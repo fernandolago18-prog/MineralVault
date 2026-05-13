@@ -49,9 +49,8 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
   const handleSave = async () => {
     setSaving(true)
     try {
-      // @ts-ignore
-      const { error } = await supabase
-        .from('user_collection')
+      const { error } = await (supabase
+        .from('user_collection') as any)
         .update({
           quality:     quality || null,
           origin:      origin.trim() || null,

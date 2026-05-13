@@ -133,8 +133,8 @@ export default function CatalogClient({
     const isOwned = collectionMap[mineralId] === 'owned'
     try {
       if (isOwned) {
-        const { error } = await supabase
-          .from('user_collection')
+        const { error } = await (supabase
+          .from('user_collection') as any)
           .delete()
           .eq('user_id', userId)
           .eq('mineral_id', mineralId)
@@ -142,8 +142,8 @@ export default function CatalogClient({
         setCollectionMap(prev => { const next = { ...prev }; delete next[mineralId]; return next })
         showToast('Eliminado de tu colección', 'info')
       } else {
-        const { error } = await supabase
-          .from('user_collection')
+        const { error } = await (supabase
+          .from('user_collection') as any)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .upsert({ user_id: userId, mineral_id: mineralId, status: 'owned' } as any, { onConflict: 'user_id,mineral_id' })
         if (error) throw error

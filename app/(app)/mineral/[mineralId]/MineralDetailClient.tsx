@@ -42,7 +42,7 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
     setLoading(true)
     try {
       if (isOwned && collectionItem) {
-        await supabase.from('user_collection').delete().eq('id', collectionItem.id)
+        await (supabase.from('user_collection') as any).delete().eq('id', collectionItem.id)
         setCollectionItem(null)
         showToast('Eliminado de tu colección')
       } else {
@@ -53,10 +53,9 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
           mineral_id: mineral.id,
           status: 'owned',
         }
-        const { data, error } = await supabase
-          .from('user_collection')
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .upsert(payload as any, { onConflict: 'user_id,mineral_id' })
+        const { data, error } = await (supabase
+          .from('user_collection') as any)
+          .upsert(payload, { onConflict: 'user_id,mineral_id' })
           .select('*, specimen_photos(*)')
           .single()
         if (error) throw error
