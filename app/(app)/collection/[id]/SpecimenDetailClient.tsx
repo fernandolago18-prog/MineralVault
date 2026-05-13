@@ -45,7 +45,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
     setTimeout(() => setToast(null), 3500)
   }, [])
 
-  // ── Save specimen metadata ─────────────────────────────────────────────────
+  // ── Save specimen metadata (forced redeploy) ──────────────────────────────────
   const handleSave = async () => {
     setSaving(true)
     try {
