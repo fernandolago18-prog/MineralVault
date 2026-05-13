@@ -10,11 +10,11 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { mineralId } = await params
   const supabase = await createClient()
-  const { data: mineral } = await supabase
+  const { data: mineral } = await (supabase
     .from('minerals')
     .select('name, name_es, description, mineral_class')
     .eq('id', mineralId)
-    .single()
+    .single() as any)
 
   if (!mineral) return { title: 'Mineral no encontrado' }
 
@@ -36,11 +36,11 @@ export default async function MineralDetailPage({ params }: Props) {
   if (!user) redirect('/auth/login')
 
   // Datos completos del mineral
-  const { data: mineral, error } = await supabase
+  const { data: mineral, error } = await (supabase
     .from('minerals')
     .select('*')
     .eq('id', mineralId)
-    .single()
+    .single() as any)
 
   if (error || !mineral) {
     console.error('[Mineral Detail Error]:', error?.message)
@@ -48,12 +48,12 @@ export default async function MineralDetailPage({ params }: Props) {
   }
 
   // Estado en la colección del usuario
-  const { data: collectionItem } = await supabase
+  const { data: collectionItem } = await (supabase
     .from('user_collection')
     .select('*, specimen_photos(*)')
     .eq('user_id', user.id)
     .eq('mineral_id', mineralId)
-    .single()
+    .single() as any)
 
   return (
     <MineralDetailClient

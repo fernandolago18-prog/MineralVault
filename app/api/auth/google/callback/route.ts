@@ -74,8 +74,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       updateData.google_refresh_token = tokens.refresh_token
     }
 
-    const { error: updateError } = await supabase
-      .from('user_profiles')
+    const { error: updateError } = await (supabase
+      .from('user_profiles') as any)
       .update(updateData)
       .eq('id', user.id)
 

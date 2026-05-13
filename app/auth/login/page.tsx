@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') ?? '/catalog'
@@ -57,6 +57,106 @@ export default function LoginPage() {
   }
 
   return (
+    <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px' }}>
+      {/* Logo */}
+      <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <div style={{
+          width: '64px', height: '64px', margin: '0 auto 1rem',
+          background: 'var(--gradient-gem)',
+          borderRadius: '18px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '28px',
+          boxShadow: 'var(--shadow-gem)',
+          animation: 'glow-pulse 3s ease-in-out infinite',
+        }}>
+          💎
+        </div>
+        <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
+          <span className="gradient-text">MineralVault</span>
+        </h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          Tu colección de minerales, catalogada y en 3D
+        </p>
+      </div>
+
+      {/* Card */}
+      <div className="glass-strong" style={{ borderRadius: 'var(--radius-xl)', padding: '2rem' }}>
+        {/* Mode toggle */}
+        <div style={{
+          display: 'flex', background: 'var(--bg-void)',
+          borderRadius: 'var(--radius-md)', padding: '4px',
+          marginBottom: '1.75rem',
+        }}>
+          {(['login', 'register'] as const).map(m => (
+            <button key={m} onClick={() => { setMode(m); setError(null); setSuccessMsg(null); }}
+              style={{
+                flex: 1, padding: '0.5rem', borderRadius: 'calc(var(--radius-md) - 2px)',
+                border: 'none', cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+                fontWeight: 600, fontSize: '0.875rem', transition: 'all var(--transition-fast)',
+                background: mode === m ? 'var(--bg-elevated)' : 'transparent',
+                color: mode === m ? 'var(--text-primary)' : 'var(--text-muted)',
+                boxShadow: mode === m ? 'var(--shadow-sm)' : 'none',
+              }}>
+              {m === 'login' ? 'Iniciar sesión' : 'Registrarse'}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {mode === 'register' && (
+            <div className="form-group">
+              <label htmlFor="displayName">Nombre del coleccionista</label>
+              <input id="displayName" type="text" className="input"
+                placeholder="Tu nombre" value={displayName}
+                onChange={e => setDisplayName(e.target.value)} required />
+            </div>
+          )}
+
+          <div className="form-group">
+            <label htmlFor="email">Correo electrónico</label>
+            <input id="email" type="email" className="input"
+              placeholder="tu@email.com" value={email}
+              onChange={e => setEmail(e.target.value)} required />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Contraseña</label>
+            <input id="password" type="password" className="input"
+              placeholder={mode === 'register' ? 'Mínimo 8 caracteres' : '••••••••'}
+              value={password} onChange={e => setPassword(e.target.value)} required />
+          </div>
+
+          {error && (
+            <div className="toast toast-error" style={{ fontSize: '0.85rem' }}>
+              {error}
+            </div>
+          )}
+          {successMsg && (
+            <div className="toast toast-success" style={{ fontSize: '0.85rem' }}>
+              {successMsg}
+            </div>
+          )}
+
+          <button type="submit" className="btn btn-primary btn-lg"
+            style={{ marginTop: '0.5rem', width: '100%' }}
+            disabled={loading}>
+            {loading ? (
+              <><span className="spinner" style={{ width: 16, height: 16 }} /> Cargando...</>
+            ) : mode === 'login' ? 'Entrar a mi colección' : 'Crear cuenta'}
+          </button>
+        </form>
+      </div>
+
+      <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+        Datos de minerales proporcionados por{' '}
+        <a href="https://www.mindat.org" target="_blank" rel="noopener noreferrer">Mindat.org</a>
+      </p>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
     <div style={{
       minHeight: '100dvh',
       display: 'flex',
@@ -85,101 +185,9 @@ export default function LoginPage() {
         ))}
       </div>
 
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px' }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <div style={{
-            width: '64px', height: '64px', margin: '0 auto 1rem',
-            background: 'var(--gradient-gem)',
-            borderRadius: '18px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '28px',
-            boxShadow: 'var(--shadow-gem)',
-            animation: 'glow-pulse 3s ease-in-out infinite',
-          }}>
-            💎
-          </div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
-            <span className="gradient-text">MineralVault</span>
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Tu colección de minerales, catalogada y en 3D
-          </p>
-        </div>
-
-        {/* Card */}
-        <div className="glass-strong" style={{ borderRadius: 'var(--radius-xl)', padding: '2rem' }}>
-          {/* Mode toggle */}
-          <div style={{
-            display: 'flex', background: 'var(--bg-void)',
-            borderRadius: 'var(--radius-md)', padding: '4px',
-            marginBottom: '1.75rem',
-          }}>
-            {(['login', 'register'] as const).map(m => (
-              <button key={m} onClick={() => { setMode(m); setError(null); setSuccessMsg(null); }}
-                style={{
-                  flex: 1, padding: '0.5rem', borderRadius: 'calc(var(--radius-md) - 2px)',
-                  border: 'none', cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
-                  fontWeight: 600, fontSize: '0.875rem', transition: 'all var(--transition-fast)',
-                  background: mode === m ? 'var(--bg-elevated)' : 'transparent',
-                  color: mode === m ? 'var(--text-primary)' : 'var(--text-muted)',
-                  boxShadow: mode === m ? 'var(--shadow-sm)' : 'none',
-                }}>
-                {m === 'login' ? 'Iniciar sesión' : 'Registrarse'}
-              </button>
-            ))}
-          </div>
-
-          <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {mode === 'register' && (
-              <div className="form-group">
-                <label htmlFor="displayName">Nombre del coleccionista</label>
-                <input id="displayName" type="text" className="input"
-                  placeholder="Tu nombre" value={displayName}
-                  onChange={e => setDisplayName(e.target.value)} required />
-              </div>
-            )}
-
-            <div className="form-group">
-              <label htmlFor="email">Correo electrónico</label>
-              <input id="email" type="email" className="input"
-                placeholder="tu@email.com" value={email}
-                onChange={e => setEmail(e.target.value)} required />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="password">Contraseña</label>
-              <input id="password" type="password" className="input"
-                placeholder={mode === 'register' ? 'Mínimo 8 caracteres' : '••••••••'}
-                value={password} onChange={e => setPassword(e.target.value)} required />
-            </div>
-
-            {error && (
-              <div className="toast toast-error" style={{ fontSize: '0.85rem' }}>
-                {error}
-              </div>
-            )}
-            {successMsg && (
-              <div className="toast toast-success" style={{ fontSize: '0.85rem' }}>
-                {successMsg}
-              </div>
-            )}
-
-            <button type="submit" className="btn btn-primary btn-lg"
-              style={{ marginTop: '0.5rem', width: '100%' }}
-              disabled={loading}>
-              {loading ? (
-                <><span className="spinner" style={{ width: 16, height: 16 }} /> Cargando...</>
-              ) : mode === 'login' ? 'Entrar a mi colección' : 'Crear cuenta'}
-            </button>
-          </form>
-        </div>
-
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-          Datos de minerales proporcionados por{' '}
-          <a href="https://www.mindat.org" target="_blank" rel="noopener noreferrer">Mindat.org</a>
-        </p>
-      </div>
+      <Suspense fallback={<div className="spinner" />}>
+        <LoginForm />
+      </Suspense>
     </div>
   )
 }

@@ -1,5 +1,9 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
+
+export const viewport: Viewport = {
+  themeColor: '#7c3aed',
+}
 
 export const metadata: Metadata = {
   title: {
@@ -10,7 +14,6 @@ export const metadata: Metadata = {
   keywords: ['minerales', 'colección', 'mineralogía', 'cristalografía', 'coleccionismo'],
   authors: [{ name: 'MineralVault' }],
   manifest: '/manifest.json',
-  themeColor: '#7c3aed',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

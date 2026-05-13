@@ -15,11 +15,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   // Obtener perfil del usuario
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase
     .from('user_profiles')
     .select('display_name, google_drive_connected')
     .eq('id', user.id)
-    .single()
+    .single() as any)
 
   return (
     <div className="app-layout">

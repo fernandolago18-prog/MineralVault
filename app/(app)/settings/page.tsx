@@ -19,11 +19,11 @@ export default async function SettingsPage() {
 
   if (!user) redirect('/auth/login')
 
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase
     .from('user_profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .single() as any)
 
   return (
     <div style={{ minHeight: '100dvh', padding: '2rem 1.5rem', maxWidth: '800px' }}>

@@ -34,8 +34,8 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     }
 
     // ── 3. Obtener la foto y verificar propiedad ─────────────────────────────
-    const { data: photo, error: photoError } = await supabase
-      .from('specimen_photos')
+    const { data: photo, error: photoError } = await (supabase
+      .from('specimen_photos') as any)
       .select('id, drive_file_id, collection_id, is_primary, user_id')
       .eq('id', photoId)
       .eq('user_id', user.id)  // Verificación explícita de propiedad
@@ -49,8 +49,8 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     }
 
     // ── 4. Obtener refresh_token y borrar de Drive ───────────────────────────
-    const { data: profile } = await supabase
-      .from('user_profiles')
+    const { data: profile } = await (supabase
+      .from('user_profiles') as any)
       .select('google_refresh_token')
       .eq('id', user.id)
       .single()
@@ -67,8 +67,8 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     }
 
     // ── 5. Eliminar registro de specimen_photos ──────────────────────────────
-    const { error: deleteError } = await supabase
-      .from('specimen_photos')
+    const { error: deleteError } = await (supabase
+      .from('specimen_photos') as any)
       .delete()
       .eq('id', photoId)
       .eq('user_id', user.id)
@@ -79,8 +79,8 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
 
     // ── 6. Si era la foto principal → promover la siguiente ──────────────────
     if (photo.is_primary) {
-      const { data: remainingPhotos } = await supabase
-        .from('specimen_photos')
+      const { data: remainingPhotos } = await (supabase
+        .from('specimen_photos') as any)
         .select('id, drive_thumb_url')
         .eq('collection_id', photo.collection_id)
         .eq('user_id', user.id)
@@ -90,21 +90,21 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
       if (remainingPhotos && remainingPhotos.length > 0) {
         const nextPhoto = remainingPhotos[0]
         // Marcar la siguiente como principal
-        await supabase
-          .from('specimen_photos')
+        await (supabase
+          .from('specimen_photos') as any)
           .update({ is_primary: true })
           .eq('id', nextPhoto.id)
 
         // Actualizar thumbnail en user_collection
-        await supabase
-          .from('user_collection')
+        await (supabase
+          .from('user_collection') as any)
           .update({ primary_photo_url: nextPhoto.drive_thumb_url })
           .eq('id', photo.collection_id)
           .eq('user_id', user.id)
       } else {
         // Sin fotos restantes — limpiar primary_photo_url
-        await supabase
-          .from('user_collection')
+        await (supabase
+          .from('user_collection') as any)
           .update({ primary_photo_url: null })
           .eq('id', photo.collection_id)
           .eq('user_id', user.id)
@@ -142,8 +142,8 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     }
 
     // Verificar propiedad
-    const { data: photo } = await supabase
-      .from('specimen_photos')
+    const { data: photo } = await (supabase
+      .from('specimen_photos') as any)
       .select('drive_thumb_url')
       .eq('id', photoId)
       .eq('user_id', user.id)
@@ -154,22 +154,22 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     }
 
     // Desmarcar todas las fotos del especimen
-    await supabase
-      .from('specimen_photos')
+    await (supabase
+      .from('specimen_photos') as any)
       .update({ is_primary: false })
       .eq('collection_id', collectionId)
       .eq('user_id', user.id)
 
     // Marcar la nueva principal
-    await supabase
-      .from('specimen_photos')
+    await (supabase
+      .from('specimen_photos') as any)
       .update({ is_primary: true })
       .eq('id', photoId)
       .eq('user_id', user.id)
 
     // Actualizar thumbnail en user_collection
-    await supabase
-      .from('user_collection')
+    await (supabase
+      .from('user_collection') as any)
       .update({ primary_photo_url: photo.drive_thumb_url })
       .eq('id', collectionId)
       .eq('user_id', user.id)

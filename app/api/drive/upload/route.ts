@@ -83,8 +83,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ── 4. Verificar que el collectionItem pertenece al usuario ──────────────
     // (La política RLS lo haría igualmente, pero verificamos explícitamente
     //  para devolver un error más descriptivo al cliente.)
-    const { data: collectionItem, error: collectionError } = await supabase
-      .from('user_collection')
+    const { data: collectionItem, error: collectionError } = await (supabase
+      .from('user_collection') as any)
       .select('id, user_id, primary_photo_url')
       .eq('id', collectionId)
       .eq('user_id', user.id)
@@ -98,8 +98,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     // ── 5. Obtener refresh_token del usuario ─────────────────────────────────
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
+    const { data: profile, error: profileError } = await (supabase
+      .from('user_profiles') as any)
       .select('google_refresh_token, google_drive_connected')
       .eq('id', user.id)
       .single()
@@ -131,8 +131,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     )
 
     // ── 9. Contar fotos existentes (¿es la primera?) ─────────────────────────
-    const { count: existingPhotosCount } = await supabase
-      .from('specimen_photos')
+    const { count: existingPhotosCount } = await (supabase
+      .from('specimen_photos') as any)
       .select('id', { count: 'exact', head: true })
       .eq('collection_id', collectionId)
 
@@ -142,8 +142,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const thumbUrl = buildThumbnailUrl(driveFile.id)
     const viewUrl  = driveFile.webViewLink ?? `https://drive.google.com/file/d/${driveFile.id}/view`
 
-    const { data: photo, error: photoInsertError } = await supabase
-      .from('specimen_photos')
+    const { data: photo, error: photoInsertError } = await (supabase
+      .from('specimen_photos') as any)
       .insert({
         collection_id:  collectionId,
         user_id:        user.id,
@@ -163,8 +163,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // ── 11. Si es la primera foto → actualizar primary_photo_url ─────────────
     if (isPrimary) {
-      await supabase
-        .from('user_collection')
+      await (supabase
+        .from('user_collection') as any)
         .update({ primary_photo_url: thumbUrl, updated_at: new Date().toISOString() })
         .eq('id', collectionId)
         .eq('user_id', user.id)

@@ -142,7 +142,7 @@ export default function Crystal3DViewer({
     controls.autoRotateSpeed = 1.5
 
     // ── Animation loop ─────────────────────────────────────
-    let animationId: number
+    let animationId = 0
     const animate = () => {
       animationId = requestAnimationFrame(animate)
       controls.update()

@@ -13,8 +13,8 @@ export default async function CollectionPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: collection, error } = await supabase
-    .from('user_collection')
+  const { data: collection, error } = await (supabase
+    .from('user_collection') as any)
     .select(`
       id, status, acquired_at, origin, quality,
       price_eur, primary_photo_url, created_at,
@@ -30,8 +30,8 @@ export default async function CollectionPage() {
 
   if (error) console.error('[Collection Load Error]:', error.message)
 
-  const items = collection ?? []
-  const totalValue = items.reduce((sum, i) => sum + (i.price_eur as number ?? 0), 0)
+  const items = (collection as any[]) ?? []
+  const totalValue = items.reduce((sum: number, i: any) => sum + (i.price_eur as number ?? 0), 0)
 
   // Distribución por clase
   const byClass: Record<string, number> = {}
@@ -40,8 +40,8 @@ export default async function CollectionPage() {
     byClass[cls] = (byClass[cls] ?? 0) + 1
   })
 
-  const { data: profile } = await supabase
-    .from('user_profiles')
+  const { data: profile } = await (supabase
+    .from('user_profiles') as any)
     .select('google_drive_connected')
     .eq('id', user.id)
     .single()
