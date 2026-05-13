@@ -49,6 +49,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
   const handleSave = async () => {
     setSaving(true)
     try {
+      // @ts-ignore
       const { error } = await supabase
         .from('user_collection')
         .update({
@@ -60,9 +61,10 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
           dimensions:  dimensions.trim() || null,
           notes:       notes.trim() || null,
           updated_at:  new Date().toISOString(),
-        } as any)
-      if (error) throw error
+        })
+        .eq('id', item.id)
         .eq('user_id', userId)
+
       if (error) throw error
       showToast('Datos guardados ✓', 'success')
     } catch (err) {

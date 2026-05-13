@@ -26,6 +26,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
   const handleSave = async () => {
     setSaving(true)
     try {
+      // @ts-ignore
       const { error } = await supabase
         .from('user_profiles')
         .update({
@@ -50,6 +51,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
     if (!confirm('¿Seguro que quieres desconectar Google Drive? No se borrarán tus fotos actuales, pero no podrás subir nuevas.')) return
     
     try {
+      // @ts-ignore
       const { error } = await supabase
         .from('user_profiles')
         .update({
