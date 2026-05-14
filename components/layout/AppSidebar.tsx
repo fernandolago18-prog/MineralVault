@@ -9,6 +9,8 @@ interface AppSidebarProps {
   userId: string
   displayName: string
   driveConnected: boolean
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 const navItems = [
@@ -17,7 +19,7 @@ const navItems = [
   { href: '/settings',   icon: '⚙️', label: 'Ajustes', description: 'Perfil y conexión' },
 ]
 
-export default function AppSidebar({ userId, displayName, driveConnected }: AppSidebarProps) {
+export default function AppSidebar({ userId, displayName, driveConnected, isOpen, onClose }: AppSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -36,10 +38,10 @@ export default function AppSidebar({ userId, displayName, driveConnected }: AppS
   }
 
   return (
-    <aside className="sidebar">
-      {/* Logo */}
-      <div style={{ padding: '1.5rem 1.25rem 1rem' }}>
-        <Link href="/catalog" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      {/* Logo & Close (Mobile) */}
+      <div style={{ padding: '1.5rem 1.25rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link href="/catalog" onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
           <div style={{
             width: '40px', height: '40px', flexShrink: 0,
             background: 'var(--gradient-gem)',
@@ -60,11 +62,13 @@ export default function AppSidebar({ userId, displayName, driveConnected }: AppS
             }}>
               MineralVault
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '-2px' }}>
-              Colección privada
-            </div>
           </div>
         </Link>
+        {onClose && (
+          <button onClick={onClose} className="btn btn-ghost btn-icon" style={{ width: '32px', height: '32px', display: 'flex', md: 'none' } as any}>
+            ✕
+          </button>
+        )}
       </div>
 
       <hr className="divider" style={{ margin: '0 1.25rem' }} />
@@ -74,7 +78,7 @@ export default function AppSidebar({ userId, displayName, driveConnected }: AppS
         {navItems.map(item => {
           const isActive = pathname.startsWith(item.href)
           return (
-            <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
+            <Link key={item.href} href={item.href} onClick={onClose} style={{ textDecoration: 'none' }}>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: '0.75rem',
                 padding: '0.625rem 0.875rem',
@@ -87,14 +91,15 @@ export default function AppSidebar({ userId, displayName, driveConnected }: AppS
               onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--bg-elevated)' }}
               onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
                 <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{item.icon}</span>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{
                     fontFamily: 'Outfit, sans-serif', fontWeight: 600, fontSize: '0.9rem',
                     color: isActive ? 'var(--accent-purple)' : 'var(--text-primary)',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                   }}>
                     {item.label}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {item.description}
                   </div>
                 </div>

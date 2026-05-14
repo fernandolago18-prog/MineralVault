@@ -78,24 +78,36 @@ export default function MineralCard({ mineral, isOwned, onToggleCollection }: Mi
           {/* Owned indicator */}
           {isOwned && (
             <div style={{
-              position: 'absolute', top: '8px', left: '8px',
+              position: 'absolute', top: '10px', left: '10px',
               background: 'var(--accent-emerald)',
-              color: 'white', borderRadius: '6px',
-              padding: '2px 8px', fontSize: '0.65rem', fontWeight: 700,
-              fontFamily: 'Outfit, sans-serif',
+              color: 'white', borderRadius: 'full',
+              width: '28px', height: '28px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.9rem', fontWeight: 900,
+              boxShadow: '0 0 15px rgba(16,185,129,0.5)',
+              border: '2px solid white',
+              zIndex: 2,
             }}>
-              EN COLECCIÓN
+              ✓
             </div>
           )}
         </div>
       </Link>
 
       {/* Content */}
-      <div style={{ padding: '0.875rem' }}>
+      <div style={{ padding: '1rem', position: 'relative' }}>
+        {isOwned && (
+          <div style={{
+            position: 'absolute', inset: 0, 
+            background: 'rgba(16,185,129,0.03)', 
+            pointerEvents: 'none',
+            borderRadius: '0 0 var(--radius-lg) var(--radius-lg)'
+          }} />
+        )}
         <Link href={`/mineral/${mineral.id}`} style={{ textDecoration: 'none' }}>
           <h5 style={{
             fontFamily: 'Outfit, sans-serif', fontWeight: 700,
-            fontSize: '0.975rem', color: 'var(--text-primary)',
+            fontSize: '1rem', color: isOwned ? 'var(--accent-emerald)' : 'var(--text-primary)',
             marginBottom: '0.125rem',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>

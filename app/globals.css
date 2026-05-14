@@ -644,15 +644,77 @@ select.input {
   font-size: 0.925rem;
 }
 
+.catalog-container {
+  min-height: 100dvh;
+  padding: 2rem 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .catalog-container {
+    padding: 1.5rem 1rem;
+  }
+}
+
 /* ============================================================
-   RESPONSIVE
+   RESPONSIVE & MOBILE HEADER
    ============================================================ */
+.mobile-header {
+  display: none;
+  height: var(--topbar-h);
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 1rem;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 35;
+}
+
 @media (max-width: 768px) {
   :root { --sidebar-w: 0px; }
+  
+  .mobile-header { display: flex; }
+  
   .sidebar {
+    width: 280px;
     transform: translateX(-100%);
     transition: transform var(--transition-base);
+    box-shadow: none;
   }
-  .sidebar.open { transform: translateX(0); }
-  .main-content { margin-left: 0; }
+  
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar-overlay.open { display: block; }
+  
+  .main-content { 
+    margin-left: 0;
+    padding-bottom: 2rem; 
+  }
+
+  /* Optimize mineral cards for mobile */
+  .mineral-card {
+    min-width: 0;
+  }
+
+  .hardness-bar {
+    gap: 2px;
+  }
+  .hardness-pip {
+    width: 14px;
+    height: 6px;
+  }
 }

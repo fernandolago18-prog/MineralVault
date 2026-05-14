@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import AppSidebar from '@/components/layout/AppSidebar'
+import LayoutWrapper from '@/components/layout/LayoutWrapper'
 
 /**
  * Layout raíz para todas las rutas protegidas de la app.
@@ -22,15 +22,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .single() as any)
 
   return (
-    <div className="app-layout">
-      <AppSidebar
-        userId={user.id}
-        displayName={profile?.display_name ?? user.email?.split('@')[0] ?? 'Coleccionista'}
-        driveConnected={profile?.google_drive_connected ?? false}
-      />
-      <main className="main-content" style={{ position: 'relative', zIndex: 1 }}>
-        {children}
-      </main>
-    </div>
+    <LayoutWrapper
+      userId={user.id}
+      displayName={profile?.display_name ?? user.email?.split('@')[0] ?? 'Coleccionista'}
+      driveConnected={profile?.google_drive_connected ?? false}
+    >
+      {children}
+    </LayoutWrapper>
   )
 }

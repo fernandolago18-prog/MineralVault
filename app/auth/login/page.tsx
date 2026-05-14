@@ -9,10 +9,8 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') ?? '/catalog'
 
-  const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -26,27 +24,10 @@ function LoginForm() {
     setLoading(true)
 
     try {
-      if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        router.push(redirectTo)
-        router.refresh()
-      } else {
-        // Validación básica client-side
-        if (password.length < 8) throw new Error('La contraseña debe tener al menos 8 caracteres.')
-        if (!displayName.trim()) throw new Error('El nombre es obligatorio.')
-
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: displayName.trim() },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
-        })
-        if (error) throw error
-        setSuccessMsg('¡Cuenta creada! Revisa tu email para confirmar el registro.')
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      router.push(redirectTo)
+      router.refresh()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ocurrió un error inesperado'
       setError(message)
@@ -81,37 +62,12 @@ function LoginForm() {
 
       {/* Card */}
       <div className="glass-strong" style={{ borderRadius: 'var(--radius-xl)', padding: '2rem' }}>
-        {/* Mode toggle */}
-        <div style={{
-          display: 'flex', background: 'var(--bg-void)',
-          borderRadius: 'var(--radius-md)', padding: '4px',
-          marginBottom: '1.75rem',
-        }}>
-          {(['login', 'register'] as const).map(m => (
-            <button key={m} onClick={() => { setMode(m); setError(null); setSuccessMsg(null); }}
-              style={{
-                flex: 1, padding: '0.5rem', borderRadius: 'calc(var(--radius-md) - 2px)',
-                border: 'none', cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
-                fontWeight: 600, fontSize: '0.875rem', transition: 'all var(--transition-fast)',
-                background: mode === m ? 'var(--bg-elevated)' : 'transparent',
-                color: mode === m ? 'var(--text-primary)' : 'var(--text-muted)',
-                boxShadow: mode === m ? 'var(--shadow-sm)' : 'none',
-              }}>
-              {m === 'login' ? 'Iniciar sesión' : 'Registrarse'}
-            </button>
-          ))}
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>Bienvenido de nuevo</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Identifícate para acceder a tu colección</p>
         </div>
 
         <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {mode === 'register' && (
-            <div className="form-group">
-              <label htmlFor="displayName">Nombre del coleccionista</label>
-              <input id="displayName" type="text" className="input"
-                placeholder="Tu nombre" value={displayName}
-                onChange={e => setDisplayName(e.target.value)} required />
-            </div>
-          )}
-
           <div className="form-group">
             <label htmlFor="email">Correo electrónico</label>
             <input id="email" type="email" className="input"
@@ -122,7 +78,7 @@ function LoginForm() {
           <div className="form-group">
             <label htmlFor="password">Contraseña</label>
             <input id="password" type="password" className="input"
-              placeholder={mode === 'register' ? 'Mínimo 8 caracteres' : '••••••••'}
+              placeholder="••••••••"
               value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
 
@@ -131,18 +87,13 @@ function LoginForm() {
               {error}
             </div>
           )}
-          {successMsg && (
-            <div className="toast toast-success" style={{ fontSize: '0.85rem' }}>
-              {successMsg}
-            </div>
-          )}
 
           <button type="submit" className="btn btn-primary btn-lg"
             style={{ marginTop: '0.5rem', width: '100%' }}
             disabled={loading}>
             {loading ? (
-              <><span className="spinner" style={{ width: 16, height: 16 }} /> Cargando...</>
-            ) : mode === 'login' ? 'Entrar a mi colección' : 'Crear cuenta'}
+              <><span className="spinner" style={{ width: 16, height: 16 }} /> Entrando...</>
+            ) : 'Entrar a mi colección'}
           </button>
         </form>
       </div>

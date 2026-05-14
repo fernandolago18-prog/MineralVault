@@ -157,23 +157,41 @@ export default function CatalogClient({
   }
 
   const ownedCount = Object.values(collectionMap).filter(s => s === 'owned').length
+  const completionPercentage = totalCount > 0 ? Math.round((ownedCount / totalCount) * 100) : 0
 
   return (
-    <div style={{ minHeight: '100dvh', padding: '2rem 1.5rem' }}>
+    <div className="catalog-container">
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h1 style={{ marginBottom: '0.375rem' }}>
-              Catálogo de <span className="gradient-text">Minerales</span>
+      <div style={{ marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
+          <div style={{ flex: 1, minWidth: '300px' }}>
+            <h1 style={{ marginBottom: '0.5rem' }}>
+              Enciclopedia de <span className="gradient-text">Minerales</span>
             </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              {totalCount.toLocaleString()} minerales · {' '}
-              <span style={{ color: 'var(--accent-emerald)' }}>{ownedCount} en tu colección</span>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.25rem' }}>
+              Explora todos los minerales conocidos. Colecciona ejemplares para completar tu enciclopedia personal.
             </p>
+            
+            {/* Progress Bar */}
+            <div style={{ maxWidth: '400px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Progreso de Colección</span>
+                <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>{ownedCount} / {totalCount.toLocaleString()} ({completionPercentage}%)</span>
+              </div>
+              <div style={{ 
+                height: '10px', background: 'var(--bg-elevated)', borderRadius: '10px', overflow: 'hidden',
+                border: '1px solid var(--border-subtle)'
+              }}>
+                <div style={{ 
+                  width: `${completionPercentage}%`, height: '100%', background: 'var(--gradient-gem-h)',
+                  boxShadow: '0 0 10px rgba(124,58,237,0.3)', transition: 'width 1s ease-out'
+                }} />
+              </div>
+            </div>
           </div>
+          
           <Link href="/collection">
-            <button className="btn btn-secondary">
+            <button className="btn btn-primary btn-lg" style={{ boxShadow: 'var(--shadow-gem)' }}>
               💎 Mi Colección ({ownedCount})
             </button>
           </Link>
