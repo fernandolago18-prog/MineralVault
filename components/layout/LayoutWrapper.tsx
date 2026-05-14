@@ -35,14 +35,14 @@ export default function LayoutWrapper({ children, userId, displayName, driveConn
           <button 
             onClick={() => setIsSidebarOpen(true)}
             className="btn btn-ghost btn-icon"
-            style={{ width: '40px', height: '40px' }}
+            style={{ width: '40px', height: '40px', color: 'var(--accent-gold)' }}
           >
             ☰
           </button>
           
           <div style={{ 
-            fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.1rem',
-            background: 'var(--gradient-gem)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            fontFamily: 'Fraunces, serif', fontWeight: 500, fontSize: '1.2rem',
+            color: 'var(--text-primary)',
           }}>
             MineralVault
           </div>

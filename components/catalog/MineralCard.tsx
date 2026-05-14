@@ -6,8 +6,8 @@ import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS } from '@/types/database'
 
 interface MineralCardProps {
   mineral: MineralSearchResult
-  isOwned: boolean
-  onToggleCollection: (mineralId: string) => void
+  status?: 'owned' | 'wanted'
+  onToggleCollection: (mineralId: string, status: 'owned' | 'wanted') => void
 }
 
 /** Devuelve un emoji representativo de la clase mineral */
@@ -35,7 +35,10 @@ function getSystemGradient(system: string | null): string {
   return map[system ?? ''] ?? 'rgba(255,255,255,0.03)'
 }
 
-export default function MineralCard({ mineral, isOwned, onToggleCollection }: MineralCardProps) {
+export default function MineralCard({ mineral, status, onToggleCollection }: MineralCardProps) {
+  const isOwned = status === 'owned'
+  const isWanted = status === 'wanted'
+  
   const hardnessLabel = mineral.hardness_min != null
     ? mineral.hardness_min === mineral.hardness_max
       ? `${mineral.hardness_min}`
@@ -45,30 +48,31 @@ export default function MineralCard({ mineral, isOwned, onToggleCollection }: Mi
   return (
     <div
       className={`mineral-card ${isOwned ? 'in-collection' : ''}`}
-      style={{ background: `${getSystemGradient(mineral.crystal_system)}, var(--bg-surface)` }}>
+      style={{ background: isOwned ? 'rgba(45,138,103,0.02)' : 'var(--bg-surface)' }}>
 
       {/* Top section: image or crystal preview */}
       <Link href={`/mineral/${mineral.id}`} style={{ display: 'block', textDecoration: 'none' }}>
         <div style={{
-          height: '130px', position: 'relative',
-          background: 'linear-gradient(135deg, var(--bg-elevated), var(--bg-overlay))',
+          height: '140px', position: 'relative',
+          background: 'var(--bg-void)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           overflow: 'hidden',
+          borderBottom: '1px solid var(--border-default)',
         }}>
           {mineral.thumbnail_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={mineral.thumbnail_url}
               alt={`Foto de ${mineral.name}`}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isOwned ? 1 : 0.7 }}
             />
           ) : (
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', opacity: isOwned ? 1 : 0.5 }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '4px' }}>
                 {getClassEmoji(mineral.mineral_class)}
               </div>
               {mineral.crystal_system && (
-                <span className="badge badge-violet" style={{ fontSize: '0.65rem' }}>
+                <span className="badge" style={{ fontSize: '0.6rem' }}>
                   {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system] ?? mineral.crystal_system}
                 </span>
               )}
@@ -78,37 +82,45 @@ export default function MineralCard({ mineral, isOwned, onToggleCollection }: Mi
           {/* Owned indicator */}
           {isOwned && (
             <div style={{
-              position: 'absolute', top: '10px', left: '10px',
+              position: 'absolute', top: '12px', left: '12px',
               background: 'var(--accent-emerald)',
-              color: 'white', borderRadius: 'full',
-              width: '28px', height: '28px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.9rem', fontWeight: 900,
-              boxShadow: '0 0 15px rgba(16,185,129,0.5)',
-              border: '2px solid white',
+              color: 'white', borderRadius: 'var(--radius-xs)',
+              padding: '2px 8px',
+              fontSize: '0.65rem', fontWeight: 800,
+              letterSpacing: '0.05em',
               zIndex: 2,
             }}>
-              ✓
+              COLLECTED
+            </div>
+          )}
+          
+          {/* Wanted indicator */}
+          {isWanted && (
+            <div style={{
+              position: 'absolute', top: '12px', right: '12px',
+              background: 'var(--bg-void)',
+              color: 'var(--accent-gold)',
+              border: '1px solid var(--accent-gold)',
+              borderRadius: 'var(--radius-xs)',
+              padding: '1px 6px', fontSize: '0.6rem', fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              zIndex: 2,
+            }}>
+              Wishlist
             </div>
           )}
         </div>
       </Link>
 
       {/* Content */}
-      <div style={{ padding: '1rem', position: 'relative' }}>
-        {isOwned && (
-          <div style={{
-            position: 'absolute', inset: 0, 
-            background: 'rgba(16,185,129,0.03)', 
-            pointerEvents: 'none',
-            borderRadius: '0 0 var(--radius-lg) var(--radius-lg)'
-          }} />
-        )}
+      <div style={{ padding: '1.25rem' }}>
         <Link href={`/mineral/${mineral.id}`} style={{ textDecoration: 'none' }}>
           <h5 style={{
-            fontFamily: 'Outfit, sans-serif', fontWeight: 700,
-            fontSize: '1rem', color: isOwned ? 'var(--accent-emerald)' : 'var(--text-primary)',
-            marginBottom: '0.125rem',
+            fontFamily: 'Fraunces, serif', fontWeight: 500,
+            fontSize: '1.1rem', color: isOwned ? 'var(--text-primary)' : 'var(--text-primary)',
+            textTransform: 'none', letterSpacing: 'normal',
+            marginBottom: '0.25rem',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {mineral.name}
@@ -116,7 +128,7 @@ export default function MineralCard({ mineral, isOwned, onToggleCollection }: Mi
           {mineral.name_es && (
             <p style={{
               fontSize: '0.75rem', color: 'var(--text-muted)',
-              marginBottom: '0.5rem', fontStyle: 'italic',
+              marginBottom: '0.75rem', fontStyle: 'italic',
             }}>
               {mineral.name_es}
             </p>
@@ -125,56 +137,34 @@ export default function MineralCard({ mineral, isOwned, onToggleCollection }: Mi
 
         {/* Chemical formula */}
         {mineral.chemical_formula && (
-          <code style={{
-            display: 'block',
-            fontSize: '0.75rem', color: 'var(--accent-cyan)',
-            marginBottom: '0.625rem',
-            fontFamily: 'JetBrains Mono, monospace',
-          }}>
-            {mineral.chemical_formula}
-          </code>
-        )}
-
-        {/* Properties mini-row */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-          {hardnessLabel !== '—' && (
-            <span className="badge badge-amber" style={{ fontSize: '0.68rem' }}>
-              ⬡ Mohs {hardnessLabel}
-            </span>
-          )}
-          {mineral.mineral_class && (
-            <span className="badge badge-violet" style={{ fontSize: '0.68rem' }}>
-              {MINERAL_CLASS_LABELS[mineral.mineral_class] ?? mineral.mineral_class}
-            </span>
-          )}
-        </div>
-
-        {/* Mohs hardness visual bar */}
-        {mineral.hardness_min != null && (
-          <div className="hardness-bar" style={{ marginBottom: '0.75rem' }}>
-            {[...Array(10)].map((_, i) => {
-              const pip = i + 1
-              const filled = pip >= (mineral.hardness_min ?? 0) && pip <= (mineral.hardness_max ?? mineral.hardness_min ?? 0)
-              return (
-                <div
-                  key={i}
-                  className={`hardness-pip ${filled ? 'active' : ''}`}
-                  title={`Mohs ${pip}`}
-                />
-              )
-            })}
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginLeft: '4px' }}>Mohs</span>
+          <div style={{ marginBottom: '1rem' }}>
+            <code className="scientific-mono" style={{
+              fontSize: '0.7rem', color: 'var(--accent-primary)',
+              display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {mineral.chemical_formula}
+            </code>
           </div>
         )}
 
-        {/* Action button */}
-        <button
-          id={`toggle-collection-${mineral.id}`}
-          className={`btn btn-sm ${isOwned ? 'btn-danger' : 'btn-primary'}`}
-          style={{ width: '100%' }}
-          onClick={(e) => { e.preventDefault(); onToggleCollection(mineral.id) }}>
-          {isOwned ? '✕ Quitar de colección' : '+ Añadir a colección'}
-        </button>
+        {/* Action buttons row */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+          <button
+            title={isOwned ? 'Quitar de mi colección' : 'Añadir a mi colección'}
+            className={`btn btn-sm ${isOwned ? 'btn-danger' : 'btn-primary'}`}
+            style={{ flex: 1 }}
+            onClick={(e) => { e.preventDefault(); onToggleCollection(mineral.id, 'owned') }}>
+            {isOwned ? 'Remove' : '+ Collection'}
+          </button>
+          
+          <button
+            title={isWanted ? 'Quitar de deseados' : 'Añadir a deseados'}
+            className={`btn btn-sm ${isWanted ? 'btn-danger' : 'btn-secondary'}`}
+            style={{ padding: '0 0.75rem' }}
+            onClick={(e) => { e.preventDefault(); onToggleCollection(mineral.id, 'wanted') }}>
+            {isWanted ? '★' : '☆'}
+          </button>
+        </div>
       </div>
     </div>
   )

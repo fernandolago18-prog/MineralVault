@@ -128,11 +128,13 @@ export default function CatalogClient({
     executeSearch({ query: search, cls: filterClass, system: filterSystem, hMin: hardnessMin, hMax: hardnessMax, offsetVal: offset })
   }
 
-  /** Añade/quita un mineral de la colección */
-  const toggleCollection = async (mineralId: string) => {
-    const isOwned = collectionMap[mineralId] === 'owned'
+  /** Añade/quita un mineral de la colección (owned o wanted) */
+  const toggleCollection = async (mineralId: string, status: 'owned' | 'wanted' = 'owned') => {
+    const currentStatus = collectionMap[mineralId]
+    
     try {
-      if (isOwned) {
+      if (currentStatus === status) {
+        // Si ya tiene ese estado, lo quitamos
         const { error } = await (supabase
           .from('user_collection') as any)
           .delete()
@@ -140,15 +142,15 @@ export default function CatalogClient({
           .eq('mineral_id', mineralId)
         if (error) throw error
         setCollectionMap(prev => { const next = { ...prev }; delete next[mineralId]; return next })
-        showToast('Eliminado de tu colección', 'info')
+        showToast(status === 'owned' ? 'Eliminado de tu colección' : 'Quitado de tu lista de deseos', 'info')
       } else {
+        // Insertamos o actualizamos al nuevo estado
         const { error } = await (supabase
           .from('user_collection') as any)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .upsert({ user_id: userId, mineral_id: mineralId, status: 'owned' } as any, { onConflict: 'user_id,mineral_id' })
+          .upsert({ user_id: userId, mineral_id: mineralId, status } as any, { onConflict: 'user_id,mineral_id' })
         if (error) throw error
-        setCollectionMap(prev => ({ ...prev, [mineralId]: 'owned' }))
-        showToast('¡Añadido a tu colección! 💎', 'success')
+        setCollectionMap(prev => ({ ...prev, [mineralId]: status }))
+        showToast(status === 'owned' ? '¡Añadido a tu colección! 💎' : 'Añadido a tu lista de deseos ✨', 'success')
       }
     } catch (err) {
       console.error('[Collection Toggle Error]:', err)
@@ -157,42 +159,46 @@ export default function CatalogClient({
   }
 
   const ownedCount = Object.values(collectionMap).filter(s => s === 'owned').length
+  const wantedCount = Object.values(collectionMap).filter(s => s === 'wanted').length
   const completionPercentage = totalCount > 0 ? Math.round((ownedCount / totalCount) * 100) : 0
 
   return (
     <div className="catalog-container">
       {/* Header */}
-      <div style={{ marginBottom: '2.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
+      <div style={{ marginBottom: '3.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem' }}>
           <div style={{ flex: 1, minWidth: '300px' }}>
-            <h1 style={{ marginBottom: '0.5rem' }}>
-              Enciclopedia de <span className="gradient-text">Minerales</span>
+            <h1 style={{ marginBottom: '0.75rem' }}>
+              <span style={{ color: 'var(--accent-gold)', fontStyle: 'italic' }}>Minerales</span> de la Tierra
             </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.25rem' }}>
-              Explora todos los minerales conocidos. Colecciona ejemplares para completar tu enciclopedia personal.
+            <p style={{ 
+              color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '1.5rem', 
+              maxWidth: '600px', lineHeight: '1.5' 
+            }}>
+              Un compendio exhaustivo de especies minerales y variedades cristalográficas. 
+              Documente sus hallazgos para completar el archivo.
             </p>
             
-            {/* Progress Bar */}
-            <div style={{ maxWidth: '400px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Progreso de Colección</span>
-                <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>{ownedCount} / {totalCount.toLocaleString()} ({completionPercentage}%)</span>
+            {/* Progress Bar (Museum Style) */}
+            <div style={{ maxWidth: '350px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.7rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Archivo Completado</span>
+                <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>{ownedCount} / {totalCount.toLocaleString()}</span>
               </div>
               <div style={{ 
-                height: '10px', background: 'var(--bg-elevated)', borderRadius: '10px', overflow: 'hidden',
-                border: '1px solid var(--border-subtle)'
+                height: '4px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-full)', overflow: 'hidden'
               }}>
                 <div style={{ 
-                  width: `${completionPercentage}%`, height: '100%', background: 'var(--gradient-gem-h)',
-                  boxShadow: '0 0 10px rgba(124,58,237,0.3)', transition: 'width 1s ease-out'
+                  width: `${completionPercentage}%`, height: '100%', background: 'var(--accent-gold)',
+                  transition: 'width 1.2s cubic-bezier(0.2, 0.8, 0.2, 1)'
                 }} />
               </div>
             </div>
           </div>
           
           <Link href="/collection">
-            <button className="btn btn-primary btn-lg" style={{ boxShadow: 'var(--shadow-gem)' }}>
-              💎 Mi Colección ({ownedCount})
+            <button className="btn btn-primary btn-lg">
+              💎 Mi Vitrina ({ownedCount})
             </button>
           </Link>
         </div>
@@ -325,7 +331,7 @@ export default function CatalogClient({
               <MineralCard
                 key={mineral.id}
                 mineral={mineral}
-                isOwned={collectionMap[mineral.id] === 'owned'}
+                status={(collectionMap[mineral.id] as 'owned' | 'wanted' | undefined)}
                 onToggleCollection={toggleCollection}
               />
             ))}

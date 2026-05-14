@@ -14,7 +14,7 @@ interface AppSidebarProps {
 }
 
 const navItems = [
-  { href: '/catalog',    icon: '🔍', label: 'Catálogo', description: 'Todos los minerales' },
+  { href: '/catalog',    icon: '📖', label: 'Minerales', description: 'Enciclopedia completa' },
   { href: '/collection', icon: '💎', label: 'Mi Colección', description: 'Mis ejemplares' },
   { href: '/settings',   icon: '⚙️', label: 'Ajustes', description: 'Perfil y conexión' },
 ]
@@ -40,66 +40,72 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Logo & Close (Mobile) */}
-      <div style={{ padding: '1.5rem 1.25rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/catalog" onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
+      <div style={{ padding: '2rem 1.5rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link href="/catalog" onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', textDecoration: 'none' }}>
           <div style={{
-            width: '40px', height: '40px', flexShrink: 0,
-            background: 'var(--gradient-gem)',
-            borderRadius: '12px',
+            width: '38px', height: '38px', flexShrink: 0,
+            background: 'var(--bg-void)',
+            border: '1.5px solid var(--accent-gold)',
+            borderRadius: 'var(--radius-sm)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '18px',
-            boxShadow: 'var(--shadow-gem)',
+            fontSize: '16px',
+            color: 'var(--accent-gold)',
           }}>
-            💎
+            ◆
           </div>
           <div>
             <div style={{
-              fontFamily: 'Outfit, sans-serif', fontWeight: 800,
-              fontSize: '1.1rem', letterSpacing: '-0.02em',
-              background: 'var(--gradient-gem)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              fontFamily: 'Fraunces, serif', fontWeight: 500,
+              fontSize: '1.3rem', letterSpacing: '-0.01em',
+              color: 'var(--text-primary)',
             }}>
               MineralVault
+            </div>
+            <div style={{ 
+              fontSize: '0.6rem', color: 'var(--text-muted)', 
+              textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '-2px' 
+            }}>
+              Arqueología Mineral
             </div>
           </div>
         </Link>
         {onClose && (
-          <button onClick={onClose} className="btn btn-ghost btn-icon" style={{ width: '32px', height: '32px', display: 'flex', md: 'none' } as any}>
+          <button onClick={onClose} className="btn btn-ghost btn-icon" style={{ width: '32px', height: '32px' }}>
             ✕
           </button>
         )}
       </div>
 
-      <hr className="divider" style={{ margin: '0 1.25rem' }} />
+      <hr className="divider" style={{ margin: '0 1.5rem' }} />
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+      <nav style={{ flex: 1, padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
         {navItems.map(item => {
           const isActive = pathname.startsWith(item.href)
           return (
             <Link key={item.href} href={item.href} onClick={onClose} style={{ textDecoration: 'none' }}>
               <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.75rem',
-                padding: '0.625rem 0.875rem',
-                borderRadius: 'var(--radius-md)',
-                background: isActive ? 'rgba(124,58,237,0.15)' : 'transparent',
-                border: isActive ? '1px solid rgba(124,58,237,0.25)' : '1px solid transparent',
+                display: 'flex', alignItems: 'center', gap: '0.875rem',
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-xs)',
+                background: isActive ? 'var(--bg-elevated)' : 'transparent',
+                border: isActive ? '1px solid var(--border-strong)' : '1px solid transparent',
                 transition: 'all var(--transition-fast)',
                 cursor: 'pointer',
               }}
-              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--bg-elevated)' }}
+              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--border-subtle)' }}
               onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ fontSize: '1.1rem', flexShrink: 0, opacity: isActive ? 1 : 0.6 }}>{item.icon}</span>
                 <div style={{ minWidth: 0 }}>
                   <div style={{
-                    fontFamily: 'Outfit, sans-serif', fontWeight: 600, fontSize: '0.9rem',
-                    color: isActive ? 'var(--accent-purple)' : 'var(--text-primary)',
+                    fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.85rem',
+                    textTransform: 'uppercase', letterSpacing: '0.05em',
+                    color: isActive ? 'var(--accent-gold)' : 'var(--text-primary)',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                   }}>
                     {item.label}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {item.description}
                   </div>
                 </div>
@@ -109,25 +115,28 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
         })}
 
         {/* Separator */}
-        <div style={{ margin: '0.5rem 0' }}>
+        <div style={{ margin: '1rem 0' }}>
           <hr className="divider" />
         </div>
 
         {/* Google Drive status */}
         <div style={{
-          padding: '0.625rem 0.875rem',
-          borderRadius: 'var(--radius-md)',
-          background: driveConnected ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)',
-          border: `1px solid ${driveConnected ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}`,
+          padding: '0.75rem 1rem',
+          borderRadius: 'var(--radius-xs)',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-default)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.9rem' }}>{driveConnected ? '🟢' : '🟡'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <span style={{ fontSize: '0.75rem' }}>{driveConnected ? '●' : '○'}</span>
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: driveConnected ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
-                Google Drive
+              <div style={{ 
+                fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+                color: driveConnected ? 'var(--accent-emerald)' : 'var(--accent-gold)' 
+              }}>
+                Cloud Backup
               </div>
-              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                {driveConnected ? 'Conectado' : 'Sin conectar'}
+              <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>
+                {driveConnected ? 'Google Drive Conectado' : 'Sincronización Inactiva'}
               </div>
             </div>
           </div>
@@ -135,39 +144,42 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
       </nav>
 
       {/* User section */}
-      <div style={{ padding: '0.75rem' }}>
-        <hr className="divider" style={{ marginBottom: '0.75rem' }} />
+      <div style={{ padding: '1rem' }}>
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.75rem',
-          padding: '0.625rem 0.5rem',
+          display: 'flex', alignItems: 'center', gap: '0.875rem',
+          padding: '0.75rem',
+          background: 'var(--bg-void)',
+          border: '1px solid var(--border-default)',
+          borderRadius: 'var(--radius-sm)',
         }}>
           {/* Avatar */}
           <div style={{
-            width: '36px', height: '36px', flexShrink: 0,
-            background: 'var(--gradient-gem)',
-            borderRadius: '10px',
+            width: '34px', height: '34px', flexShrink: 0,
+            background: 'var(--accent-gold)',
+            borderRadius: 'var(--radius-xs)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'Outfit, sans-serif', fontWeight: 700,
-            fontSize: '1rem', color: 'white',
+            fontFamily: 'Fraunces, serif', fontWeight: 600,
+            fontSize: '0.9rem', color: 'var(--bg-void)',
           }}>
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
-              fontFamily: 'Outfit, sans-serif', fontWeight: 600, fontSize: '0.875rem',
+              fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.8rem',
               color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              textTransform: 'uppercase', letterSpacing: '0.02em'
             }}>
               {displayName}
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Coleccionista</div>
+            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Coleccionista</div>
           </div>
           <button
             onClick={handleSignOut}
             disabled={signingOut}
             title="Cerrar sesión"
             className="btn btn-ghost btn-icon"
-            style={{ width: '32px', height: '32px', flexShrink: 0 }}>
-            {signingOut ? <span className="spinner" style={{ width: 14, height: 14 }} /> : '↩'}
+            style={{ width: '28px', height: '28px', flexShrink: 0 }}>
+            {signingOut ? <span className="spinner" style={{ width: 12, height: 12 }} /> : '↩'}
           </button>
         </div>
       </div>
