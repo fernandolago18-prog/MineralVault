@@ -22,7 +22,10 @@ import {
   translateCleavage,
   translateFracture,
   translateTenacity,
-  translateHabit
+  translateHabit,
+  translateMagnetism,
+  translateRadioactivity,
+  translateFluorescence
 } from '@/types/database'
 
 // El visor 3D solo se carga en cliente (WebGL)
@@ -267,23 +270,23 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                     </td>
                   </tr>
                 )}
-                {mineral.streak && <tr><td>Raya</td><td>{mineral.streak}</td></tr>}
+                {mineral.streak && <tr><td>Raya</td><td>{translateStreak(mineral.streak)}</td></tr>}
                 {mineral.luster && mineral.luster.length > 0 && (
-                  <tr><td>Brillo</td><td>{mineral.luster.map(l => LUSTER_LABELS[l.toLowerCase()] || l).join(', ')}</td></tr>
+                  <tr><td>Brillo</td><td>{translateLuster(mineral.luster)}</td></tr>
                 )}
-                {mineral.transparency && <tr><td>Transparencia</td><td>{TRANSPARENCY_LABELS[mineral.transparency.toLowerCase()] || mineral.transparency}</td></tr>}
+                {mineral.transparency && <tr><td>Transparencia</td><td>{TRANSPARENCY_LABELS[mineral.transparency.toLowerCase().trim()] || mineral.transparency}</td></tr>}
                 {mineral.color && mineral.color.length > 0 && (
-                  <tr><td>Color</td><td>{mineral.color.map(c => COLOR_LABELS[c.toLowerCase()] || c).join(', ')}</td></tr>
+                  <tr><td>Color</td><td>{translateColor(mineral.color)}</td></tr>
                 )}
                 {mineral.crystal_habits && mineral.crystal_habits.length > 0 && (
-                  <tr><td>Hábito cristalino</td><td>{mineral.crystal_habits.join(', ')}</td></tr>
+                  <tr><td>Hábito cristalino</td><td>{mineral.crystal_habits.map(h => translateHabit(h)).join(', ')}</td></tr>
                 )}
-                {mineral.cleavage && <tr><td>Exfoliación</td><td>{CLEAVAGE_LABELS[mineral.cleavage.toLowerCase()] || mineral.cleavage}</td></tr>}
-                {mineral.fracture && <tr><td>Fractura</td><td>{FRACTURE_LABELS[mineral.fracture.toLowerCase()] || mineral.fracture}</td></tr>}
-                {mineral.tenacity && <tr><td>Tenacidad</td><td>{TENACITY_LABELS[mineral.tenacity.toLowerCase()] || mineral.tenacity}</td></tr>}
-                {mineral.magnetism && <tr><td>Magnetismo</td><td>{mineral.magnetism}</td></tr>}
-                {mineral.radioactivity && <tr><td>Radioactividad</td><td>{mineral.radioactivity}</td></tr>}
-                {mineral.fluorescence && <tr><td>Fluorescencia</td><td>{mineral.fluorescence}</td></tr>}
+                {mineral.cleavage && <tr><td>Exfoliación</td><td>{translateCleavage(mineral.cleavage)}</td></tr>}
+                {mineral.fracture && <tr><td>Fractura</td><td>{translateFracture(mineral.fracture)}</td></tr>}
+                {mineral.tenacity && <tr><td>Tenacidad</td><td>{translateTenacity(mineral.tenacity)}</td></tr>}
+                {mineral.magnetism && <tr><td>Magnetismo</td><td>{translateMagnetism(mineral.magnetism)}</td></tr>}
+                {mineral.radioactivity && <tr><td>Radioactividad</td><td>{translateRadioactivity(mineral.radioactivity)}</td></tr>}
+                {mineral.fluorescence && <tr><td>Fluorescencia</td><td>{translateFluorescence(mineral.fluorescence)}</td></tr>}
                 {mineral.strunz_number && <tr><td>Número Strunz</td><td><code style={{ fontSize: '0.85em', color: 'var(--accent-cyan)' }}>{mineral.strunz_number}</code></td></tr>}
                 {mineral.dana_number && <tr><td>Número Dana</td><td><code style={{ fontSize: '0.85em', color: 'var(--accent-cyan)' }}>{mineral.dana_number}</code></td></tr>}
               </tbody>
@@ -429,7 +432,7 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                       height="240px"
                     />
                     <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.625rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
-                      Hábito: {habit}
+                      Hábito: {translateHabit(habit)}
                     </p>
                     <p style={{ textAlign: 'center', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>
                       Sistema {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system ?? ''] ?? mineral.crystal_system ?? 'amorfo'}

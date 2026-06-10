@@ -340,10 +340,11 @@ export function translateFracture(fracture: string | null | undefined): string {
   if (!fracture) return '—';
   const clean = fracture.toLowerCase().replace(/\./g, '').trim();
   const parts = clean.split(/[,;\/]/).map(p => p.trim());
-  return parts.map(p => {
+  const mapped = parts.map(p => {
     const norm = p.replace('-', '');
     return FRACTURE_LABELS[p] ?? FRACTURE_LABELS[norm] ?? p;
-  }).join(', ');
+  });
+  return Array.from(new Set(mapped)).join(', ');
 }
 
 export function translateTenacity(tenacity: string | null | undefined): string {
@@ -487,6 +488,85 @@ export function translateColor(colorArray: string[] | null | undefined): string 
   });
 
   return colorsList.join(', ');
+}
+
+export function translateMagnetism(magnetism: string | null | undefined): string {
+  if (!magnetism) return '—';
+  const clean = magnetism.trim();
+  const replacements: Record<string, string> = {
+    'Antiferromagnetic': 'Antiferromagnético',
+    'antiferromagnetic': 'antiferromagnético',
+    'Magnetic': 'Magnético',
+    'magnetic': 'magnético',
+    'Non-magnetic': 'No magnético',
+    'non-magnetic': 'no magnético',
+  };
+  return replacements[clean] ?? clean;
+}
+
+export function translateRadioactivity(radioactivity: string | null | undefined): string {
+  if (!radioactivity) return '—';
+  const clean = radioactivity.trim();
+  const replacements: Record<string, string> = {
+    'none': 'ninguna',
+    'None': 'Ninguna',
+    'weak': 'débil',
+    'Weak': 'Débil',
+    'strong': 'fuerte',
+    'Strong': 'Fuerte',
+  };
+  return replacements[clean] ?? clean;
+}
+
+export function translateFluorescence(fluorescence: string | null | undefined): string {
+  if (!fluorescence) return '—';
+  let clean = fluorescence.trim();
+  
+  const lower = clean.toLowerCase();
+  if (lower === 'none' || lower === 'none.' || lower === 'ninguno' || lower === 'ninguno.' || lower === 'ninguna' || lower === 'ninguna.') {
+    return 'Ninguna';
+  }
+  if (lower === 'no' || lower === 'no.') {
+    return 'No';
+  }
+  if (lower === 'not fluorescent' || lower === 'not fluorescent.' || lower === 'no fluorescente' || lower === 'no fluorescente.') {
+    return 'No fluorescente';
+  }
+
+  const replacements: [RegExp, string][] = [
+    [/not fluorescent/gi, 'no fluorescente'],
+    [/fluorescent/gi, 'fluorescente'],
+    [/weak/gi, 'débil'],
+    [/bright/gi, 'brillante'],
+    [/strong/gi, 'fuerte'],
+    [/under/gi, 'bajo'],
+    [/short-wave/gi, 'onda corta'],
+    [/short wave/gi, 'onda corta'],
+    [/long-wave/gi, 'onda larga'],
+    [/long wave/gi, 'onda larga'],
+    [/wavelength/gi, 'longitud de onda'],
+    [/light/gi, 'luz'],
+    [/yellow/gi, 'amarillo'],
+    [/green/gi, 'verde'],
+    [/blue/gi, 'azul'],
+    [/red/gi, 'rojo'],
+    [/orange/gi, 'naranja'],
+    [/white/gi, 'blanco'],
+    [/cream/gi, 'crema'],
+    [/pink/gi, 'rosa'],
+    [/violet/gi, 'violeta'],
+    [/purple/gi, 'púrpura'],
+    [/none observed/gi, 'ninguno observado'],
+    [/\bto\b/gi, 'a'],
+    [/\band\b/gi, 'y'],
+    [/\bor\b/gi, 'o'],
+  ];
+
+  for (const [regex, replacement] of replacements) {
+    clean = clean.replace(regex, replacement);
+  }
+
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
 
 /** Hábitos de cristalización por defecto (fallback) para minerales comunes */
