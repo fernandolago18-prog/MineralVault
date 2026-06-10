@@ -194,6 +194,16 @@ export const CRYSTAL_SYSTEM_DEFINITIONS: Record<string, string> = {
   Amorphous: 'Amorfo: Estructura no cristalina sin ordenamiento atómico de largo alcance.',
 }
 
+export const VALID_3D_SYSTEMS = [
+  'Cubic',
+  'Tetragonal',
+  'Hexagonal',
+  'Trigonal',
+  'Orthorhombic',
+  'Monoclinic',
+  'Triclinic',
+]
+
 export const MINERAL_CLASS_LABELS: Record<string, string> = {
   'Native Elements': 'Elementos Nativos',
   'Sulfides': 'Sulfuros',

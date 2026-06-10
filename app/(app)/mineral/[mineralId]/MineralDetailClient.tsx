@@ -8,6 +8,7 @@ import type { Mineral, CollectionItem, SpecimenPhoto } from '@/types/database'
 import {
   CRYSTAL_SYSTEM_LABELS,
   CRYSTAL_SYSTEM_DEFINITIONS,
+  VALID_3D_SYSTEMS,
   MINERAL_CLASS_LABELS,
   LUSTER_LABELS,
   TRANSPARENCY_LABELS,
@@ -381,54 +382,56 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
 
         {/* Right column — 3D + collection */}
         <div style={{ position: 'sticky', top: '2rem' }}>
-          {/* Visores 3D para todos los hábitos disponibles */}
-          {mineral.crystal_habits && mineral.crystal_habits.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1.25rem' }}>
-              {mineral.crystal_habits.map((habit, idx) => (
-                <div key={idx} className="card-elevated" style={{ padding: '0.875rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                  <Crystal3DViewer
-                    crystalOptions={{
-                      system: mineral.crystal_system ?? 'Amorphous',
-                      habit: habit,
-                      axisRatio: (mineral.model_3d_config as any)?.params,
-                    }}
-                    transparency={0.88}
-                    height="240px"
-                  />
-                  <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.625rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
-                    Hábito: {habit}
-                  </p>
-                  <p style={{ textAlign: 'center', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>
-                    Sistema {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system ?? ''] ?? mineral.crystal_system ?? 'amorfo'}
-                  </p>
-                  {mineral.crystal_system && CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system] && (
-                    <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.375rem', padding: '0 0.5rem', lineHeight: 1.4, fontStyle: 'italic' }}>
-                      {CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system]}
+          {/* Visores 3D para todos los hábitos disponibles (Solo para sistemas cristalinos válidos) */}
+          {mineral.crystal_system && VALID_3D_SYSTEMS.includes(mineral.crystal_system) && (
+            mineral.crystal_habits && mineral.crystal_habits.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                {mineral.crystal_habits.map((habit, idx) => (
+                  <div key={idx} className="card-elevated" style={{ padding: '0.875rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                    <Crystal3DViewer
+                      crystalOptions={{
+                        system: mineral.crystal_system ?? 'Amorphous',
+                        habit: habit,
+                        axisRatio: (mineral.model_3d_config as any)?.params,
+                      }}
+                      transparency={0.88}
+                      height="240px"
+                    />
+                    <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.625rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
+                      Hábito: {habit}
                     </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="card-elevated" style={{ padding: '0.875rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', marginBottom: '1.25rem' }}>
-              <Crystal3DViewer
-                crystalOptions={{
-                  system: mineral.crystal_system ?? 'Amorphous',
-                  habit: '',
-                  axisRatio: (mineral.model_3d_config as any)?.params,
-                }}
-                transparency={0.88}
-                height="340px"
-              />
-              <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.625rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
-                Sistema {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system ?? ''] ?? mineral.crystal_system ?? 'amorfo'}
-              </p>
-              {mineral.crystal_system && CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system] && (
-                <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.375rem', padding: '0 0.5rem', lineHeight: 1.4, fontStyle: 'italic' }}>
-                  {CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system]}
+                    <p style={{ textAlign: 'center', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>
+                      Sistema {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system ?? ''] ?? mineral.crystal_system ?? 'amorfo'}
+                    </p>
+                    {mineral.crystal_system && CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system] && (
+                      <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.375rem', padding: '0 0.5rem', lineHeight: 1.4, fontStyle: 'italic' }}>
+                        {CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system]}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="card-elevated" style={{ padding: '0.875rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', marginBottom: '1.25rem' }}>
+                <Crystal3DViewer
+                  crystalOptions={{
+                    system: mineral.crystal_system ?? 'Amorphous',
+                    habit: '',
+                    axisRatio: (mineral.model_3d_config as any)?.params,
+                  }}
+                  transparency={0.88}
+                  height="340px"
+                />
+                <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.625rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
+                  Sistema {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system ?? ''] ?? mineral.crystal_system ?? 'amorfo'}
                 </p>
-              )}
-            </div>
+                {mineral.crystal_system && CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system] && (
+                  <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.375rem', padding: '0 0.5rem', lineHeight: 1.4, fontStyle: 'italic' }}>
+                    {CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system]}
+                  </p>
+                )}
+              </div>
+            )
           )}
 
           {/* Collection button */}
