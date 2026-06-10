@@ -31,6 +31,25 @@ const Crystal3DViewer = dynamic(() => import('@/components/Crystal3DViewer'), {
   ),
 })
 
+const GEOMETRIC_HABITS_KEYWORDS = [
+  'cubic', 'cúbic', 'isometr',
+  'octahedr', 'octaédr',
+  'dodecahedr', 'dodecaédr',
+  'tetrahedr', 'tetraédr',
+  'tabular',
+  'prismatic', 'prismátic',
+  'pyramid', 'piramid', 'bipyramid', 'bipiramid',
+  'acicular', 'needle', 'aguja',
+  'rhombohedr', 'romboédr',
+  'scalenohedr', 'escalenoédr',
+  'plat', 'platy', 'laminar', 'hojoso', 'hoja'
+]
+
+function isGeometricHabit(habit: string): boolean {
+  const lowercase = habit.toLowerCase()
+  return GEOMETRIC_HABITS_KEYWORDS.some(kw => lowercase.includes(kw))
+}
+
 interface Props {
   mineral: Mineral
   collectionItem: (CollectionItem & { specimen_photos: SpecimenPhoto[] }) | null
@@ -46,6 +65,11 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
 
   const supabase = createClient()
   const isOwned = collectionItem?.status === 'owned'
+
+  const geometricHabits = useMemo(() => {
+    if (!mineral.crystal_habits) return []
+    return mineral.crystal_habits.filter(isGeometricHabit)
+  }, [mineral.crystal_habits])
 
   const showToast = (msg: string) => {
     setToast(msg); setTimeout(() => setToast(null), 3000)
@@ -384,9 +408,9 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
         <div style={{ position: 'sticky', top: '2rem' }}>
           {/* Visores 3D para todos los hábitos disponibles (Solo para sistemas cristalinos válidos) */}
           {mineral.crystal_system && VALID_3D_SYSTEMS.includes(mineral.crystal_system) && (
-            mineral.crystal_habits && mineral.crystal_habits.length > 0 ? (
+            geometricHabits && geometricHabits.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                {mineral.crystal_habits.map((habit, idx) => (
+                {geometricHabits.map((habit, idx) => (
                   <div key={idx} className="card-elevated" style={{ padding: '0.875rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                     <Crystal3DViewer
                       crystalOptions={{
