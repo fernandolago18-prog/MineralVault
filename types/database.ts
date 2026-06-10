@@ -223,6 +223,8 @@ export const MINERAL_CLASS_LABELS: Record<string, string> = {
 
 export const LUSTER_LABELS: Record<string, string> = {
   vitreous: 'Vítreo',
+  'sub-vitreous': 'Subvítreo',
+  subvitreous: 'Subvítreo',
   adamantine: 'Adamantino',
   pearly: 'Nacarado (Perlado)',
   greasy: 'Graso',
@@ -248,16 +250,20 @@ export const CLEAVAGE_LABELS: Record<string, string> = {
   poor: 'Pobre',
   indistinct: 'Indistinta',
   none: 'Ninguna',
+  distinct: 'Distinguible',
+  imperfect: 'Imperfecta',
 }
 
 export const FRACTURE_LABELS: Record<string, string> = {
   conchoidal: 'Concoidea',
   subconchoidal: 'Subconcoidea',
+  'sub-conchoidal': 'Subconcoidea',
   uneven: 'Irregular',
   splintery: 'Astillosa',
   hackly: 'Ganchosa',
   fibrous: 'Fibrosa',
   even: 'Regular',
+  irregular: 'Irregular',
 }
 
 export const TENACITY_LABELS: Record<string, string> = {
@@ -284,6 +290,203 @@ export const COLOR_LABELS: Record<string, string> = {
   violet: 'Violeta',
   purple: 'Púrpura',
   colorless: 'Incoloro',
+  colourless: 'Incoloro',
+}
+
+export const CRYSTAL_HABIT_LABELS: Record<string, string> = {
+  prismatic: 'Prismático',
+  rhombohedral: 'Romboédrico',
+  tabular: 'Tabular',
+  cubic: 'Cúbico',
+  octahedral: 'Octaédrico',
+  dodecahedral: 'Dodecaédrico',
+  pyramidal: 'Piramidal',
+  scalenohedral: 'Escalenoédrico',
+  acicular: 'Acicular',
+  needle: 'En agujas (Acicular)',
+  platy: 'Laminar',
+  plate: 'Laminar',
+  plat: 'Laminar',
+  earthy: 'Terroso',
+  columnar: 'Columnar',
+  massive: 'Masivo',
+  granular: 'Granular',
+  botryoidal: 'Botrioidal',
+  fibrous: 'Fibroso',
+  stalactitic: 'Estalactítico',
+  radiating: 'Radiado',
+  reniform: 'Reniforme',
+}
+
+export function translateHabit(habit: string | null | undefined): string {
+  if (!habit) return '—';
+  const clean = habit.toLowerCase().trim();
+  return CRYSTAL_HABIT_LABELS[clean] ?? habit;
+}
+
+export function translateLuster(lusterArray: string[] | null | undefined): string {
+  if (!lusterArray || lusterArray.length === 0) return '—';
+  return lusterArray.map(l => LUSTER_LABELS[l.toLowerCase().trim()] ?? l).join(', ');
+}
+
+export function translateCleavage(cleavage: string | null | undefined): string {
+  if (!cleavage) return '—';
+  const clean = cleavage.toLowerCase().replace(/\./g, '').trim();
+  const parts = clean.split(/[\/,;\-]/).map(p => p.trim());
+  return parts.map(p => CLEAVAGE_LABELS[p] ?? p).join(' / ');
+}
+
+export function translateFracture(fracture: string | null | undefined): string {
+  if (!fracture) return '—';
+  const clean = fracture.toLowerCase().replace(/\./g, '').trim();
+  const parts = clean.split(/[,;\/]/).map(p => p.trim());
+  return parts.map(p => {
+    const norm = p.replace('-', '');
+    return FRACTURE_LABELS[p] ?? FRACTURE_LABELS[norm] ?? p;
+  }).join(', ');
+}
+
+export function translateTenacity(tenacity: string | null | undefined): string {
+  if (!tenacity) return '—';
+  const clean = tenacity.toLowerCase().replace(/\./g, '').trim();
+  const parts = clean.split(/[,;\/]/).map(p => p.trim());
+  return parts.map(p => TENACITY_LABELS[p] ?? p).join(', ');
+}
+
+export function translateStreak(streak: string | null | undefined): string {
+  if (!streak) return '—';
+  let clean = streak.trim().replace(/\./g, '');
+  
+  // Diccionario de traducción de rayas comunes
+  const replacements: [RegExp, string][] = [
+    [/^white$/i, 'Blanca'],
+    [/^white to pale yellow$/i, 'Blanca a amarillo pálido'],
+    [/^colorless$/i, 'Incoloro'],
+    [/^colourless$/i, 'Incoloro'],
+    [/^grey$/i, 'Gris'],
+    [/^gray$/i, 'Gris'],
+    [/^black$/i, 'Negra'],
+    [/^red$/i, 'Roja'],
+    [/^brown$/i, 'Marrón'],
+    [/^yellow$/i, 'Amarilla'],
+    [/^green$/i, 'Verde'],
+    [/^light green$/i, 'Verde claro'],
+    [/^dark green$/i, 'Verde oscuro'],
+    [/^pale green$/i, 'Verde pálido'],
+    [/^yellowish$/i, 'Amarillenta'],
+    [/^reddish brown$/i, 'Marrón rojizo'],
+    [/^dark brown$/i, 'Marrón oscuro'],
+    [/^lead-grey$/i, 'Gris plomo'],
+    [/^lead grey$/i, 'Gris plomo'],
+    [/^brass-yellow$/i, 'Amarillo latón'],
+    [/^copper-red$/i, 'Rojo cobre'],
+    [/^copper red$/i, 'Rojo cobre'],
+  ];
+
+  for (const [regex, replacement] of replacements) {
+    if (regex.test(clean)) {
+      return replacement;
+    }
+  }
+
+  // Si no coincide exactamente, hacer traducción por palabras claves
+  const wordReplacements: [RegExp, string][] = [
+    [/white/gi, 'blanca'],
+    [/colorless/gi, 'incolora'],
+    [/colourless/gi, 'incolora'],
+    [/black/gi, 'negra'],
+    [/red/gi, 'roja'],
+    [/brown/gi, 'marrón'],
+    [/yellow/gi, 'amarilla'],
+    [/green/gi, 'verde'],
+    [/grey/gi, 'gris'],
+    [/gray/gi, 'gris'],
+    [/pale/gi, 'pálido'],
+    [/dark/gi, 'oscuro'],
+    [/light/gi, 'claro'],
+    [/\bto\b/gi, 'a'],
+    [/\band\b/gi, 'y'],
+    [/\bor\b/gi, 'o'],
+  ];
+
+  for (const [regex, replacement] of wordReplacements) {
+    clean = clean.replace(regex, replacement);
+  }
+
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
+}
+
+export function translateColor(colorArray: string[] | null | undefined): string {
+  if (!colorArray || colorArray.length === 0) return '—';
+  
+  const colorsList = colorArray.map(color => {
+    let clean = color.trim();
+    
+    // Traducción de frases comunes de Mindat
+    if (clean.toLowerCase().includes('displays a wide variety of colour')) {
+      return 'Gran variedad de colores (púrpura, verde, amarillo, azul, incoloro, rosa, etc.)';
+    }
+    if (clean.toLowerCase().includes('often tinged other hues due to impurities')) {
+      return 'A menudo teñido de otros tonos debido a impurezas';
+    }
+
+    const replacements: [RegExp, string][] = [
+      [/colorless/gi, 'incoloro'],
+      [/colourless/gi, 'incoloro'],
+      [/pale brass-yellow/gi, 'amarillo latón pálido'],
+      [/brass-yellow/gi, 'amarillo latón'],
+      [/brass yellow/gi, 'amarillo latón'],
+      [/golden-yellow/gi, 'amarillo dorado'],
+      [/golden yellow/gi, 'amarillo dorado'],
+      [/champagne/gi, 'champaña'],
+      [/yellowish green/gi, 'verde amarillento'],
+      [/yellowish-green/gi, 'verde amarillento'],
+      [/greenish/gi, 'verdoso'],
+      [/bluish/gi, 'azulado'],
+      [/reddish/gi, 'rojizo'],
+      [/yellowish/gi, 'amarillento'],
+      [/brownish/gi, 'marronáceo'],
+      [/white/gi, 'blanco'],
+      [/black/gi, 'negro'],
+      [/blue/gi, 'azul'],
+      [/red/gi, 'rojo'],
+      [/green/gi, 'verde'],
+      [/brown/gi, 'marrón'],
+      [/yellow/gi, 'amarillo'],
+      [/gray/gi, 'gris'],
+      [/grey/gi, 'gris'],
+      [/pink/gi, 'rosa'],
+      [/orange/gi, 'naranja'],
+      [/violet/gi, 'violeta'],
+      [/purple/gi, 'púrpura'],
+      [/lilac/gi, 'lila'],
+      [/bronze/gi, 'bronce'],
+      [/copper/gi, 'cobre'],
+      [/gold/gi, 'dorado'],
+      [/golden/gi, 'dorado'],
+      [/silver/gi, 'plata'],
+      [/silvery/gi, 'plateado'],
+      [/rose/gi, 'rosa'],
+      [/etc/gi, 'etc'],
+      [/\bto\b/gi, 'a'],
+      [/\band\b/gi, 'y'],
+      [/\bor\b/gi, 'o'],
+      [/\bwith\b/gi, 'con'],
+      [/\bdeep\b/gi, 'oscuro'],
+      [/\bdeeper\b/gi, 'más oscuro'],
+      [/\bshades\b/gi, 'tonos'],
+      [/\bdark\b/gi, 'oscuro'],
+      [/\blight\b/gi, 'claro'],
+    ];
+
+    for (const [regex, replacement] of replacements) {
+      clean = clean.replace(regex, replacement);
+    }
+
+    return clean.charAt(0).toUpperCase() + clean.slice(1);
+  });
+
+  return colorsList.join(', ');
 }
 
 /** Hábitos de cristalización por defecto (fallback) para minerales comunes */

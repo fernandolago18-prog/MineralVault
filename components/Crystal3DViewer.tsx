@@ -118,16 +118,17 @@ export default function Crystal3DViewer({
       mesh.receiveShadow = true
       group.add(mesh)
       meshes.push(mesh)
-    })
 
-    // ── Wireframe overlay ──────────────────────────────────
-    const wireGeo = geometries[0]?.clone()
-    if (wireGeo) {
-      const wireMat = new THREE.MeshBasicMaterial({
-        color: 0xffffff, wireframe: true, transparent: true, opacity: 0.06,
+      // Agregar líneas de contorno (bordes) para realzar las facetas cristalinas
+      const edgesGeo = new THREE.EdgesGeometry(geom)
+      const lineMat = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.3, // Opacidad sutil para dar aspecto facetado premium
       })
-      group.add(new THREE.Mesh(wireGeo, wireMat))
-    }
+      const lineSegments = new THREE.LineSegments(edgesGeo, lineMat)
+      group.add(lineSegments)
+    })
 
     // ── Normalización de tamaño para evitar desbordamientos ──
     const box = new THREE.Box3().setFromObject(group)

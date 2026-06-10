@@ -15,7 +15,14 @@ import {
   CLEAVAGE_LABELS,
   FRACTURE_LABELS,
   TENACITY_LABELS,
-  COLOR_LABELS
+  COLOR_LABELS,
+  translateColor,
+  translateStreak,
+  translateLuster,
+  translateCleavage,
+  translateFracture,
+  translateTenacity,
+  translateHabit
 } from '@/types/database'
 
 // El visor 3D solo se carga en cliente (WebGL)

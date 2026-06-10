@@ -74,8 +74,12 @@ function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
     return [new THREE.CylinderGeometry(0.9, 0.9, 0.5, 6)]
   }
   if (habit.includes('pyramid') || habit.includes('bipyramid')) {
-    // Bipyramidal
-    return [new THREE.ConeGeometry(0.7, height, 6), createFlipped(new THREE.ConeGeometry(0.7, height * 0.7, 6))]
+    // Bipyramidal: base-to-base alignment
+    const top = new THREE.ConeGeometry(0.7, height / 2, 6)
+    const bot = createFlipped(new THREE.ConeGeometry(0.7, height / 2, 6))
+    translateGeometry(top, 0, height / 4, 0)
+    translateGeometry(bot, 0, -height / 4, 0)
+    return [top, bot]
   }
   // Prismatic: tall hexagonal prism with pyramidal terminations
   const prism = new THREE.CylinderGeometry(0.75, 0.75, height, 6)
@@ -94,8 +98,11 @@ function buildTetragonal(habit: string, c: number): THREE.BufferGeometry[] {
     return [new THREE.BoxGeometry(1.3, 0.5, 1.3)]
   }
   if (habit.includes('pyramid') || habit.includes('bipyramid')) {
-    const top = new THREE.ConeGeometry(0.7, height, 4)
-    const bot = createFlipped(new THREE.ConeGeometry(0.7, height, 4))
+    // Bipyramidal: base-to-base alignment
+    const top = new THREE.ConeGeometry(0.7, height / 2, 4)
+    const bot = createFlipped(new THREE.ConeGeometry(0.7, height / 2, 4))
+    translateGeometry(top, 0, height / 4, 0)
+    translateGeometry(bot, 0, -height / 4, 0)
     return [top, bot]
   }
   // Prismatic
@@ -117,7 +124,13 @@ function buildOrthorhombic(habit: string, a: number, b: number, c: number): THRE
     return [new THREE.BoxGeometry(w * 1.4, 0.5, d * 1.4)]
   }
   if (habit.includes('acicular') || habit.includes('needle')) {
-    return [new THREE.CylinderGeometry(0.2, 0.2, 2.5, 8)]
+    // Acicular: thin long 4-sided needle with pyramidal terminations
+    const prism = new THREE.CylinderGeometry(0.08, 0.08, 2.2, 4)
+    const capTop = new THREE.ConeGeometry(0.08, 0.15, 4)
+    const capBot = createFlipped(new THREE.ConeGeometry(0.08, 0.15, 4))
+    translateGeometry(capTop, 0, 1.1, 0)
+    translateGeometry(capBot, 0, -1.1, 0)
+    return [prism, capTop, capBot]
   }
   // Prismatic: rectangular prism
   return [new THREE.BoxGeometry(w, h, d)]
@@ -129,7 +142,6 @@ function buildMonoclinic(habit: string, b: number, c: number): THREE.BufferGeome
   const w = 0.7 + b * 0.3
 
   if (habit.includes('tabular') || habit.includes('plat')) {
-    // Sheared flat prism
     return [createSheared(new THREE.BoxGeometry(w * 1.4, 0.45, 1.1), 0.2)]
   }
   if (habit.includes('prismatic')) {
@@ -140,10 +152,8 @@ function buildMonoclinic(habit: string, b: number, c: number): THREE.BufferGeome
 
 // ── TRICLINIC ─────────────────────────────────────────────────────────────────
 function buildTriclinic(a: number, b: number, c: number): THREE.BufferGeometry[] {
-  // Triclinic: fully distorted box with shear in two axes
   const geom = new THREE.BoxGeometry(0.7 + a * 0.3, 1.0 + c * 0.4, 0.6 + b * 0.3)
   const sheared = createSheared(geom, 0.15)
-  // Apply a second shear on another axis
   const positions = sheared.attributes.position
   for (let i = 0; i < positions.count; i++) {
     const y = positions.getY(i)
@@ -159,20 +169,80 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
   const height = 0.9 + c * 0.7
 
   if (habit.includes('rhombohedr')) {
-    return [new THREE.OctahedronGeometry(0.85, 0)] // simplified rhombohedron
+    // Rhombohedron: sheared cube
+    return [buildRhombohedron()]
   }
   if (habit.includes('scalenohedr')) {
-    const geom = new THREE.ConeGeometry(0.7, height, 6)
-    return [geom, createFlipped(new THREE.ConeGeometry(0.6, height * 0.75, 6))]
+    // Scalenohedron: ditrigonal scalenohedron with alternating equatorial heights
+    return [buildScalenohedron(height)]
   }
   if (habit.includes('tabular') || habit.includes('plat')) {
     return [new THREE.CylinderGeometry(0.9, 0.9, 0.45, 3)] // short trigonal prism
   }
   if (habit.includes('pyramid') || habit.includes('bipyramid')) {
-    return [new THREE.ConeGeometry(0.75, height * 0.8, 3), createFlipped(new THREE.ConeGeometry(0.75, height * 0.8, 3))]
+    // Bipyramidal: base-to-base alignment
+    const top = new THREE.ConeGeometry(0.75, height / 2, 3)
+    const bot = createFlipped(new THREE.ConeGeometry(0.75, height / 2, 3))
+    translateGeometry(top, 0, height / 4, 0)
+    translateGeometry(bot, 0, -height / 4, 0)
+    return [top, bot]
   }
   // Trigonal prism
   return [new THREE.CylinderGeometry(0.8, 0.8, height, 3)]
+}
+
+// ── AUXILIARY SHAPES ──────────────────────────────────────────────────────────
+function buildRhombohedron(): THREE.BufferGeometry {
+  const geom = new THREE.BoxGeometry(1.1, 1.1, 1.1)
+  const positions = geom.attributes.position
+  const shear = 0.35
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i)
+    const y = positions.getY(i)
+    const z = positions.getZ(i)
+    positions.setX(i, x + y * shear)
+    positions.setZ(i, z + y * shear)
+  }
+  positions.needsUpdate = true
+  geom.computeVertexNormals()
+  return geom
+}
+
+function buildScalenohedron(height: number): THREE.BufferGeometry {
+  const geom = new THREE.BufferGeometry()
+  const r = 0.65
+  const shift = height * 0.15
+  const halfH = height / 2
+
+  // 8 vertices
+  const vertices = new Float32Array(8 * 3)
+  // 0: Top tip
+  vertices[0] = 0; vertices[1] = halfH; vertices[2] = 0
+  // 1: Bottom tip
+  vertices[3] = 0; vertices[4] = -halfH; vertices[5] = 0
+
+  // 2..7: Equatorial hexagon with alternating heights
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * Math.PI) / 3
+    const idx = (2 + i) * 3
+    vertices[idx] = r * Math.cos(angle)
+    vertices[idx + 1] = (i % 2 === 0 ? 1 : -1) * shift
+    vertices[idx + 2] = r * Math.sin(angle)
+  }
+
+  const indices: number[] = []
+  for (let i = 0; i < 6; i++) {
+    const next = (i + 1) % 6
+    // Top triangles
+    indices.push(0, 2 + i, 2 + next)
+    // Bottom triangles
+    indices.push(1, 2 + next, 2 + i)
+  }
+
+  geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
+  geom.setIndex(indices)
+  geom.computeVertexNormals()
+  return geom
 }
 
 // ── AMORPHOUS ─────────────────────────────────────────────────────────────────
