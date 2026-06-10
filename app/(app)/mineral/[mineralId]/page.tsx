@@ -75,24 +75,40 @@ export default async function MineralDetailPage({ params }: Props) {
 
   // Traducción perezosa (lazy translation) de la descripción si detectamos que está en inglés
   if (mineral.description && isEnglish(mineral.description)) {
-    const translated = await translateText(mineral.description)
-    if (translated) {
-      try {
-        const { createClient: createServiceRoleClient } = await import('@supabase/supabase-js')
-        const serviceSupabase = createServiceRoleClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
-        const { error: errUpdate } = await serviceSupabase
-          .from('minerals')
-          .update({ description: translated })
-          .eq('id', mineralId)
+    // Limpiar frase incompleta al final debido al límite de 150 caracteres de la API de Mindat
+    let textToTranslate = mineral.description.trim()
+    if (textToTranslate.endsWith('...')) {
+      textToTranslate = textToTranslate.slice(0, -3).trim()
+    }
+    const lastPeriod = Math.max(
+      textToTranslate.lastIndexOf('.'),
+      textToTranslate.lastIndexOf('?'),
+      textToTranslate.lastIndexOf('!')
+    )
+    if (lastPeriod !== -1 && lastPeriod < textToTranslate.length - 1) {
+      textToTranslate = textToTranslate.slice(0, lastPeriod + 1).trim()
+    }
 
-        if (!errUpdate) {
-          mineral.description = translated
+    if (textToTranslate) {
+      const translated = await translateText(textToTranslate)
+      if (translated) {
+        try {
+          const { createClient: createServiceRoleClient } = await import('@supabase/supabase-js')
+          const serviceSupabase = createServiceRoleClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          )
+          const { error: errUpdate } = await serviceSupabase
+            .from('minerals')
+            .update({ description: translated })
+            .eq('id', mineralId)
+
+          if (!errUpdate) {
+            mineral.description = translated
+          }
+        } catch (dbErr) {
+          console.error('[Lazy Translation DB Update Error]:', dbErr)
         }
-      } catch (dbErr) {
-        console.error('[Lazy Translation DB Update Error]:', dbErr)
       }
     }
   }

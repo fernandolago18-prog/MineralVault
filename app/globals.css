@@ -426,6 +426,20 @@ label {
 .hardness-pip { width: 14px; height: 6px; border-radius: 1px; background: var(--bg-overlay); }
 .hardness-pip.active { background: var(--accent-gold); }
 
+.prop-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.prop-table tr {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.prop-table tr:last-child {
+  border-bottom: none;
+}
+.prop-table td {
+  padding: 0.75rem 0.5rem;
+  vertical-align: middle;
+}
 .prop-table td:first-child {
   color: var(--text-muted);
   font-size: 0.7rem;
