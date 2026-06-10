@@ -193,65 +193,6 @@ function buildBipyramid(N: number, radius: number, height: number): THREE.Buffer
   return geom
 }
 
-/**
- * Genera un Dodecaedro Rómbico geológicamente correcto (14 vértices, 12 caras rómbicas).
- * Es el hábito real que adoptan minerales como el Granate o la Magnetita en el sistema cúbico.
- */
-function buildRhombicDodecahedron(): THREE.BufferGeometry {
-  const geom = new THREE.BufferGeometry()
-  
-  // Para que las caras sean perfectamente planas (coplanares),
-  // la coordenada de los ápices octaédricos (o) debe ser exactamente el doble de los vértices cúbicos (w).
-  const w = 0.6
-  const o = w * 2.0 // 1.2
-
-  const vertices = new Float32Array([
-    // Vértices octaédricos (6)
-    0, 0, o,     // 0: +Z
-    0, 0, -o,    // 1: -Z
-    o, 0, 0,     // 2: +X
-    -o, 0, 0,    // 3: -X
-    0, o, 0,     // 4: +Y
-    0, -o, 0,    // 5: -Y
-    
-    // Vértices cúbicos (8)
-    w, w, w,     // 6: ++Z, ++X, ++Y
-    w, w, -w,    // 7: -Z, ++X, ++Y
-    w, -w, w,    // 8: ++Z, ++X, -Y
-    w, -w, -w,   // 9: -Z, ++X, -Y
-    -w, w, w,    // 10: ++Z, -X, ++Y
-    -w, w, -w,   // 11: -Z, -X, ++Y
-    -w, -w, w,   // 12: ++Z, -X, -Y
-    -w, -w, -w,  // 13: -Z, -X, -Y
-  ])
-
-  // Índices ordenados en sentido antihorario (CCW) para que las normales apunten hacia fuera
-  const indices = [
-    // Rombos que conectan con el ápice superior +Z (0)
-    0, 8, 2,  0, 2, 6,     // +Z, +X
-    0, 10, 3,  0, 3, 12,   // +Z, -X
-    0, 6, 4,  0, 4, 10,    // +Z, +Y
-    0, 12, 5,  0, 5, 8,    // +Z, -Y
-
-    // Rombos que conectan con el ápice inferior -Z (1)
-    1, 7, 2,  1, 2, 9,     // -Z, +X
-    1, 13, 3,  1, 3, 11,   // -Z, -X
-    1, 11, 4,  1, 4, 7,    // -Z, +Y
-    1, 9, 5,  1, 5, 13,    // -Z, -Y
-
-    // Rombos en la franja lateral ecuatorial
-    2, 7, 4,  2, 4, 6,     // +X, +Y
-    2, 8, 5,  2, 5, 9,     // +X, -Y
-    3, 10, 4,  3, 4, 11,   // -X, +Y
-    3, 13, 5,  3, 5, 12,   // -X, -Y
-  ]
-
-  geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
-  geom.setIndex(indices)
-  geom.computeVertexNormals()
-  return geom
-}
-
 // ── CUBIC ─────────────────────────────────────────────────────────────────────
 function buildCubic(habit: string): THREE.BufferGeometry[] {
   if (
@@ -266,7 +207,8 @@ function buildCubic(habit: string): THREE.BufferGeometry[] {
     habit.includes('dodecaédr') ||
     habit.includes('dodeca')
   ) {
-    return [makeFlatGeom(buildRhombicDodecahedron())]
+    // Dodecaedro regular de 12 caras pentagonales iguales
+    return [makeFlatGeom(new THREE.DodecahedronGeometry(0.85))]
   }
   if (
     habit.includes('tetrahedr') ||
