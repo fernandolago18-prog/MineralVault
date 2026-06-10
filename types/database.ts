@@ -183,6 +183,17 @@ export const CRYSTAL_SYSTEM_LABELS: Record<string, string> = {
   Amorphous: 'Amorfo',
 }
 
+export const CRYSTAL_SYSTEM_DEFINITIONS: Record<string, string> = {
+  Cubic: 'Cúbico (Isométrico): Tres ejes iguales que se cortan en ángulos de 90°.',
+  Tetragonal: 'Tetragonal: Tres ejes, dos iguales y uno diferente, todos a 90°.',
+  Hexagonal: 'Hexagonal: Tres ejes iguales en un plano a 120° y un cuarto eje perpendicular diferente.',
+  Trigonal: 'Trigonal (Romboédrico): Similar al hexagonal, pero sin un eje de simetría séxtuple (a veces agrupado como una subdivisión de este último).',
+  Orthorhombic: 'Ortorrómbico: Tres ejes desiguales que se cortan a 90°.',
+  Monoclinic: 'Monoclínico: Tres ejes desiguales, dos de ellos inclinados entre sí y el tercero perpendicular.',
+  Triclinic: 'Triclínico: Tres ejes desiguales y ninguno forma ángulos de 90°.',
+  Amorphous: 'Amorfo: Estructura no cristalina sin ordenamiento atómico de largo alcance.',
+}
+
 export const MINERAL_CLASS_LABELS: Record<string, string> = {
   'Native Elements': 'Elementos Nativos',
   'Sulfides': 'Sulfuros',

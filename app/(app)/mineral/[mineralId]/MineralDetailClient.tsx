@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Mineral, CollectionItem, SpecimenPhoto } from '@/types/database'
 import {
   CRYSTAL_SYSTEM_LABELS,
+  CRYSTAL_SYSTEM_DEFINITIONS,
   MINERAL_CLASS_LABELS,
   LUSTER_LABELS,
   TRANSPARENCY_LABELS,
@@ -400,6 +401,11 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                   <p style={{ textAlign: 'center', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>
                     Sistema {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system ?? ''] ?? mineral.crystal_system ?? 'amorfo'}
                   </p>
+                  {mineral.crystal_system && CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system] && (
+                    <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.375rem', padding: '0 0.5rem', lineHeight: 1.4, fontStyle: 'italic' }}>
+                      {CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system]}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -417,6 +423,11 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
               <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.625rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
                 Sistema {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system ?? ''] ?? mineral.crystal_system ?? 'amorfo'}
               </p>
+              {mineral.crystal_system && CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system] && (
+                <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.375rem', padding: '0 0.5rem', lineHeight: 1.4, fontStyle: 'italic' }}>
+                  {CRYSTAL_SYSTEM_DEFINITIONS[mineral.crystal_system]}
+                </p>
+              )}
             </div>
           )}
 
