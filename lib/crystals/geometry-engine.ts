@@ -1,7 +1,8 @@
 /**
  * Motor de cristales 3D paramétrico para MineralVault.
  * Genera geometrías Three.js basadas en el sistema cristalográfico y hábito del mineral.
- * No requiere assets externos — todo es procedural.
+ * Todas las geometrías devueltas son watertight (estancas) y usan sombreado plano (flat shading)
+ * para evitar solapamientos visibles de caras internas con transparencias y asegurar aristas vivas.
  */
 
 import * as THREE from 'three'
@@ -19,7 +20,8 @@ export interface CrystalGeometryOptions {
 
 /**
  * Crea la geometría 3D apropiada para un sistema cristalográfico dado.
- * Devuelve un array de meshes (algunos cristales tienen múltiples formas).
+ * Devuelve un array de meshes (algunos cristales tienen múltiples formas, pero ahora
+ * están unificados en geometrías estancas para evitar caras internas visibles).
  */
 export function buildCrystalGeometry(options: CrystalGeometryOptions): THREE.BufferGeometry[] {
   const { system, habit = '', axisRatio = {} } = options
@@ -44,25 +46,225 @@ export function buildCrystalGeometry(options: CrystalGeometryOptions): THREE.Buf
     case 'Trigonal':
       return buildTrigonal(habitLower, c)
     case 'Icosahedral':
-      return [new THREE.IcosahedronGeometry(0.85)]
+      return [makeFlatGeom(new THREE.IcosahedronGeometry(0.85))]
     default:
-      return [buildAmorphous()]
+      return [makeFlatGeom(buildAmorphous())]
   }
+}
+
+// ── AUXILIARES DE CONVERSIÓN PLANA (FLAT SHADING) ─────────────────────────────
+
+/**
+ * Convierte una geometría indexada en no indexada para duplicar vértices
+ * y fuerza el cálculo de normales por cara para obtener un sombreado plano (flat) impecable.
+ */
+function makeFlatGeom(geom: THREE.BufferGeometry): THREE.BufferGeometry {
+  const flat = geom.toNonIndexed()
+  flat.computeVertexNormals()
+  return flat
+}
+
+// ── GENERADORES DE POLIEDROS ESTANCOS (WATERTIGHT) ──────────────────────────
+
+/**
+ * Genera un prisma regular de N lados con tapas piramidales en ambos extremos.
+ * Retorna una única geometría cerrada sin caras de división interna.
+ */
+function buildPrismWithPyramidalCaps(
+  N: number,
+  radius: number,
+  hPrism: number,
+  hCap: number
+): THREE.BufferGeometry {
+  const geom = new THREE.BufferGeometry()
+  const halfHP = hPrism / 2
+  const totalVertices = 2 * N + 2
+  const vertices = new Float32Array(totalVertices * 3)
+
+  // Vértice 0: Ápice superior
+  vertices[0] = 0
+  vertices[1] = halfHP + hCap
+  vertices[2] = 0
+
+  // Vértices 1 a N: Base superior del prisma
+  for (let i = 0; i < N; i++) {
+    const angle = (i * 2 * Math.PI) / N
+    const idx = (1 + i) * 3
+    vertices[idx] = radius * Math.cos(angle)
+    vertices[idx + 1] = halfHP
+    vertices[idx + 2] = radius * Math.sin(angle)
+  }
+
+  // Vértices N+1 a 2N: Base inferior del prisma
+  for (let i = 0; i < N; i++) {
+    const angle = (i * 2 * Math.PI) / N
+    const idx = (1 + N + i) * 3
+    vertices[idx] = radius * Math.cos(angle)
+    vertices[idx + 1] = -halfHP
+    vertices[idx + 2] = radius * Math.sin(angle)
+  }
+
+  // Vértice 2N+1: Ápice inferior
+  const botApexIdx = 2 * N + 1
+  vertices[botApexIdx * 3] = 0
+  vertices[botApexIdx * 3 + 1] = -halfHP - hCap
+  vertices[botApexIdx * 3 + 2] = 0
+
+  const indices: number[] = []
+
+  // Helpers para índices
+  const topBaseIdx = (i: number) => 1 + (i % N)
+  const botBaseIdx = (i: number) => 1 + N + (i % N)
+
+  // Caras piramidales superiores: conecta ápice superior (0) con los vértices superiores
+  for (let i = 0; i < N; i++) {
+    indices.push(topBaseIdx(i), 0, topBaseIdx(i + 1))
+  }
+
+  // Caras del prisma (laterales): 2 triángulos por cara lateral
+  for (let i = 0; i < N; i++) {
+    const tL = topBaseIdx(i)
+    const tR = topBaseIdx(i + 1)
+    const bL = botBaseIdx(i)
+    const bR = botBaseIdx(i + 1)
+
+    // Triángulo lateral 1
+    indices.push(tL, bR, bL)
+    // Triángulo lateral 2
+    indices.push(tL, tR, bR)
+  }
+
+  // Caras piramidales inferiores: conecta ápice inferior (2N+1) con los vértices inferiores
+  for (let i = 0; i < N; i++) {
+    indices.push(botApexIdx, botBaseIdx(i), botBaseIdx(i + 1))
+  }
+
+  geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
+  geom.setIndex(indices)
+  geom.computeVertexNormals()
+  return geom
+}
+
+/**
+ * Genera una bipirámide regular de N lados (ej: bipirámide hexagonal o tetragonal/octaedro).
+ * Retorna una única geometría cerrada sin planos de división ecuatorial.
+ */
+function buildBipyramid(N: number, radius: number, height: number): THREE.BufferGeometry {
+  const geom = new THREE.BufferGeometry()
+  const halfH = height / 2
+  const totalVertices = N + 2
+  const vertices = new Float32Array(totalVertices * 3)
+
+  // Vértice 0: Ápice superior
+  vertices[0] = 0
+  vertices[1] = halfH
+  vertices[2] = 0
+
+  // Vértice 1: Ápice inferior
+  vertices[3] = 0
+  vertices[4] = -halfH
+  vertices[5] = 0
+
+  // Vértices 2 a N+1: Cinturón ecuatorial
+  for (let i = 0; i < N; i++) {
+    const angle = (i * 2 * Math.PI) / N
+    const idx = (2 + i) * 3
+    vertices[idx] = radius * Math.cos(angle)
+    vertices[idx + 1] = 0
+    vertices[idx + 2] = radius * Math.sin(angle)
+  }
+
+  const indices: number[] = []
+  const eqIdx = (i: number) => 2 + (i % N)
+
+  // Pirámide superior
+  for (let i = 0; i < N; i++) {
+    indices.push(eqIdx(i), 0, eqIdx(i + 1))
+  }
+
+  // Pirámide inferior
+  for (let i = 0; i < N; i++) {
+    indices.push(1, eqIdx(i), eqIdx(i + 1))
+  }
+
+  geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
+  geom.setIndex(indices)
+  geom.computeVertexNormals()
+  return geom
+}
+
+/**
+ * Genera un Dodecaedro Rómbico geológicamente correcto (14 vértices, 12 caras rómbicas).
+ * Es el hábito real que adoptan minerales como el Granate o la Magnetita en el sistema cúbico.
+ */
+function buildRhombicDodecahedron(): THREE.BufferGeometry {
+  const geom = new THREE.BufferGeometry()
+  
+  // Para que las caras sean perfectamente planas (coplanares),
+  // la coordenada de los ápices octaédricos (o) debe ser exactamente el doble de los vértices cúbicos (w).
+  const w = 0.6
+  const o = w * 2.0 // 1.2
+
+  const vertices = new Float32Array([
+    // Vértices octaédricos (6)
+    0, 0, o,     // 0: +Z
+    0, 0, -o,    // 1: -Z
+    o, 0, 0,     // 2: +X
+    -o, 0, 0,    // 3: -X
+    0, o, 0,     // 4: +Y
+    0, -o, 0,    // 5: -Y
+    
+    // Vértices cúbicos (8)
+    w, w, w,     // 6: ++Z, ++X, ++Y
+    w, w, -w,    // 7: -Z, ++X, ++Y
+    w, -w, w,    // 8: ++Z, ++X, -Y
+    w, -w, -w,   // 9: -Z, ++X, -Y
+    -w, w, w,    // 10: ++Z, -X, ++Y
+    -w, w, -w,   // 11: -Z, -X, ++Y
+    -w, -w, w,   // 12: ++Z, -X, -Y
+    -w, -w, -w,  // 13: -Z, -X, -Y
+  ])
+
+  // Índices ordenados en sentido antihorario (CCW) para que las normales apunten hacia fuera
+  const indices = [
+    // Rombos que conectan con el ápice superior +Z (0)
+    0, 8, 2,  0, 2, 6,     // +Z, +X
+    0, 10, 3,  0, 3, 12,   // +Z, -X
+    0, 6, 4,  0, 4, 10,    // +Z, +Y
+    0, 12, 5,  0, 5, 8,    // +Z, -Y
+
+    // Rombos que conectan con el ápice inferior -Z (1)
+    1, 7, 2,  1, 2, 9,     // -Z, +X
+    1, 13, 3,  1, 3, 11,   // -Z, -X
+    1, 11, 4,  1, 4, 7,    // -Z, +Y
+    1, 9, 5,  1, 5, 13,    // -Z, -Y
+
+    // Rombos en la franja lateral ecuatorial
+    2, 7, 4,  2, 4, 6,     // +X, +Y
+    2, 8, 5,  2, 5, 9,     // +X, -Y
+    3, 10, 4,  3, 4, 11,   // -X, +Y
+    3, 13, 5,  3, 5, 12,   // -X, -Y
+  ]
+
+  geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
+  geom.setIndex(indices)
+  geom.computeVertexNormals()
+  return geom
 }
 
 // ── CUBIC ─────────────────────────────────────────────────────────────────────
 function buildCubic(habit: string): THREE.BufferGeometry[] {
   if (habit.includes('octahedr') || habit.includes('octa')) {
-    return [new THREE.OctahedronGeometry(0.9)]
+    return [makeFlatGeom(new THREE.OctahedronGeometry(0.9))]
   }
   if (habit.includes('dodecahedr')) {
-    return [new THREE.DodecahedronGeometry(0.85)]
+    return [makeFlatGeom(buildRhombicDodecahedron())]
   }
   if (habit.includes('tetrahedr')) {
-    return [new THREE.TetrahedronGeometry(0.95)]
+    return [makeFlatGeom(new THREE.TetrahedronGeometry(0.95))]
   }
-  // Default cubic: cube with slight bevel feel
-  return [new THREE.BoxGeometry(1.4, 1.4, 1.4, 1, 1, 1)]
+  // Default cubic: cubo limpio de aristas vivas
+  return [makeFlatGeom(new THREE.BoxGeometry(1.3, 1.3, 1.3))]
 }
 
 // ── HEXAGONAL ─────────────────────────────────────────────────────────────────
@@ -70,24 +272,17 @@ function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
   const height = 1.2 + c * 0.8
 
   if (habit.includes('tabular') || habit.includes('plat')) {
-    // Tabular: short hexagonal prism
-    return [new THREE.CylinderGeometry(0.9, 0.9, 0.5, 6)]
+    // Tabular: prisma hexagonal corto
+    return [makeFlatGeom(new THREE.CylinderGeometry(0.9, 0.9, 0.3, 6))]
   }
   if (habit.includes('pyramid') || habit.includes('bipyramid')) {
-    // Bipyramidal: base-to-base alignment
-    const top = new THREE.ConeGeometry(0.7, height / 2, 6)
-    const bot = createFlipped(new THREE.ConeGeometry(0.7, height / 2, 6))
-    translateGeometry(top, 0, height / 4, 0)
-    translateGeometry(bot, 0, -height / 4, 0)
-    return [top, bot]
+    // Bipiramidal hexagonal estanco
+    return [makeFlatGeom(buildBipyramid(6, 0.8, height))]
   }
-  // Prismatic: tall hexagonal prism with pyramidal terminations
-  const prism = new THREE.CylinderGeometry(0.75, 0.75, height, 6)
-  const capTop = new THREE.ConeGeometry(0.75, 0.35, 6)
-  const capBot = createFlipped(new THREE.ConeGeometry(0.75, 0.35, 6))
-  translateGeometry(capTop, 0, height / 2, 0)
-  translateGeometry(capBot, 0, -height / 2, 0)
-  return [prism, capTop, capBot]
+  // Prismático: prisma hexagonal con terminaciones piramidales integradas
+  const prismH = height * 0.75
+  const capH = height * 0.2
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(6, 0.7, prismH, capH))]
 }
 
 // ── TETRAGONAL ────────────────────────────────────────────────────────────────
@@ -95,23 +290,17 @@ function buildTetragonal(habit: string, c: number): THREE.BufferGeometry[] {
   const height = 1.0 + c * 0.6
 
   if (habit.includes('tabular')) {
-    return [new THREE.BoxGeometry(1.3, 0.5, 1.3)]
+    // Tabular tetragonal
+    return [makeFlatGeom(new THREE.BoxGeometry(1.3, 0.3, 1.3))]
   }
   if (habit.includes('pyramid') || habit.includes('bipyramid')) {
-    // Bipyramidal: base-to-base alignment
-    const top = new THREE.ConeGeometry(0.7, height / 2, 4)
-    const bot = createFlipped(new THREE.ConeGeometry(0.7, height / 2, 4))
-    translateGeometry(top, 0, height / 4, 0)
-    translateGeometry(bot, 0, -height / 4, 0)
-    return [top, bot]
+    // Bipiramidal tetragonal estanco (octaedro estirado)
+    return [makeFlatGeom(buildBipyramid(4, 0.8, height))]
   }
-  // Prismatic
-  const prism = new THREE.CylinderGeometry(0.7, 0.7, height, 4)
-  const capTop = new THREE.ConeGeometry(0.7, 0.4, 4)
-  const capBot = createFlipped(new THREE.ConeGeometry(0.7, 0.4, 4))
-  translateGeometry(capTop, 0, height / 2, 0)
-  translateGeometry(capBot, 0, -height / 2, 0)
-  return [prism, capTop, capBot]
+  // Prismático tetragonal con tapas piramidales integradas
+  const prismH = height * 0.75
+  const capH = height * 0.2
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(4, 0.7, prismH, capH))]
 }
 
 // ── ORTHORHOMBIC ──────────────────────────────────────────────────────────────
@@ -121,19 +310,15 @@ function buildOrthorhombic(habit: string, a: number, b: number, c: number): THRE
   const h = 1.0 + c * 0.6
 
   if (habit.includes('tabular') || habit.includes('plat')) {
-    return [new THREE.BoxGeometry(w * 1.4, 0.5, d * 1.4)]
+    return [makeFlatGeom(new THREE.BoxGeometry(w * 1.4, 0.3, d * 1.4))]
   }
   if (habit.includes('acicular') || habit.includes('needle')) {
-    // Acicular: thin long 4-sided needle with pyramidal terminations
-    const prism = new THREE.CylinderGeometry(0.08, 0.08, 2.2, 4)
-    const capTop = new THREE.ConeGeometry(0.08, 0.15, 4)
-    const capBot = createFlipped(new THREE.ConeGeometry(0.08, 0.15, 4))
-    translateGeometry(capTop, 0, 1.1, 0)
-    translateGeometry(capBot, 0, -1.1, 0)
-    return [prism, capTop, capBot]
+    // Acicular: aguja tetragonal muy delgada y estirada con puntas piramidales
+    const needleGeom = buildPrismWithPyramidalCaps(4, 0.08, 1.8, 0.15)
+    return [makeFlatGeom(needleGeom)]
   }
-  // Prismatic: rectangular prism
-  return [new THREE.BoxGeometry(w, h, d)]
+  // Prismático ortorrómbico: caja rectangular de aristas vivas
+  return [makeFlatGeom(new THREE.BoxGeometry(w, h, d))]
 }
 
 // ── MONOCLINIC ────────────────────────────────────────────────────────────────
@@ -142,12 +327,12 @@ function buildMonoclinic(habit: string, b: number, c: number): THREE.BufferGeome
   const w = 0.7 + b * 0.3
 
   if (habit.includes('tabular') || habit.includes('plat')) {
-    return [createSheared(new THREE.BoxGeometry(w * 1.4, 0.45, 1.1), 0.2)]
+    return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w * 1.4, 0.3, 1.1), 0.2))]
   }
   if (habit.includes('prismatic')) {
-    return [createSheared(new THREE.BoxGeometry(w, h, 0.9), 0.15)]
+    return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w, h, 0.9), 0.15))]
   }
-  return [createSheared(new THREE.BoxGeometry(w, h, 1.0), 0.18)]
+  return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w, h, 1.0), 0.18))]
 }
 
 // ── TRICLINIC ─────────────────────────────────────────────────────────────────
@@ -161,7 +346,7 @@ function buildTriclinic(a: number, b: number, c: number): THREE.BufferGeometry[]
   }
   positions.needsUpdate = true
   sheared.computeVertexNormals()
-  return [sheared]
+  return [makeFlatGeom(sheared)]
 }
 
 // ── TRIGONAL ──────────────────────────────────────────────────────────────────
@@ -169,29 +354,26 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
   const height = 0.9 + c * 0.7
 
   if (habit.includes('rhombohedr')) {
-    // Rhombohedron: sheared cube
-    return [buildRhombohedron()]
+    // Romboedro estanco (cubo cizallado)
+    return [makeFlatGeom(buildRhombohedron())]
   }
   if (habit.includes('scalenohedr')) {
-    // Scalenohedron: ditrigonal scalenohedron with alternating equatorial heights
-    return [buildScalenohedron(height)]
+    // Escalenoedro ditrigonal estanco y plano
+    return [makeFlatGeom(buildScalenohedron(height))]
   }
   if (habit.includes('tabular') || habit.includes('plat')) {
-    return [new THREE.CylinderGeometry(0.9, 0.9, 0.45, 3)] // short trigonal prism
+    return [makeFlatGeom(new THREE.CylinderGeometry(0.9, 0.9, 0.3, 3))] // Prisma trigonal corto
   }
   if (habit.includes('pyramid') || habit.includes('bipyramid')) {
-    // Bipyramidal: base-to-base alignment
-    const top = new THREE.ConeGeometry(0.75, height / 2, 3)
-    const bot = createFlipped(new THREE.ConeGeometry(0.75, height / 2, 3))
-    translateGeometry(top, 0, height / 4, 0)
-    translateGeometry(bot, 0, -height / 4, 0)
-    return [top, bot]
+    // Bipirámide trigonal estanca
+    return [makeFlatGeom(buildBipyramid(3, 0.8, height))]
   }
-  // Trigonal prism
-  return [new THREE.CylinderGeometry(0.8, 0.8, height, 3)]
+  // Prisma trigonal
+  return [makeFlatGeom(new THREE.CylinderGeometry(0.8, 0.8, height, 3))]
 }
 
 // ── AUXILIARY SHAPES ──────────────────────────────────────────────────────────
+
 function buildRhombohedron(): THREE.BufferGeometry {
   const geom = new THREE.BoxGeometry(1.1, 1.1, 1.1)
   const positions = geom.attributes.position
@@ -214,14 +396,14 @@ function buildScalenohedron(height: number): THREE.BufferGeometry {
   const shift = height * 0.15
   const halfH = height / 2
 
-  // 8 vertices
+  // 8 vértices
   const vertices = new Float32Array(8 * 3)
-  // 0: Top tip
+  // 0: Ápice superior
   vertices[0] = 0; vertices[1] = halfH; vertices[2] = 0
-  // 1: Bottom tip
+  // 1: Ápice inferior
   vertices[3] = 0; vertices[4] = -halfH; vertices[5] = 0
 
-  // 2..7: Equatorial hexagon with alternating heights
+  // 2..7: Hexágono ecuatorial con alturas alternadas para dar forma ditrigonal
   for (let i = 0; i < 6; i++) {
     const angle = (i * Math.PI) / 3
     const idx = (2 + i) * 3
@@ -233,9 +415,9 @@ function buildScalenohedron(height: number): THREE.BufferGeometry {
   const indices: number[] = []
   for (let i = 0; i < 6; i++) {
     const next = (i + 1) % 6
-    // Top triangles
+    // Triángulos superiores
     indices.push(0, 2 + i, 2 + next)
-    // Bottom triangles
+    // Triángulos inferiores
     indices.push(1, 2 + next, 2 + i)
   }
 
@@ -252,21 +434,6 @@ function buildAmorphous(): THREE.BufferGeometry {
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 
-function createFlipped(geom: THREE.BufferGeometry): THREE.BufferGeometry {
-  const flipped = geom.clone()
-  const positions = flipped.attributes.position
-  for (let i = 0; i < positions.count; i++) {
-    positions.setY(i, -positions.getY(i))
-  }
-  positions.needsUpdate = true
-  flipped.computeVertexNormals()
-  return flipped
-}
-
-function translateGeometry(geom: THREE.BufferGeometry, x: number, y: number, z: number): void {
-  geom.translate(x, y, z)
-}
-
 function createSheared(geom: THREE.BufferGeometry, shearFactor: number): THREE.BufferGeometry {
   const clone = geom.clone()
   const positions = clone.attributes.position
@@ -282,6 +449,7 @@ function createSheared(geom: THREE.BufferGeometry, shearFactor: number): THREE.B
 /**
  * Crea el material estándar para el cristal con apariencia mineral.
  * Color y transparencia configurables por mineral.
+ * Habilita sombreado plano (flatShading) para aristas vivas cristalinas.
  */
 export function createCrystalMaterial(options: {
   color?: string | number
@@ -300,6 +468,7 @@ export function createCrystalMaterial(options: {
     emissive: options.emissive ?? 0x220033,
     emissiveIntensity: 0.15,
     side: THREE.DoubleSide,
+    flatShading: true, // Requerido para aristas vivas y aspecto mineralógico
   })
 }
 

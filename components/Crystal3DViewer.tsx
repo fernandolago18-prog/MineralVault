@@ -23,8 +23,8 @@ interface Crystal3DViewerProps {
 
 /**
  * Componente visor 3D de cristales usando Three.js con OrbitControls.
- * Renderiza la forma paramétrica del cristal con iluminación PBR y
- * fondo transparente para integrarse con el diseño de la app.
+ * Renderiza la forma paramétrica del cristal con sombreado plano (flat) e iluminación PBR.
+ * Fondo transparente para integrarse con el diseño de la app.
  */
 export default function Crystal3DViewer({
   crystalOptions,
@@ -107,12 +107,18 @@ export default function Crystal3DViewer({
     const meshes: THREE.Mesh[] = []
     const group = new THREE.Group()
 
+    // Control de basura específico para evitar fugas de memoria en WebGL
+    const geometriesToDispose: THREE.BufferGeometry[] = []
+    const materialsToDispose: THREE.Material[] = []
+
     geometries.forEach(geom => {
       const material = createCrystalMaterial({
         color,
         opacity: transparency,
         transparent: transparency < 1.0,
       })
+      materialsToDispose.push(material)
+
       const mesh = new THREE.Mesh(geom, material)
       mesh.castShadow = true
       mesh.receiveShadow = true
@@ -121,11 +127,15 @@ export default function Crystal3DViewer({
 
       // Agregar líneas de contorno (bordes) para realzar las facetas cristalinas
       const edgesGeo = new THREE.EdgesGeometry(geom)
+      geometriesToDispose.push(edgesGeo)
+
       const lineMat = new THREE.LineBasicMaterial({
         color: 0xffffff,
         transparent: true,
-        opacity: 0.3, // Opacidad sutil para dar aspecto facetado premium
+        opacity: 0.22, // Opacidad sutil de arista facetada premium
       })
+      materialsToDispose.push(lineMat)
+
       const lineSegments = new THREE.LineSegments(edgesGeo, lineMat)
       group.add(lineSegments)
     })
@@ -158,7 +168,7 @@ export default function Crystal3DViewer({
     const animate = () => {
       animationId = requestAnimationFrame(animate)
       controls.update()
-      // Subtle pulsing glow
+      // Pulsación sutil del destello
       const t = Date.now() * 0.001
       rimLight.intensity = 1.2 + Math.sin(t * 1.5) * 0.4
       renderer.render(scene, camera)
@@ -183,11 +193,12 @@ export default function Crystal3DViewer({
       resizeObserver.disconnect()
       controls.dispose()
       renderer.dispose()
+      
+      // Liberación completa de recursos de WebGL
       geometries.forEach(g => g.dispose())
-      meshes.forEach(m => {
-        if (Array.isArray(m.material)) m.material.forEach(mat => mat.dispose())
-        else m.material.dispose()
-      })
+      geometriesToDispose.forEach(g => g.dispose())
+      materialsToDispose.forEach(m => m.dispose())
+      
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement)
       }
