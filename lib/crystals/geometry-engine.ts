@@ -243,10 +243,10 @@ function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
     // Bipiramidal hexagonal estanco
     return [makeFlatGeom(buildBipyramid(6, 0.8, height))]
   }
-  // Prismático: prisma hexagonal con terminaciones piramidales integradas
-  const prismH = height * 0.75
-  const capH = height * 0.2
-  return [makeFlatGeom(buildPrismWithPyramidalCaps(6, 0.7, prismH, capH))]
+  // Prismático: prisma hexagonal con terminaciones piramidales altas y estilizadas
+  const prismH = height * 0.62
+  const capH = height * 0.35
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(6, 0.75, prismH, capH))]
 }
 
 // ── TETRAGONAL ────────────────────────────────────────────────────────────────
@@ -271,10 +271,10 @@ function buildTetragonal(habit: string, c: number): THREE.BufferGeometry[] {
     // Bipiramidal tetragonal estanco (octaedro estirado)
     return [makeFlatGeom(buildBipyramid(4, 0.8, height))]
   }
-  // Prismático tetragonal con tapas piramidales integradas
-  const prismH = height * 0.75
-  const capH = height * 0.2
-  return [makeFlatGeom(buildPrismWithPyramidalCaps(4, 0.7, prismH, capH))]
+  // Prismático tetragonal con tapas piramidales altas y estilizadas
+  const prismH = height * 0.62
+  const capH = height * 0.35
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(4, 0.75, prismH, capH))]
 }
 
 // ── ORTHORHOMBIC ──────────────────────────────────────────────────────────────
@@ -355,7 +355,7 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('scalenohedr') ||
     habit.includes('escalenoédr')
   ) {
-    // Escalenoedro ditrigonal estanco y plano
+    // Escalenoedro ditrigonal estanco y altamente definido
     return [makeFlatGeom(buildScalenohedron(height))]
   }
   if (
@@ -399,8 +399,8 @@ function buildRhombohedron(): THREE.BufferGeometry {
 
 function buildScalenohedron(height: number): THREE.BufferGeometry {
   const geom = new THREE.BufferGeometry()
-  const r = 0.65
-  const shift = height * 0.15
+  const r = 0.8  // Mayor radio para resaltar volumen
+  const shift = height * 0.22  // Zigzag vertical más pronunciado
   const halfH = height / 2
 
   // 8 vértices
@@ -410,13 +410,14 @@ function buildScalenohedron(height: number): THREE.BufferGeometry {
   // 1: Ápice inferior
   vertices[3] = 0; vertices[4] = -halfH; vertices[5] = 0
 
-  // 2..7: Hexágono ecuatorial con alturas alternadas para dar forma ditrigonal
+  // 2..7: Hexágono ecuatorial con radios y alturas alternadas para dar forma ditrigonal pronunciada (corona en zigzag)
   for (let i = 0; i < 6; i++) {
     const angle = (i * Math.PI) / 3
     const idx = (2 + i) * 3
-    vertices[idx] = r * Math.cos(angle)
+    const currentR = (i % 2 === 0) ? r : r * 0.55 // Alternancia de radio para acentuar las aristas del escalenoedro
+    vertices[idx] = currentR * Math.cos(angle)
     vertices[idx + 1] = (i % 2 === 0 ? 1 : -1) * shift
-    vertices[idx + 2] = r * Math.sin(angle)
+    vertices[idx + 2] = currentR * Math.sin(angle)
   }
 
   const indices: number[] = []
