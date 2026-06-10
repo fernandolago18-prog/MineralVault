@@ -129,6 +129,17 @@ export default function Crystal3DViewer({
       group.add(new THREE.Mesh(wireGeo, wireMat))
     }
 
+    // ── Normalización de tamaño para evitar desbordamientos ──
+    const box = new THREE.Box3().setFromObject(group)
+    const size = new THREE.Vector3()
+    box.getSize(size)
+    const maxDim = Math.max(size.x, size.y, size.z)
+    if (maxDim > 0) {
+      const targetScale = 1.25  // Ajustar tamaño para que encaje perfectamente en el visor
+      const scale = targetScale / maxDim
+      group.scale.set(scale, scale, scale)
+    }
+
     scene.add(group)
 
     // ── Orbit Controls ─────────────────────────────────────

@@ -80,6 +80,7 @@ export interface Mineral {
   mindat_url: string | null
   thumbnail_url: string | null
   model_3d_config: Crystal3DConfig | null
+  parent_mindat_id: number | null
   created_at: string
   updated_at: string
 }
@@ -178,6 +179,7 @@ export const CRYSTAL_SYSTEM_LABELS: Record<string, string> = {
   Monoclinic: 'Monoclínico',
   Triclinic: 'Triclínico',
   Trigonal: 'Trigonal',
+  Icosahedral: 'Icosaédrico',
   Amorphous: 'Amorfo',
 }
 
@@ -197,3 +199,158 @@ export const MINERAL_CLASS_LABELS: Record<string, string> = {
   'Molybdates': 'Molibdatos',
   'Nitrates': 'Nitratos',
 }
+
+export const LUSTER_LABELS: Record<string, string> = {
+  vitreous: 'Vítreo',
+  adamantine: 'Adamantino',
+  pearly: 'Nacarado (Perlado)',
+  greasy: 'Graso',
+  silky: 'Sedoso',
+  resinous: 'Resinoso',
+  waxy: 'Ceroso',
+  dull: 'Mate',
+  metallic: 'Metálico',
+  submetallic: 'Submetálico',
+  earthy: 'Terroso',
+}
+
+export const TRANSPARENCY_LABELS: Record<string, string> = {
+  transparent: 'Transparente',
+  translucent: 'Translúcido',
+  opaque: 'Opaco',
+}
+
+export const CLEAVAGE_LABELS: Record<string, string> = {
+  perfect: 'Perfecta',
+  good: 'Buena',
+  fair: 'Regular',
+  poor: 'Pobre',
+  indistinct: 'Indistinta',
+  none: 'Ninguna',
+}
+
+export const FRACTURE_LABELS: Record<string, string> = {
+  conchoidal: 'Concoidea',
+  subconchoidal: 'Subconcoidea',
+  uneven: 'Irregular',
+  splintery: 'Astillosa',
+  hackly: 'Ganchosa',
+  fibrous: 'Fibrosa',
+  even: 'Regular',
+}
+
+export const TENACITY_LABELS: Record<string, string> = {
+  brittle: 'Frágil',
+  sectile: 'Séctil',
+  malleable: 'Maleable',
+  ductile: 'Dúctil',
+  flexible: 'Flexible',
+  elastic: 'Elástica',
+}
+
+export const COLOR_LABELS: Record<string, string> = {
+  white: 'Blanco',
+  black: 'Negro',
+  blue: 'Azul',
+  red: 'Rojo',
+  green: 'Verde',
+  brown: 'Marrón',
+  yellow: 'Amarillo',
+  gray: 'Gris',
+  grey: 'Gris',
+  pink: 'Rosa',
+  orange: 'Naranja',
+  violet: 'Violeta',
+  purple: 'Púrpura',
+  colorless: 'Incoloro',
+}
+
+/** Hábitos de cristalización por defecto (fallback) para minerales comunes */
+export const FALLBACK_CRYSTAL_HABITS: Record<number, string[]> = {
+  3337: ['Prismatic', 'Rhombohedral', 'Tabular'],       // Quartz (Cuarzo)
+  1576: ['Cubic', 'Octahedral', 'Dodecahedral'],         // Fluorite (Fluorita)
+  859:  ['Rhombohedral', 'Scalenohedral', 'Prismatic'],  // Calcite (Calcita)
+  1136: ['Pyramidal', 'Prismatic', 'Tabular'],          // Corundum (Corindón)
+}
+
+/**
+ * Fusiona las propiedades de una variedad de mineral con las de su especie mineral principal (padre),
+ * heredando cualquier propiedad que esté vacía o nula en la variedad.
+ * También aplica hábitos cristalinos predeterminados si la especie principal no los tiene especificados.
+ */
+export function mergeMineralWithParent<T extends Partial<Mineral>>(mineral: T, parent: Partial<Mineral> | null | undefined): T {
+  const merged = { ...mineral };
+  
+  if (parent && mineral.parent_mindat_id) {
+    const fieldsToMerge: (keyof Mineral)[] = [
+      'chemical_formula',
+      'hardness_min',
+      'hardness_max',
+      'density_min',
+      'density_max',
+      'streak',
+      'luster',
+      'transparency',
+      'color',
+      'crystal_system',
+      'crystal_habits',
+      'cleavage',
+      'fracture',
+      'tenacity',
+      'magnetism',
+      'radioactivity',
+      'fluorescence',
+      'mineral_class',
+      'strunz_number',
+      'dana_number',
+      'associated_minerals',
+      'localities',
+      'description',
+      'model_3d_config',
+    ];
+
+    for (const field of fieldsToMerge) {
+      const val = mineral[field];
+      const parentVal = parent[field];
+      
+      const isEmpty = 
+        val === null || 
+        val === undefined || 
+        val === '' || 
+        (Array.isArray(val) && val.length === 0) ||
+        (field === 'strunz_number' && val === '0.0.0') ||
+        (field === 'dana_number' && val === '0.0.0.0') ||
+        (field === 'model_3d_config' && val && typeof val === 'object' && (val as any).system === 'Amorphous' && (!(val as any).params || (val as any).params.a === 1 && (val as any).params.b === 1 && (val as any).params.c === 1));
+
+      if (isEmpty && parentVal !== null && parentVal !== undefined && parentVal !== '') {
+        if (field === 'model_3d_config') {
+          const parentConfig = parentVal as any;
+          const parentIsEmpty = parentConfig && parentConfig.system === 'Amorphous' && (!parentConfig.params || parentConfig.params.a === 1 && parentConfig.params.b === 1 && parentConfig.params.c === 1);
+          if (!parentIsEmpty) {
+            (merged as any)[field] = parentVal;
+          }
+        } else {
+          (merged as any)[field] = parentVal;
+        }
+      }
+    }
+
+    // Fallback description if it's null but specify it's a variety of the parent
+    if (!mineral.description && parent.description) {
+      merged.description = `Variedad de ${parent.name_es || parent.name}. ${parent.description}`;
+    }
+  }
+
+  // Enriquecer con hábitos cristalinos de fallback si están vacíos (priorizando ID del padre si es variedad)
+  const lookupId = merged.parent_mindat_id ?? merged.mindat_id ?? (parent ? (parent.parent_mindat_id ?? parent.mindat_id) : null);
+  if (lookupId && (!merged.crystal_habits || merged.crystal_habits.length === 0)) {
+    const fallback = FALLBACK_CRYSTAL_HABITS[lookupId];
+    if (fallback) {
+      merged.crystal_habits = fallback;
+    }
+  }
+
+  return merged;
+}
+
+

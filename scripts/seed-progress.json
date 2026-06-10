@@ -1,0 +1,9 @@
+{
+  "lastPage": 4400,
+  "lastUrl": "https://api.mindat.org/v1/geomaterials/?enttype_ids=1&format=json&page=4401",
+  "totalFetched": 44000,
+  "totalInserted": 25622,
+  "totalErrors": 505,
+  "startedAt": "2026-06-09T15:48:34.522Z",
+  "updatedAt": "2026-06-09T15:48:34.522Z"
+}

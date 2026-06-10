@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { mergeMineralWithParent } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Mi Colección',
@@ -21,7 +22,7 @@ export default async function CollectionPage() {
       mineral:mineral_id (
         id, name, name_es, chemical_formula,
         hardness_min, hardness_max, crystal_system,
-        mineral_class, thumbnail_url, color
+        mineral_class, thumbnail_url, color, parent_mindat_id
       )
     `)
     .eq('user_id', user.id)
@@ -31,6 +32,32 @@ export default async function CollectionPage() {
   if (error) console.error('[Collection Load Error]:', error.message)
 
   const items = (collection as any[]) ?? []
+
+  // Obtener los parent_mindat_id únicos para las variedades en la colección
+  const parentMindatIds = items
+    .map(i => i.mineral?.parent_mindat_id)
+    .filter((id): id is number => id !== null && id !== undefined)
+
+  const parentsMap = new Map()
+  if (parentMindatIds.length > 0) {
+    const { data: parents } = await supabase
+      .from('minerals')
+      .select('*')
+      .in('mindat_id', parentMindatIds)
+
+    if (parents) {
+      (parents as any[]).forEach((p: any) => parentsMap.set(p.mindat_id, p))
+    }
+  }
+
+  // Siempre ejecutar mergeMineralWithParent para aplicar fallbacks e herencia
+  items.forEach(i => {
+    if (i.mineral) {
+      const parent = i.mineral.parent_mindat_id ? parentsMap.get(i.mineral.parent_mindat_id) : null
+      i.mineral = mergeMineralWithParent(i.mineral, parent)
+    }
+  })
+
   const totalValue = items.reduce((sum: number, i: any) => sum + (i.price_eur as number ?? 0), 0)
 
   // Distribución por clase
@@ -149,16 +176,17 @@ export default async function CollectionPage() {
                     )}
                   </div>
                   <div style={{ padding: '0.875rem' }}>
-                    <h5 style={{ marginBottom: '0.125rem' }}>{mineral.name}</h5>
-                    {mineral.name_es && (
+                    <h5 style={{ marginBottom: '0.125rem' }}>{mineral.name_es || mineral.name}</h5>
+                    {mineral.name_es && mineral.name_es !== mineral.name && (
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '0.5rem' }}>
-                        {mineral.name_es}
+                        {mineral.name}
                       </p>
                     )}
                     {mineral.chemical_formula && (
-                      <code style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)' }}>
-                        {mineral.chemical_formula}
-                      </code>
+                      <code 
+                        style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)' }}
+                        dangerouslySetInnerHTML={{ __html: mineral.chemical_formula }}
+                      />
                     )}
                     <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.625rem', flexWrap: 'wrap' }}>
                       {item.quality && (

@@ -9,6 +9,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { Metadata }  from 'next'
 import SpecimenDetailClient from './SpecimenDetailClient'
 import type { CollectionItem, Mineral, SpecimenPhoto } from '@/types/database'
+import { mergeMineralWithParent } from '@/types/database'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -53,7 +54,7 @@ export default async function SpecimenDetailPage({ params }: Props) {
           id, name, name_es, chemical_formula,
           hardness_min, hardness_max, crystal_system,
           mineral_class, thumbnail_url, color, localities,
-          mindat_url, description
+          mindat_url, description, parent_mindat_id
         )
       `)
       .eq('id', id)
@@ -81,6 +82,21 @@ export default async function SpecimenDetailPage({ params }: Props) {
   }
 
   const item    = (collectionRes as any).data as CollectionItem & { mineral: Mineral }
+
+  // Fusionar propiedades de variedad y aplicar hábitos por defecto
+  if (item && item.mineral) {
+    let parentMineral = null
+    if (item.mineral.parent_mindat_id !== null) {
+      const { data: parent } = await supabase
+        .from('minerals')
+        .select('*')
+        .eq('mindat_id', item.mineral.parent_mindat_id)
+        .maybeSingle()
+      parentMineral = parent
+    }
+    item.mineral = mergeMineralWithParent(item.mineral, parentMineral)
+  }
+
   const photos  = ((photosRes as any).data ?? []) as SpecimenPhoto[]
   const driveConnected = (profileRes as any).data?.google_drive_connected ?? false
 

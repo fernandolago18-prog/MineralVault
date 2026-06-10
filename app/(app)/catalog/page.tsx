@@ -18,17 +18,17 @@ export default async function CatalogPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  // Carga inicial de minerales (primera página)
-  const { data: minerals, error } = await supabase
-    .from('minerals')
-    .select(`
-      id, mindat_id, name, name_es, chemical_formula,
-      hardness_min, hardness_max, density_min, density_max,
-      streak, color, crystal_system, crystal_habits,
-      mineral_class, thumbnail_url, model_3d_config
-    `)
-    .order('name', { ascending: true })
-    .range(0, 23)
+  // Carga inicial de minerales (primera página) — solo minerales padre (sin variedades)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: minerals, error } = await (supabase as any).rpc('search_minerals', {
+    search_query:   null,
+    filter_class:   null,
+    filter_system:  null,
+    hardness_min_v: null,
+    hardness_max_v: null,
+    page_size:      24,
+    page_offset:    0,
+  })
 
   if (error) {
     console.error('[Catalog Load Error]:', error.message)

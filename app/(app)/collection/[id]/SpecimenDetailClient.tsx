@@ -196,7 +196,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
       <nav style={{ marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <Link href="/collection" style={{ color: 'var(--text-muted)' }}>Mi Colección</Link>
         <span>/</span>
-        <Link href={`/mineral/${mineral.id}`} style={{ color: 'var(--text-muted)' }}>{mineral.name}</Link>
+        <Link href={`/mineral/${mineral.id}`} style={{ color: 'var(--text-muted)' }}>{mineral.name_es || mineral.name}</Link>
         <span>/</span>
         <span style={{ color: 'var(--text-primary)' }}>Mi ejemplar</span>
       </nav>
@@ -213,12 +213,13 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
             )}
             <span className="badge badge-emerald">✓ En colección</span>
           </div>
-          <h1 style={{ marginBottom: '0.25rem' }}>{mineral.name}</h1>
-          {mineral.name_es && <p style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{mineral.name_es}</p>}
+          <h1 style={{ marginBottom: '0.25rem' }}>{mineral.name_es || mineral.name}</h1>
+          {mineral.name_es && mineral.name_es !== mineral.name && <p style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{mineral.name}</p>}
           {mineral.chemical_formula && (
-            <code style={{ color: 'var(--accent-cyan)', background: 'rgba(6,182,212,0.08)', padding: '0.2rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(6,182,212,0.2)', fontSize: '0.9rem' }}>
-              {mineral.chemical_formula}
-            </code>
+            <code 
+              style={{ color: 'var(--accent-cyan)', background: 'rgba(6,182,212,0.08)', padding: '0.2rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(6,182,212,0.2)', fontSize: '0.9rem' }}
+              dangerouslySetInnerHTML={{ __html: mineral.chemical_formula }}
+            />
           )}
         </div>
         <Link href={`/mineral/${mineral.id}`}>

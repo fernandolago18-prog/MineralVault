@@ -4,8 +4,8 @@ import { useState, useCallback, useRef, useTransition, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import type { MineralSearchResult } from '@/types/database'
-import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS } from '@/types/database'
+import type { MineralSearchResult, Mineral } from '@/types/database'
+import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS, mergeMineralWithParent } from '@/types/database'
 import MineralCard from '@/components/catalog/MineralCard'
 
 interface CatalogClientProps {
@@ -38,8 +38,49 @@ export default function CatalogClient({
   const [offset, setOffset] = useState(24)
   const [isPending, startTransition] = useTransition()
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [varietiesMap, setVarietiesMap] = useState<Record<number, Mineral[]>>({})
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const searchParams = useSearchParams()
+
+  const supabase = createClient()
+
+  const fetchVarieties = useCallback(async (parentIds: number[]) => {
+    if (parentIds.length === 0) return
+    try {
+      const { data, error } = await supabase
+        .from('minerals')
+        .select('*')
+        .in('parent_mindat_id', parentIds)
+      
+      if (error) throw error
+
+      if (data) {
+        setVarietiesMap(prev => {
+          const next = { ...prev }
+          data.forEach((v: any) => {
+            const pid = v.parent_mindat_id
+            if (pid != null) {
+              if (!next[pid]) next[pid] = []
+              if (!next[pid].some((m: any) => m.id === v.id)) {
+                next[pid].push(v)
+              }
+            }
+          })
+          return next
+        })
+      }
+    } catch (err) {
+      console.error('[Fetch Varieties Error]:', err)
+    }
+  }, [supabase])
+
+  // Cargar variedades de los minerales iniciales al montar el componente
+  useEffect(() => {
+    if (initialMinerals.length > 0) {
+      const parentIds = initialMinerals.map(m => m.mindat_id).filter((id): id is number => id !== null)
+      fetchVarieties(parentIds)
+    }
+  }, [initialMinerals, fetchVarieties])
 
   // Mostrar feedback del flujo OAuth de Google Drive
   useEffect(() => {
@@ -52,14 +93,12 @@ export default function CatalogClient({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const supabase = createClient()
-
   const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ msg, type })
     setTimeout(() => setToast(null), 3000)
   }
 
-  /** Ejecuta búsqueda usando RPC (Server-side full-text search) */
+  /** Ejecuta búsqueda usando RPC (ILIKE substring — soporta nombres parciales en cualquier idioma) */
   const executeSearch = useCallback(async (params: {
     query?: string; cls?: string; system?: string; hMin?: number | ''; hMax?: number | ''; offsetVal?: number
   }) => {
@@ -69,7 +108,7 @@ export default function CatalogClient({
     try {
       // @ts-ignore
       const { data, error } = await supabase.rpc('search_minerals', {
-        search_query:   params.query?.trim() || null,
+        search_query:   (params.query && params.query.trim().length > 0) ? params.query.trim() : null,
         filter_class:   params.cls || null,
         filter_system:  params.system || null,
         hardness_min_v: params.hMin === '' ? null : params.hMin,
@@ -80,15 +119,86 @@ export default function CatalogClient({
 
       if (error) throw error
 
-      const results = (data as any[]) ?? []
-      const totalCountFromRpc = results[0]?.total_count ? parseInt(results[0].total_count) : 0
+      let results = (data as any[]) ?? []
+      let totalCountFromRpc = results[0]?.total_count ? parseInt(results[0].total_count) : 0
+
+      // Búsqueda directa de variedades que coincidan (para soportar variedades como Amethyst independientemente)
+      const q = params.query ? params.query.trim() : ''
+      if (q.length > 0) {
+        const queryBuilder = supabase
+          .from('minerals')
+          .select('*')
+          .not('parent_mindat_id', 'is', null)
+
+        if (params.cls) queryBuilder.ilike('mineral_class', params.cls)
+        if (params.system) queryBuilder.ilike('crystal_system', params.system)
+        if (params.hMin !== '' && params.hMin !== undefined) queryBuilder.gte('hardness_max', params.hMin)
+        if (params.hMax !== '' && params.hMax !== undefined) queryBuilder.lte('hardness_min', params.hMax)
+
+        // Aplicamos la misma paginación por rangos en la consulta directa
+        const { data: vData } = await queryBuilder.limit(PAGE_SIZE).range(params.offsetVal ?? 0, (params.offsetVal ?? 0) + PAGE_SIZE - 1)
+        const vDataList = (vData as unknown as any[]) ?? []
+        if (vDataList.length > 0) {
+          // Filtrar duplicados
+          vDataList.forEach((v: any) => {
+            if (!results.some(r => r.id === v.id)) {
+              results.push({
+                ...v,
+                total_count: totalCountFromRpc || vDataList.length // fallback
+              })
+            }
+          })
+        }
+      }
+
+      // Fusionar propiedades de padres si hay variedades en los resultados
+      const parentMindatIds = results
+        .map(r => r.parent_mindat_id)
+        .filter((id): id is number => id !== null && id !== undefined)
+
+      if (parentMindatIds.length > 0) {
+        const { data: parentsData } = await supabase
+          .from('minerals')
+          .select('*')
+          .in('mindat_id', parentMindatIds)
+
+        if (parentsData) {
+          const parentsMap = new Map((parentsData as any[]).map(p => [p.mindat_id, p]))
+          results = results.map(item => {
+            if (item.parent_mindat_id !== null && item.parent_mindat_id !== undefined) {
+              const parent = parentsMap.get(item.parent_mindat_id)
+              if (parent) {
+                return mergeMineralWithParent(item, parent)
+              }
+            }
+            // También enriquecer padres con fallback habits si es necesario
+            return mergeMineralWithParent(item, null)
+          })
+        }
+      } else {
+        // Enriquecer padres con fallback habits (incluso si no hay variedades)
+        results = results.map(item => mergeMineralWithParent(item, null))
+      }
+
+      // Cargar variedades de los resultados de búsqueda para los dropdowns
+      const parentIds = results.map(m => m.mindat_id).filter((id): id is number => id !== null)
+      if (parentIds.length > 0) {
+        await fetchVarieties(parentIds)
+      }
 
       if (isLoadMore) {
-        setMinerals(prev => [...prev, ...results])
+        setMinerals(prev => {
+          // Filtrar duplicados al paginar
+          const next = [...prev]
+          results.forEach(r => {
+            if (!next.some(n => n.id === r.id)) next.push(r)
+          })
+          return next
+        })
         setOffset(params.offsetVal! + PAGE_SIZE)
       } else {
         setMinerals(results)
-        setTotalCount(totalCountFromRpc)
+        setTotalCount(totalCountFromRpc || results.length)
         setOffset(PAGE_SIZE)
       }
     } catch (err) {
@@ -98,14 +208,14 @@ export default function CatalogClient({
       setLoading(false)
       setLoadingMore(false)
     }
-  }, [supabase])
+  }, [supabase, fetchVarieties])
 
   const handleSearchChange = (value: string) => {
     setSearch(value)
     clearTimeout(searchTimeout.current)
     searchTimeout.current = setTimeout(() => {
       executeSearch({ query: value, cls: filterClass, system: filterSystem, hMin: hardnessMin, hMax: hardnessMax })
-    }, 400)
+    }, 250)  // 250ms debounce — más rápido para búsqueda ILIKE
   }
 
   const handleFilterChange = (type: string, value: any) => {
@@ -268,7 +378,7 @@ export default function CatalogClient({
                 step="0.5"
                 className="input"
                 style={{ padding: '0.5rem' }}
-                placeholder="Min"
+                placeholder="Mín"
                 value={hardnessMin}
                 onChange={e => handleFilterChange('hMin', e.target.value === '' ? '' : parseFloat(e.target.value))}
               />
@@ -280,7 +390,7 @@ export default function CatalogClient({
                 step="0.5"
                 className="input"
                 style={{ padding: '0.5rem' }}
-                placeholder="Max"
+                placeholder="Máx"
                 value={hardnessMax}
                 onChange={e => handleFilterChange('hMax', e.target.value === '' ? '' : parseFloat(e.target.value))}
               />
@@ -331,8 +441,10 @@ export default function CatalogClient({
               <MineralCard
                 key={mineral.id}
                 mineral={mineral}
-                status={(collectionMap[mineral.id] as 'owned' | 'wanted' | undefined)}
+                varieties={mineral.mindat_id ? (varietiesMap[mineral.mindat_id] || []) : []}
+                collectionMap={collectionMap}
                 onToggleCollection={toggleCollection}
+                searchQuery={search}
               />
             ))}
           </div>

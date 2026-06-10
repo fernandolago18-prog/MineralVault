@@ -43,6 +43,8 @@ export function buildCrystalGeometry(options: CrystalGeometryOptions): THREE.Buf
       return buildTriclinic(a, b, c)
     case 'Trigonal':
       return buildTrigonal(habitLower, c)
+    case 'Icosahedral':
+      return [new THREE.IcosahedronGeometry(0.85)]
     default:
       return [buildAmorphous()]
   }
@@ -163,6 +165,12 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
     const geom = new THREE.ConeGeometry(0.7, height, 6)
     return [geom, createFlipped(new THREE.ConeGeometry(0.6, height * 0.75, 6))]
   }
+  if (habit.includes('tabular') || habit.includes('plat')) {
+    return [new THREE.CylinderGeometry(0.9, 0.9, 0.45, 3)] // short trigonal prism
+  }
+  if (habit.includes('pyramid') || habit.includes('bipyramid')) {
+    return [new THREE.ConeGeometry(0.75, height * 0.8, 3), createFlipped(new THREE.ConeGeometry(0.75, height * 0.8, 3))]
+  }
   // Trigonal prism
   return [new THREE.CylinderGeometry(0.8, 0.8, height, 3)]
 }
@@ -234,5 +242,6 @@ export const SYSTEM_COLORS: Record<string, number> = {
   Monoclinic:    0xe91e63,
   Triclinic:     0xf39c12,
   Trigonal:      0x00bcd4,
+  Icosahedral:   0x9c27b0,
   Amorphous:     0x78909c,
 }
