@@ -254,13 +254,25 @@ function buildRhombicDodecahedron(): THREE.BufferGeometry {
 
 // ── CUBIC ─────────────────────────────────────────────────────────────────────
 function buildCubic(habit: string): THREE.BufferGeometry[] {
-  if (habit.includes('octahedr') || habit.includes('octa')) {
+  if (
+    habit.includes('octahedr') ||
+    habit.includes('octaédr') ||
+    habit.includes('octa')
+  ) {
     return [makeFlatGeom(new THREE.OctahedronGeometry(0.9))]
   }
-  if (habit.includes('dodecahedr')) {
+  if (
+    habit.includes('dodecahedr') ||
+    habit.includes('dodecaédr') ||
+    habit.includes('dodeca')
+  ) {
     return [makeFlatGeom(buildRhombicDodecahedron())]
   }
-  if (habit.includes('tetrahedr')) {
+  if (
+    habit.includes('tetrahedr') ||
+    habit.includes('tetraédr') ||
+    habit.includes('tetra')
+  ) {
     return [makeFlatGeom(new THREE.TetrahedronGeometry(0.95))]
   }
   // Default cubic: cubo limpio de aristas vivas
@@ -271,11 +283,21 @@ function buildCubic(habit: string): THREE.BufferGeometry[] {
 function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
   const height = 1.2 + c * 0.8
 
-  if (habit.includes('tabular') || habit.includes('plat')) {
+  if (
+    habit.includes('tabular') ||
+    habit.includes('plat') ||
+    habit.includes('laminar') ||
+    habit.includes('hoja')
+  ) {
     // Tabular: prisma hexagonal corto
     return [makeFlatGeom(new THREE.CylinderGeometry(0.9, 0.9, 0.3, 6))]
   }
-  if (habit.includes('pyramid') || habit.includes('bipyramid')) {
+  if (
+    habit.includes('pyramid') ||
+    habit.includes('bipyramid') ||
+    habit.includes('piramid') ||
+    habit.includes('bipiramid')
+  ) {
     // Bipiramidal hexagonal estanco
     return [makeFlatGeom(buildBipyramid(6, 0.8, height))]
   }
@@ -289,11 +311,21 @@ function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
 function buildTetragonal(habit: string, c: number): THREE.BufferGeometry[] {
   const height = 1.0 + c * 0.6
 
-  if (habit.includes('tabular')) {
+  if (
+    habit.includes('tabular') ||
+    habit.includes('plat') ||
+    habit.includes('laminar') ||
+    habit.includes('hoja')
+  ) {
     // Tabular tetragonal
     return [makeFlatGeom(new THREE.BoxGeometry(1.3, 0.3, 1.3))]
   }
-  if (habit.includes('pyramid') || habit.includes('bipyramid')) {
+  if (
+    habit.includes('pyramid') ||
+    habit.includes('bipyramid') ||
+    habit.includes('piramid') ||
+    habit.includes('bipiramid')
+  ) {
     // Bipiramidal tetragonal estanco (octaedro estirado)
     return [makeFlatGeom(buildBipyramid(4, 0.8, height))]
   }
@@ -309,10 +341,19 @@ function buildOrthorhombic(habit: string, a: number, b: number, c: number): THRE
   const d = 0.6 + b * 0.4
   const h = 1.0 + c * 0.6
 
-  if (habit.includes('tabular') || habit.includes('plat')) {
+  if (
+    habit.includes('tabular') ||
+    habit.includes('plat') ||
+    habit.includes('laminar') ||
+    habit.includes('hoja')
+  ) {
     return [makeFlatGeom(new THREE.BoxGeometry(w * 1.4, 0.3, d * 1.4))]
   }
-  if (habit.includes('acicular') || habit.includes('needle')) {
+  if (
+    habit.includes('acicular') ||
+    habit.includes('needle') ||
+    habit.includes('aguja')
+  ) {
     // Acicular: aguja tetragonal muy delgada y estirada con puntas piramidales
     const needleGeom = buildPrismWithPyramidalCaps(4, 0.08, 1.8, 0.15)
     return [makeFlatGeom(needleGeom)]
@@ -326,10 +367,18 @@ function buildMonoclinic(habit: string, b: number, c: number): THREE.BufferGeome
   const h = 1.0 + c * 0.5
   const w = 0.7 + b * 0.3
 
-  if (habit.includes('tabular') || habit.includes('plat')) {
+  if (
+    habit.includes('tabular') ||
+    habit.includes('plat') ||
+    habit.includes('laminar') ||
+    habit.includes('hoja')
+  ) {
     return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w * 1.4, 0.3, 1.1), 0.2))]
   }
-  if (habit.includes('prismatic')) {
+  if (
+    habit.includes('prismatic') ||
+    habit.includes('prismátic')
+  ) {
     return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w, h, 0.9), 0.15))]
   }
   return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w, h, 1.0), 0.18))]
@@ -353,18 +402,34 @@ function buildTriclinic(a: number, b: number, c: number): THREE.BufferGeometry[]
 function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
   const height = 0.9 + c * 0.7
 
-  if (habit.includes('rhombohedr')) {
+  if (
+    habit.includes('rhombohedr') ||
+    habit.includes('romboédr')
+  ) {
     // Romboedro estanco (cubo cizallado)
     return [makeFlatGeom(buildRhombohedron())]
   }
-  if (habit.includes('scalenohedr')) {
+  if (
+    habit.includes('scalenohedr') ||
+    habit.includes('escalenoédr')
+  ) {
     // Escalenoedro ditrigonal estanco y plano
     return [makeFlatGeom(buildScalenohedron(height))]
   }
-  if (habit.includes('tabular') || habit.includes('plat')) {
+  if (
+    habit.includes('tabular') ||
+    habit.includes('plat') ||
+    habit.includes('laminar') ||
+    habit.includes('hoja')
+  ) {
     return [makeFlatGeom(new THREE.CylinderGeometry(0.9, 0.9, 0.3, 3))] // Prisma trigonal corto
   }
-  if (habit.includes('pyramid') || habit.includes('bipyramid')) {
+  if (
+    habit.includes('pyramid') ||
+    habit.includes('bipyramid') ||
+    habit.includes('piramid') ||
+    habit.includes('bipiramid')
+  ) {
     // Bipirámide trigonal estanca
     return [makeFlatGeom(buildBipyramid(3, 0.8, height))]
   }
