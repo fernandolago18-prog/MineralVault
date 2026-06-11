@@ -129,6 +129,7 @@ export default function CatalogClient({
           .from('minerals')
           .select('*')
           .not('parent_mindat_id', 'is', null)
+          .or(`name.ilike.%${q}%,name_es.ilike.%${q}%`)
 
         if (params.cls) queryBuilder.ilike('mineral_class', params.cls)
         if (params.system) queryBuilder.ilike('crystal_system', params.system)
