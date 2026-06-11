@@ -17,6 +17,9 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  if (!isUuid) return { title: 'Espécimen no encontrado' }
+
   const supabase = await createClient()
 
   const { data } = await supabase
@@ -37,6 +40,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SpecimenDetailPage({ params }: Props) {
   const { id } = await params
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  if (!isUuid) {
+    notFound()
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()

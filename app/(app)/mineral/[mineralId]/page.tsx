@@ -11,11 +11,19 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { mineralId } = await params
   const supabase = await createClient()
-  const { data: mineral } = await (supabase
-    .from('minerals')
-    .select('name, name_es, description, mineral_class')
-    .eq('id', mineralId)
-    .single() as any)
+  
+  let query = supabase.from('minerals').select('name, name_es, description, mineral_class')
+  
+  const isNumeric = /^\d+$/.test(mineralId)
+  if (isNumeric) {
+    query = query.eq('mindat_id', parseInt(mineralId))
+  } else {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mineralId)
+    if (!isUuid) return { title: 'Mineral no encontrado' }
+    query = query.eq('id', mineralId)
+  }
+
+  const { data: mineral } = await (query.single() as any)
 
   if (!mineral) return { title: 'Mineral no encontrado' }
 
@@ -61,17 +69,35 @@ export default async function MineralDetailPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  // Datos completos del mineral
-  const { data: mineral, error } = await (supabase
-    .from('minerals')
-    .select('*')
-    .eq('id', mineralId)
-    .single() as any)
+  // Datos completos del mineral (soportando ID de base de datos o Mindat ID)
+  let query = supabase.from('minerals').select('*')
+  
+  const isNumeric = /^\d+$/.test(mineralId)
+  if (isNumeric) {
+    query = query.eq('mindat_id', parseInt(mineralId))
+  } else {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mineralId)
+    if (!isUuid) {
+      notFound()
+    }
+    query = query.eq('id', mineralId)
+  }
 
-  if (error || !mineral) {
-    console.error('[Mineral Detail Error]:', error?.message)
+  const { data: mineral, error } = await (query.single() as any)
+
+  if (error) {
+    console.error('[Mineral Detail Database Error]:', error.message, error.code)
+    if (error.code === 'PGRST116') {
+      notFound()
+    }
+    throw new Error(`Error al cargar el mineral: ${error.message}`)
+  }
+
+  if (!mineral) {
     notFound()
   }
+
+  const realMineralId = mineral.id
 
   // Traducción perezosa (lazy translation) de la descripción si detectamos que está en inglés
   if (mineral.description && isEnglish(mineral.description)) {
@@ -101,7 +127,7 @@ export default async function MineralDetailPage({ params }: Props) {
           const { error: errUpdate } = await serviceSupabase
             .from('minerals')
             .update({ description: translated })
-            .eq('id', mineralId)
+            .eq('id', realMineralId)
 
           if (!errUpdate) {
             mineral.description = translated
@@ -118,7 +144,7 @@ export default async function MineralDetailPage({ params }: Props) {
     .from('user_collection')
     .select('*, specimen_photos(*)')
     .eq('user_id', user.id)
-    .eq('mineral_id', mineralId)
+    .eq('mineral_id', realMineralId)
     .single() as any)
 
   // Obtener variedades y/o mineral principal (padre)
