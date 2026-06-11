@@ -70,6 +70,11 @@ export default async function MineralDetailPage({ params }: Props) {
   if (!user) redirect('/auth/login')
 
   // Datos completos del mineral (soportando ID de base de datos o Mindat ID)
+  console.log('--- MINERAL DETAIL PAGE REQUEST ---', { 
+    rawMineralId: mineralId, 
+    isNumeric: /^\d+$/.test(mineralId), 
+    isUuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mineralId) 
+  })
   let query = supabase.from('minerals').select('*')
   
   const isNumeric = /^\d+$/.test(mineralId)
