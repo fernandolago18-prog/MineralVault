@@ -25,7 +25,8 @@ import {
   translateHabit,
   translateMagnetism,
   translateRadioactivity,
-  translateFluorescence
+  translateFluorescence,
+  getStreakColor
 } from '@/types/database'
 
 // El visor 3D solo se carga en cliente (WebGL)
@@ -107,7 +108,7 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
           .single()
         if (error) throw error
         setCollectionItem(data as (CollectionItem & { specimen_photos: SpecimenPhoto[] }))
-        showToast('¡Añadido a tu colección! 💎')
+        showToast('¡Añadido a tu colección!')
       }
     } catch (err) {
       console.error('[Toggle Error]:', err)
@@ -211,7 +212,6 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
               background: 'rgba(245,158,11,0.04)',
             }}>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '2rem', lineHeight: 1 }}>🕮</span>
                 <div>
                   <h4 style={{ marginBottom: '0.5rem', color: 'var(--accent-gold)', fontSize: '0.9rem' }}>
                     Ficha en construcción
@@ -224,7 +224,7 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                     <a href={mindatUrl} target="_blank" rel="noopener noreferrer"
                       className="btn btn-ghost btn-sm"
                       style={{ display: 'inline-flex', marginTop: '1rem' }}>
-                      🔗 Consultar en Mindat.org
+                      Consultar en Mindat.org
                     </a>
                   )}
                 </div>
@@ -270,7 +270,29 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                     </td>
                   </tr>
                 )}
-                {mineral.streak && <tr><td>Raya</td><td>{translateStreak(mineral.streak)}</td></tr>}
+                {mineral.streak && (
+                  <tr>
+                    <td>Raya</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {getStreakColor(mineral.streak) && (
+                          <span 
+                            style={{
+                              display: 'inline-block',
+                              width: '12px',
+                              height: '12px',
+                              borderRadius: '50%',
+                              backgroundColor: getStreakColor(mineral.streak)!.hex,
+                              border: getStreakColor(mineral.streak)!.border || '1px solid rgba(255, 255, 255, 0.1)',
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                        <span>{translateStreak(mineral.streak)}</span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {mineral.luster && mineral.luster.length > 0 && (
                   <tr><td>Brillo</td><td>{translateLuster(mineral.luster)}</td></tr>
                 )}
@@ -319,7 +341,7 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={parentMineral.thumbnail_url} alt={parentMineral.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <div style={{ fontSize: '1.25rem' }}>💎</div>
+                        <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>◆</div>
                       )}
                     </div>
                     <div>
@@ -366,7 +388,7 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={v.thumbnail_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
-                              <div style={{ fontSize: '1rem' }}>✨</div>
+                              <div style={{ fontSize: '1.0rem', color: 'var(--text-muted)' }}>◆</div>
                             )}
                           </div>
                           <div style={{ minWidth: 0 }}>
@@ -398,7 +420,7 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                 textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Outfit' }}>Localidades Principales</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {mineral.localities.map((loc, i) => (
-                  <span key={i} className="badge badge-cyan">📍 {loc}</span>
+                  <span key={i} className="badge badge-cyan">{loc}</span>
                 ))}
               </div>
             </div>
@@ -409,7 +431,7 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
             <a href={mindatUrl} target="_blank" rel="noopener noreferrer"
               className="btn btn-ghost btn-sm"
               style={{ display: 'inline-flex', marginTop: '0.5rem' }}>
-              🔗 Ver en Mindat.org
+              Ver en Mindat.org
             </a>
           )}
         </div>
@@ -483,7 +505,7 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
           {isOwned && collectionItem && (
             <Link href={`/collection/${collectionItem.id}`}>
               <button className="btn btn-secondary" style={{ width: '100%' }}>
-                📸 Ver mi ejemplar y fotos
+                Ver mi ejemplar y fotos
               </button>
             </Link>
           )}

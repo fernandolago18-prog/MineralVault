@@ -73,7 +73,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
       
       {/* Profile Section */}
       <section className="card-elevated" style={{ padding: '1.5rem' }}>
-        <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>👤 Perfil del Coleccionista</h3>
+        <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Perfil del Coleccionista</h3>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="form-group">
@@ -110,14 +110,14 @@ export default function SettingsClient({ profile, userEmail }: Props) {
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? 'Guardando...' : '💾 Guardar cambios'}
+            {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
         </div>
       </section>
 
       {/* Cloud Section */}
       <section className="card-elevated" style={{ padding: '1.5rem' }}>
-        <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>☁️ Almacenamiento en la Nube</h3>
+        <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Almacenamiento en la Nube</h3>
         
         <div style={{ 
           display: 'flex', 
@@ -134,7 +134,11 @@ export default function SettingsClient({ profile, userEmail }: Props) {
               background: profile?.google_drive_connected ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem'
             }}>
-              {profile?.google_drive_connected ? '✅' : '🔗'}
+              {profile?.google_drive_connected ? (
+                <span style={{ color: 'var(--accent-emerald)', fontSize: '1.25rem', lineHeight: 1 }}>●</span>
+              ) : (
+                <span style={{ color: 'var(--accent-amber)', fontSize: '1.25rem', lineHeight: 1 }}>○</span>
+              )}
             </div>
             <div>
               <h4 style={{ fontSize: '0.95rem', marginBottom: '0.1rem' }}>Google Drive</h4>

@@ -14,9 +14,9 @@ interface AppSidebarProps {
 }
 
 const navItems = [
-  { href: '/catalog',    icon: '📖', label: 'Minerales', description: 'Enciclopedia completa' },
-  { href: '/collection', icon: '💎', label: 'Mi Colección', description: 'Mis ejemplares' },
-  { href: '/settings',   icon: '⚙️', label: 'Ajustes', description: 'Perfil y conexión' },
+  { href: '/catalog',    label: 'Minerales', description: 'Enciclopedia completa' },
+  { href: '/collection', label: 'Mi Colección', description: 'Mis ejemplares' },
+  { href: '/settings',   label: 'Ajustes', description: 'Perfil y conexión' },
 ]
 
 export default function AppSidebar({ userId, displayName, driveConnected, isOpen, onClose }: AppSidebarProps) {
@@ -95,8 +95,7 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
               }}
               onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--border-subtle)' }}
               onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                <span style={{ fontSize: '1.1rem', flexShrink: 0, opacity: isActive ? 1 : 0.6 }}>{item.icon}</span>
-                <div style={{ minWidth: 0 }}>
+                <div style={{ minWidth: 0, paddingLeft: '0.25rem' }}>
                   <div style={{
                     fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.85rem',
                     textTransform: 'uppercase', letterSpacing: '0.05em',
@@ -113,8 +112,6 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
             </Link>
           )
         })}
-
-
 
         {/* Google Drive status */}
         <div style={{
@@ -175,8 +172,8 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
             disabled={signingOut}
             title="Cerrar sesión"
             className="btn btn-ghost btn-icon"
-            style={{ width: '28px', height: '28px', flexShrink: 0 }}>
-            {signingOut ? <span className="spinner" style={{ width: 12, height: 12 }} /> : '↩'}
+            style={{ width: '48px', height: '28px', flexShrink: 0, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-rose)' }}>
+            {signingOut ? <span className="spinner" style={{ width: 12, height: 12 }} /> : 'Salir'}
           </button>
         </div>
       </div>

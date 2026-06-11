@@ -123,7 +123,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
     }, 500)
 
     if (successCount > 0) {
-      showToast(`¡${successCount} foto${successCount > 1 ? 's' : ''} subida${successCount > 1 ? 's' : ''} a Google Drive! 📸`, 'success')
+      showToast(`¡${successCount} foto${successCount > 1 ? 's' : ''} subida${successCount > 1 ? 's' : ''} a Google Drive!`, 'success')
     }
     if (failCount > 0) {
       showToast(`${failCount} foto${failCount > 1 ? 's' : ''} fallaron al subir`, 'error')
@@ -173,7 +173,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
       })
       if (!res.ok) throw new Error('Error al actualizar')
       setPhotos(prev => prev.map(p => ({ ...p, is_primary: p.id === photo.id })))
-      showToast('Foto principal actualizada ⭐', 'success')
+      showToast('Foto principal actualizada', 'success')
     } catch (err) {
       console.error('[SetPrimary Error]:', err)
       showToast('Error al actualizar foto principal', 'error')
@@ -223,7 +223,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
           )}
         </div>
         <Link href={`/mineral/${mineral.id}`}>
-          <button className="btn btn-secondary btn-sm">🔬 Ver ficha del mineral</button>
+          <button className="btn btn-secondary btn-sm">Ver ficha del mineral</button>
         </Link>
       </div>
 
@@ -233,7 +233,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
         {/* ── Left: Photos ── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <h3 style={{ fontSize: '1.1rem' }}>📸 Fotos del ejemplar</h3>
+            <h3 style={{ fontSize: '1.1rem' }}>Fotos del ejemplar</h3>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{photos.length} foto{photos.length !== 1 ? 's' : ''}</span>
           </div>
 
@@ -265,7 +265,6 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                 </div>
               ) : (
                 <>
-                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📷</div>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
                     Arrastra una foto o <span style={{ color: 'var(--accent-purple)' }}>haz clic para seleccionar</span>
                   </p>
@@ -279,7 +278,6 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
               padding: '1.5rem', textAlign: 'center', marginBottom: '1rem',
               background: 'rgba(245,158,11,0.04)',
             }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🔗</div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
                 Conecta Google Drive para subir fotos de tus especímenes
               </p>
@@ -345,9 +343,9 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                     <button
                       onClick={() => window.open(photo.drive_view_url, '_blank')}
                       title="Ver en Drive"
-                      style={{ background: 'rgba(6,182,212,0.9)', border: 'none', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', color: 'white', fontSize: '0.7rem' }}
+                      style={{ background: 'rgba(6,182,212,0.9)', border: 'none', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', color: 'white', fontSize: '0.7rem', fontWeight: 600 }}
                     >
-                      🔗
+                      Drive
                     </button>
                     <button
                       onClick={() => handleDeletePhoto(photo)}
@@ -385,7 +383,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                 alt={mineral.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                <div style={{ fontSize: '3rem' }}>💎</div>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>◆</div>
                 <p style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>Sin foto principal</p>
               </div>
             )}
@@ -452,7 +450,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
 
             <button className="btn btn-primary" onClick={handleSave} disabled={saving}
               style={{ marginTop: '0.25rem' }}>
-              {saving ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Guardando...</> : '💾 Guardar cambios'}
+              {saving ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Guardando...</> : 'Guardar cambios'}
             </button>
           </div>
 
@@ -463,7 +461,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
             background: driveConnected ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)',
             border: `1px solid ${driveConnected ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}`,
           }}>
-            <span>{driveConnected ? '🟢' : '🟡'}</span>
+            <span style={{ color: driveConnected ? 'var(--accent-emerald)' : 'var(--accent-amber)', fontSize: '0.9rem', lineHeight: 1 }}>●</span>
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: driveConnected ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
                 Google Drive {driveConnected ? 'conectado' : 'no conectado'}

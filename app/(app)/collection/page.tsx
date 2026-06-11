@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { mergeMineralWithParent } from '@/types/database'
+import { mergeMineralWithParent, getStreakColor } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Mi Colección',
@@ -22,7 +22,7 @@ export default async function CollectionPage() {
       mineral:mineral_id (
         id, name, name_es, chemical_formula,
         hardness_min, hardness_max, crystal_system,
-        mineral_class, thumbnail_url, color, parent_mindat_id
+        mineral_class, thumbnail_url, color, parent_mindat_id, streak
       )
     `)
     .eq('user_id', user.id)
@@ -94,7 +94,6 @@ export default async function CollectionPage() {
             border: '1px solid rgba(245,158,11,0.2)', borderRadius: 'var(--radius-md)',
             display: 'flex', alignItems: 'center', gap: '0.75rem'
           }}>
-            <span style={{ fontSize: '1.25rem' }}>☁️</span>
             <div>
               <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-amber)', marginBottom: '0.1rem' }}>
                 Google Drive desconectado
@@ -116,12 +115,12 @@ export default async function CollectionPage() {
         gap: '1rem', marginBottom: '2rem',
       }}>
         {[
-          { label: 'Total de minerales', value: items.length, icon: '💎', color: 'var(--accent-purple)' },
-          { label: 'Clases distintas', value: Object.keys(byClass).length, icon: '🏷️', color: 'var(--accent-cyan)' },
-          { label: 'Valor estimado', value: `€${totalValue.toFixed(0)}`, icon: '💰', color: 'var(--accent-amber)' },
+          { label: 'Total de minerales', value: items.length, icon: '◆', color: 'var(--accent-purple)' },
+          { label: 'Clases distintas', value: Object.keys(byClass).length, icon: '■', color: 'var(--accent-cyan)' },
+          { label: 'Valor estimado', value: `€${totalValue.toFixed(0)}`, icon: '€', color: 'var(--accent-amber)' },
         ].map(stat => (
           <div key={stat.label} className="card" style={{ padding: '1.25rem' }}>
-            <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{stat.icon}</div>
+            <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: stat.color }}>{stat.icon}</div>
             <div style={{ fontSize: '1.75rem', fontWeight: 800, fontFamily: 'Outfit', color: stat.color }}>
               {stat.value}
             </div>
@@ -135,7 +134,7 @@ export default async function CollectionPage() {
       {/* Collection grid */}
       {items.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>💎</div>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--border-strong)' }}>◆</div>
           <h3 style={{ marginBottom: '0.75rem' }}>Tu colección está vacía</h3>
           <p style={{ marginBottom: '1.5rem' }}>Visita el catálogo y añade tus primeros minerales.</p>
           <Link href="/catalog">
@@ -152,13 +151,30 @@ export default async function CollectionPage() {
             const mineral = item.mineral as {
               id: string; name: string; name_es?: string | null; chemical_formula?: string | null;
               hardness_min?: number | null; crystal_system?: string | null; mineral_class?: string | null;
-              thumbnail_url?: string | null;
+              thumbnail_url?: string | null; streak?: string | null;
             } | null
             if (!mineral) return null
 
+            const streakColor = getStreakColor(mineral.streak)
+
             return (
               <Link key={item.id} href={`/collection/${item.id}`} style={{ textDecoration: 'none' }}>
-                <div className="mineral-card in-collection" style={{ cursor: 'pointer' }}>
+                <div className="mineral-card in-collection" style={{ cursor: 'pointer', position: 'relative' }}>
+                  {streakColor && (
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        bottom: 0,
+                        width: '4px',
+                        backgroundColor: streakColor.hex,
+                        borderRight: streakColor.border || 'none',
+                        zIndex: 10,
+                      }}
+                      title={`Color de raya: ${mineral.streak}`}
+                    />
+                  )}
                   <div style={{
                     height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05))',
@@ -172,7 +188,7 @@ export default async function CollectionPage() {
                       <img src={mineral.thumbnail_url} alt={mineral.name}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <div style={{ fontSize: '3rem' }}>💎</div>
+                      <div style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>◆</div>
                     )}
                   </div>
                   <div style={{ padding: '0.875rem' }}>

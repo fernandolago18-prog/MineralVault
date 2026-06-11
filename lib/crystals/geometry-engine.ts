@@ -223,8 +223,6 @@ function buildCubic(habit: string): THREE.BufferGeometry[] {
 
 // ── HEXAGONAL ─────────────────────────────────────────────────────────────────
 function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
-  const height = 1.0 + c * 0.6 // Reducido para evitar estiramientos desproporcionados
-
   if (
     habit.includes('tabular') ||
     habit.includes('plat') ||
@@ -232,7 +230,7 @@ function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('hoja')
   ) {
     // Tabular: prisma hexagonal corto
-    return [makeFlatGeom(new THREE.CylinderGeometry(0.9, 0.9, 0.3, 6))]
+    return [makeFlatGeom(new THREE.CylinderGeometry(0.95, 0.95, 0.3, 6))]
   }
   if (
     habit.includes('pyramid') ||
@@ -241,18 +239,18 @@ function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('bipiramid')
   ) {
     // Bipiramidal hexagonal estanco
-    return [makeFlatGeom(buildBipyramid(6, 0.85, height))]
+    const height = 0.9 + Math.min(c, 1.0) * 0.2
+    return [makeFlatGeom(buildBipyramid(6, 1.0, height))]
   }
-  // Prismático: prisma hexagonal con terminaciones piramidales integradas y proporciones robustas
-  const prismH = height * 0.52
-  const capH = height * 0.24
-  return [makeFlatGeom(buildPrismWithPyramidalCaps(6, 0.85, prismH, capH))]
+  // Prismático: prisma hexagonal con terminaciones piramidales integradas y proporciones muy robustas (ancho 1.1)
+  const robustHeight = 0.7 + Math.min(c, 1.0) * 0.15
+  const prismH = robustHeight * 0.45
+  const capH = robustHeight * 0.2
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(6, 1.1, prismH, capH))]
 }
 
 // ── TETRAGONAL ────────────────────────────────────────────────────────────────
 function buildTetragonal(habit: string, c: number): THREE.BufferGeometry[] {
-  const height = 0.9 + c * 0.5 // Reducido para evitar estiramientos desproporcionados
-
   if (
     habit.includes('tabular') ||
     habit.includes('plat') ||
@@ -269,19 +267,21 @@ function buildTetragonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('bipiramid')
   ) {
     // Bipiramidal tetragonal estanco
-    return [makeFlatGeom(buildBipyramid(4, 0.85, height))]
+    const height = 0.9 + Math.min(c, 1.0) * 0.2
+    return [makeFlatGeom(buildBipyramid(4, 1.0, height))]
   }
-  // Prismático tetragonal con tapas piramidales integradas y proporciones robustas
-  const prismH = height * 0.52
-  const capH = height * 0.24
-  return [makeFlatGeom(buildPrismWithPyramidalCaps(4, 0.85, prismH, capH))]
+  // Prismático tetragonal con tapas piramidales integradas y proporciones muy robustas (ancho 1.1)
+  const robustHeight = 0.7 + Math.min(c, 1.0) * 0.15
+  const prismH = robustHeight * 0.45
+  const capH = robustHeight * 0.2
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(4, 1.1, prismH, capH))]
 }
 
 // ── ORTHORHOMBIC ──────────────────────────────────────────────────────────────
 function buildOrthorhombic(habit: string, a: number, b: number, c: number): THREE.BufferGeometry[] {
   const w = 0.8 + a * 0.4
   const d = 0.6 + b * 0.4
-  const h = 1.0 + c * 0.6
+  const robustH = 0.9 + Math.min(c, 1.0) * 0.3 // Capado para evitar estiramientos finos
 
   if (
     habit.includes('tabular') ||
@@ -296,18 +296,25 @@ function buildOrthorhombic(habit: string, a: number, b: number, c: number): THRE
     habit.includes('needle') ||
     habit.includes('aguja')
   ) {
-    // Acicular: aguja tetragonal con un radio lo suficientemente grueso (0.18) para ser visible y legible sin zoom
-    const needleGeom = buildPrismWithPyramidalCaps(4, 0.18, 1.4, 0.2)
+    // Acicular: aguja tetragonal con un radio grueso y visible (0.22) para que se lea perfectamente sin zoom
+    const needleGeom = buildPrismWithPyramidalCaps(4, 0.22, 1.3, 0.18)
     return [makeFlatGeom(needleGeom)]
   }
-  // Prismático ortorrómbico: caja rectangular de aristas vivas
-  return [makeFlatGeom(new THREE.BoxGeometry(w, h, d))]
+  if (
+    habit.includes('prismatic') ||
+    habit.includes('prismátic')
+  ) {
+    // Prismático ortorrómbico robusto
+    return [makeFlatGeom(new THREE.BoxGeometry(1.2, robustH, 1.0))]
+  }
+  // Default ortorrómbico
+  return [makeFlatGeom(new THREE.BoxGeometry(w, robustH, d))]
 }
 
 // ── MONOCLINIC ────────────────────────────────────────────────────────────────
 function buildMonoclinic(habit: string, b: number, c: number): THREE.BufferGeometry[] {
-  const h = 1.0 + c * 0.5
-  const w = 0.7 + b * 0.3
+  const w = 0.8 + b * 0.3
+  const robustH = 0.9 + Math.min(c, 1.0) * 0.25 // Capado
 
   if (
     habit.includes('tabular') ||
@@ -321,14 +328,15 @@ function buildMonoclinic(habit: string, b: number, c: number): THREE.BufferGeome
     habit.includes('prismatic') ||
     habit.includes('prismátic')
   ) {
-    return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w, h, 0.9), 0.15))]
+    return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w * 1.2, robustH, 1.1), 0.15))]
   }
-  return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w, h, 1.0), 0.18))]
+  return [makeFlatGeom(createSheared(new THREE.BoxGeometry(w, robustH, 1.0), 0.18))]
 }
 
 // ── TRICLINIC ─────────────────────────────────────────────────────────────────
 function buildTriclinic(a: number, b: number, c: number): THREE.BufferGeometry[] {
-  const geom = new THREE.BoxGeometry(0.7 + a * 0.3, 1.0 + c * 0.4, 0.6 + b * 0.3)
+  const robustH = 0.9 + Math.min(c, 1.0) * 0.25
+  const geom = new THREE.BoxGeometry(0.9 + a * 0.2, robustH, 0.8 + b * 0.2)
   const sheared = createSheared(geom, 0.15)
   const positions = sheared.attributes.position
   for (let i = 0; i < positions.count; i++) {
@@ -342,8 +350,6 @@ function buildTriclinic(a: number, b: number, c: number): THREE.BufferGeometry[]
 
 // ── TRIGONAL ──────────────────────────────────────────────────────────────────
 function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
-  const height = 0.8 + c * 0.5 // Reducido para acentuar el ancho y evitar distorsión
-
   if (
     habit.includes('rhombohedr') ||
     habit.includes('romboédr')
@@ -355,8 +361,8 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('scalenohedr') ||
     habit.includes('escalenoédr')
   ) {
-    // Escalenoedro ditrigonal estanco y altamente definido
-    return [makeFlatGeom(buildScalenohedron(height))]
+    // Escalenoedro ditrigonal estanco y altamente definido (volumen fijo)
+    return [makeFlatGeom(buildScalenohedron())]
   }
   if (
     habit.includes('tabular') ||
@@ -364,7 +370,7 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('laminar') ||
     habit.includes('hoja')
   ) {
-    return [makeFlatGeom(new THREE.CylinderGeometry(0.9, 0.9, 0.3, 3))] // Prisma trigonal corto
+    return [makeFlatGeom(new THREE.CylinderGeometry(0.95, 0.95, 0.3, 3))] // Prisma trigonal corto
   }
   if (
     habit.includes('pyramid') ||
@@ -373,10 +379,14 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('bipiramid')
   ) {
     // Bipirámide trigonal estanca
-    return [makeFlatGeom(buildBipyramid(3, 0.85, height))]
+    const height = 0.8 + Math.min(c, 1.0) * 0.2
+    return [makeFlatGeom(buildBipyramid(3, 1.0, height))]
   }
-  // Prisma trigonal
-  return [makeFlatGeom(new THREE.CylinderGeometry(0.8, 0.8, height, 3))]
+  // Prismático trigonal: Usamos buildPrismWithPyramidalCaps(3) para un look premium con tapas piramidales
+  const robustHeight = 0.7 + Math.min(c, 1.0) * 0.15
+  const prismH = robustHeight * 0.45
+  const capH = robustHeight * 0.2
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(3, 1.1, prismH, capH))]
 }
 
 // ── AUXILIARY SHAPES ──────────────────────────────────────────────────────────
@@ -397,11 +407,11 @@ function buildRhombohedron(): THREE.BufferGeometry {
   return geom
 }
 
-function buildScalenohedron(height: number): THREE.BufferGeometry {
+function buildScalenohedron(): THREE.BufferGeometry {
   const geom = new THREE.BufferGeometry()
-  const r = 0.85  // Mayor radio para un volumen robusto y visible
-  const shift = height * 0.18  // Zigzag equilibrado en la corona
-  const halfH = height / 2
+  const r = 1.20  // Radio ecuatorial generoso para gran volumen y evitar aspecto fino
+  const shift = 0.12  // Zigzag equilibrado en la corona
+  const halfH = 0.40  // Altura fija de 0.8 para asegurar un aspecto chato, robusto y visible
 
   // 8 vértices
   const vertices = new Float32Array(8 * 3)
@@ -414,7 +424,7 @@ function buildScalenohedron(height: number): THREE.BufferGeometry {
   for (let i = 0; i < 6; i++) {
     const angle = (i * Math.PI) / 3
     const idx = (2 + i) * 3
-    const currentR = (i % 2 === 0) ? r : r * 0.55 // Alternancia de radio para acentuar las aristas del escalenoedro
+    const currentR = (i % 2 === 0) ? r : r * 0.65 // Alternancia de radio para acentuar las aristas del escalenoedro
     vertices[idx] = currentR * Math.cos(angle)
     vertices[idx + 1] = (i % 2 === 0 ? 1 : -1) * shift
     vertices[idx + 2] = currentR * Math.sin(angle)

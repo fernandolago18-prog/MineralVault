@@ -657,4 +657,70 @@ export function mergeMineralWithParent<T extends Partial<Mineral>>(mineral: T, p
   return merged;
 }
 
+export function getStreakColor(streak: string | null | undefined): { hex: string; border?: string } | null {
+  if (!streak) return null;
+  const clean = streak.toLowerCase().trim();
+  
+  if (clean.includes('incolor') || clean.includes('colourless') || clean.includes('colorless')) {
+    return { hex: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.4)' };
+  }
+  if (clean.includes('blanc') || clean.includes('white')) {
+    return { hex: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.4)' };
+  }
+  if (clean.includes('amarillo latón') || clean.includes('brass')) {
+    return { hex: '#d4af37' };
+  }
+  if (clean.includes('amarillo-oro') || clean.includes('gold') || clean.includes('oro')) {
+    return { hex: '#ffd700' };
+  }
+  if (clean.includes('marrón rojiz') || clean.includes('marrón rojoc') || clean.includes('reddish brown')) {
+    return { hex: '#a0522d' };
+  }
+  if (clean.includes('marrón oscur') || clean.includes('dark brown')) {
+    return { hex: '#4a2f13' };
+  }
+  if (clean.includes('rojo cobre') || clean.includes('copper')) {
+    return { hex: '#b87333' };
+  }
+  if (clean.includes('roja') || clean.includes('rojo') || clean.includes('red')) {
+    return { hex: '#c0392b' };
+  }
+  if (clean.includes('marrón') || clean.includes('brown')) {
+    return { hex: '#8b5a2b' };
+  }
+  if (clean.includes('amarill') || clean.includes('yellow')) {
+    return { hex: '#f1c40f' };
+  }
+  if (clean.includes('gris plomo') || clean.includes('lead')) {
+    return { hex: '#555d65', border: '1px solid rgba(255, 255, 255, 0.2)' };
+  }
+  if (clean.includes('gris') || clean.includes('grey') || clean.includes('gray')) {
+    return { hex: '#8e8e93' };
+  }
+  if (clean.includes('negra') || clean.includes('negro') || clean.includes('black')) {
+    return { hex: '#111111', border: '1px solid rgba(255, 255, 255, 0.3)' };
+  }
+  if (clean.includes('verde claro') || clean.includes('light green')) {
+    return { hex: '#a3e4d7' };
+  }
+  if (clean.includes('verde oscur') || clean.includes('dark green')) {
+    return { hex: '#196f3d' };
+  }
+  if (clean.includes('verde pálid') || clean.includes('pale green')) {
+    return { hex: '#abebc6' };
+  }
+  if (clean.includes('verde') || clean.includes('green')) {
+    return { hex: '#2ecc71' };
+  }
+  if (clean.includes('azul') || clean.includes('blue')) {
+    return { hex: '#3498db' };
+  }
+  if (clean.includes('naranja') || clean.includes('orange')) {
+    return { hex: '#e67e22' };
+  }
+  
+  return null;
+}
+
+
 

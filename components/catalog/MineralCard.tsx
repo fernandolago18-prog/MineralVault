@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import type { MineralSearchResult, Mineral } from '@/types/database'
-import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS, mergeMineralWithParent } from '@/types/database'
+import { CRYSTAL_SYSTEM_LABELS, mergeMineralWithParent, getStreakColor } from '@/types/database'
 
 interface MineralCardProps {
   mineral: MineralSearchResult
@@ -11,17 +11,6 @@ interface MineralCardProps {
   collectionMap: Record<string, string>
   onToggleCollection: (mineralId: string, status: 'owned' | 'wanted') => void
   searchQuery?: string
-}
-
-/** Devuelve un emoji representativo de la clase mineral */
-function getClassEmoji(cls: string | null): string {
-  const map: Record<string, string> = {
-    'Native Elements': '⚡', 'Sulfides': '🪨', 'Oxides': '🔴',
-    'Halides': '💠', 'Carbonates': '🌊', 'Phosphates': '💚',
-    'Silicates': '💎', 'Sulfates': '🤍', 'Borates': '🔵',
-    'Arsenates': '☢️', 'Vanadates': '🟢', 'Tungstates': '⬛',
-  }
-  return map[cls ?? ''] ?? '🪨'
 }
 
 /** Genera un color de fondo sutil basado en el sistema cristalino */
@@ -75,10 +64,32 @@ export default function MineralCard({
       : `${mergedMineral.hardness_min}–${mergedMineral.hardness_max}`
     : '—'
 
+  const streakColor = getStreakColor(mergedMineral.streak)
+
   return (
     <div
       className={`mineral-card ${isOwned ? 'in-collection' : ''}`}
-      style={{ background: isOwned ? 'rgba(45,138,103,0.02)' : 'var(--bg-surface)' }}>
+      style={{ 
+        background: isOwned ? 'rgba(45,138,103,0.02)' : 'var(--bg-surface)',
+        position: 'relative'
+      }}>
+      
+      {streakColor && (
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            bottom: 0,
+            width: '4px',
+            backgroundColor: streakColor.hex,
+            borderRight: streakColor.border || 'none',
+            zIndex: 10,
+          }}
+          title={`Color de raya: ${mergedMineral.streak}`}
+        />
+      )}
+
 
       {/* Top section: image or crystal preview */}
       <Link href={`/mineral/${selectedMineral.id}`} style={{ display: 'block', textDecoration: 'none' }}>
@@ -98,9 +109,6 @@ export default function MineralCard({
             />
           ) : (
             <div style={{ textAlign: 'center', opacity: isOwned ? 1 : 0.5 }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '4px' }}>
-                {getClassEmoji(mergedMineral.mineral_class)}
-              </div>
               {mergedMineral.crystal_system && (
                 <span className="badge" style={{ fontSize: '0.6rem' }}>
                   {CRYSTAL_SYSTEM_LABELS[mergedMineral.crystal_system] ?? mergedMineral.crystal_system}
@@ -145,7 +153,7 @@ export default function MineralCard({
 
       {/* Content */}
       <div style={{ padding: '1.25rem' }}>
-        <Link href={`/mineral/${selectedMineral.id}`} style={{ textDecoration: 'none' }}>
+        <Link href={`/selectedMineral/${selectedMineral.id}`} style={{ textDecoration: 'none' }}>
           <h5 style={{
             fontFamily: 'Fraunces, serif', fontWeight: 500,
             fontSize: '1.1rem', color: 'var(--text-primary)',
@@ -217,7 +225,7 @@ export default function MineralCard({
               <option value={mineral.id}>{mineral.name_es || mineral.name} (General)</option>
               {varieties.map(v => (
                 <option key={v.id} value={v.id}>
-                  ✨ {v.name_es || v.name} {collectionMap[v.id] === 'owned' ? ' (Coleccionado)' : ''}
+                  {v.name_es || v.name} {collectionMap[v.id] === 'owned' ? ' (Coleccionado)' : ''}
                 </option>
               ))}
             </select>

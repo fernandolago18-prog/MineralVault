@@ -36,13 +36,15 @@ export default async function LandingPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{
             width: '42px', height: '42px',
-            background: 'var(--gradient-gem)',
+            background: 'var(--bg-void)',
+            border: '1.5px solid var(--accent-gold)',
             borderRadius: '12px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '20px',
+            fontSize: '18px',
+            color: 'var(--accent-gold)',
             boxShadow: 'var(--shadow-gem)',
           }}>
-            💎
+            ◆
           </div>
           <span style={{ 
             fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', 
@@ -128,7 +130,7 @@ export default async function LandingPage() {
           )}
         </div>
 
-        {/* Floating preview cards (abstract) */}
+        {/* Feature cards */}
         <div style={{ 
           marginTop: '5rem',
           display: 'grid',
@@ -139,12 +141,11 @@ export default async function LandingPage() {
           opacity: 0.8
         }}>
           {[
-            { title: 'Base de Datos', icon: '📖', desc: '+10k especies de Mindat.org' },
-            { title: 'Visor 3D', icon: '◆', desc: 'Hébitos y sistemas cristalinos' },
-            { title: 'Google Drive', icon: '☁️', desc: 'Tus fotos siempre seguras' },
+            { title: 'Base de Datos', desc: '+10k especies de Mindat.org' },
+            { title: 'Visor 3D', desc: 'Hábitos y sistemas cristalinos' },
+            { title: 'Google Drive', desc: 'Tus fotos siempre seguras' },
           ].map((feat, i) => (
             <div key={i} className="card" style={{ padding: '1.5rem', textAlign: 'left' }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>{feat.icon}</div>
               <h4 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{feat.title}</h4>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{feat.desc}</p>
             </div>

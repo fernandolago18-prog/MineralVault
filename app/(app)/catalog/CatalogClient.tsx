@@ -86,7 +86,7 @@ export default function CatalogClient({
   useEffect(() => {
     const success = searchParams.get('success')
     const error   = searchParams.get('error')
-    if (success === 'google_connected') showToast('✅ Google Drive conectado correctamente', 'success')
+    if (success === 'google_connected') showToast('Google Drive conectado correctamente', 'success')
     if (error === 'google_denied')      showToast('Google Drive: acceso denegado', 'error')
     if (error === 'google_csrf')        showToast('Error de seguridad en la conexión con Google', 'error')
     if (error?.startsWith('google_'))   showToast('Error al conectar Google Drive', 'error')
@@ -260,7 +260,7 @@ export default function CatalogClient({
           .upsert({ user_id: userId, mineral_id: mineralId, status } as any, { onConflict: 'user_id,mineral_id' })
         if (error) throw error
         setCollectionMap(prev => ({ ...prev, [mineralId]: status }))
-        showToast(status === 'owned' ? '¡Añadido a tu colección! 💎' : 'Añadido a tu lista de deseos ✨', 'success')
+        showToast(status === 'owned' ? '¡Añadido a tu colección!' : 'Añadido a tu lista de deseos', 'success')
       }
     } catch (err) {
       console.error('[Collection Toggle Error]:', err)
@@ -308,7 +308,7 @@ export default function CatalogClient({
           
           <Link href="/collection">
             <button className="btn btn-primary btn-lg">
-              💎 Mi Vitrina ({ownedCount})
+              Mi Vitrina ({ownedCount})
             </button>
           </Link>
         </div>
@@ -325,7 +325,7 @@ export default function CatalogClient({
               <span style={{
                 position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)',
                 color: 'var(--text-muted)', fontSize: '1rem', pointerEvents: 'none',
-              }}>🔍</span>
+              }}></span>
               <input
                 id="catalog-search"
                 type="search"
@@ -425,7 +425,7 @@ export default function CatalogClient({
         </div>
       ) : minerals.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+          <div style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--border-strong)' }}>◆</div>
           <h3>Sin resultados</h3>
           <p>Prueba con otros filtros o términos de búsqueda.</p>
         </div>
