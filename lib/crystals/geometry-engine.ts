@@ -223,7 +223,7 @@ function buildCubic(habit: string): THREE.BufferGeometry[] {
 
 // ── HEXAGONAL ─────────────────────────────────────────────────────────────────
 function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
-  const height = 1.2 + c * 0.8
+  const height = 1.0 + c * 0.6 // Reducido para evitar estiramientos desproporcionados
 
   if (
     habit.includes('tabular') ||
@@ -241,17 +241,17 @@ function buildHexagonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('bipiramid')
   ) {
     // Bipiramidal hexagonal estanco
-    return [makeFlatGeom(buildBipyramid(6, 0.8, height))]
+    return [makeFlatGeom(buildBipyramid(6, 0.85, height))]
   }
-  // Prismático: prisma hexagonal con terminaciones piramidales altas y estilizadas
-  const prismH = height * 0.62
-  const capH = height * 0.35
-  return [makeFlatGeom(buildPrismWithPyramidalCaps(6, 0.75, prismH, capH))]
+  // Prismático: prisma hexagonal con terminaciones piramidales integradas y proporciones robustas
+  const prismH = height * 0.52
+  const capH = height * 0.24
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(6, 0.85, prismH, capH))]
 }
 
 // ── TETRAGONAL ────────────────────────────────────────────────────────────────
 function buildTetragonal(habit: string, c: number): THREE.BufferGeometry[] {
-  const height = 1.0 + c * 0.6
+  const height = 0.9 + c * 0.5 // Reducido para evitar estiramientos desproporcionados
 
   if (
     habit.includes('tabular') ||
@@ -268,13 +268,13 @@ function buildTetragonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('piramid') ||
     habit.includes('bipiramid')
   ) {
-    // Bipiramidal tetragonal estanco (octaedro estirado)
-    return [makeFlatGeom(buildBipyramid(4, 0.8, height))]
+    // Bipiramidal tetragonal estanco
+    return [makeFlatGeom(buildBipyramid(4, 0.85, height))]
   }
-  // Prismático tetragonal con tapas piramidales altas y estilizadas
-  const prismH = height * 0.62
-  const capH = height * 0.35
-  return [makeFlatGeom(buildPrismWithPyramidalCaps(4, 0.75, prismH, capH))]
+  // Prismático tetragonal con tapas piramidales integradas y proporciones robustas
+  const prismH = height * 0.52
+  const capH = height * 0.24
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(4, 0.85, prismH, capH))]
 }
 
 // ── ORTHORHOMBIC ──────────────────────────────────────────────────────────────
@@ -296,8 +296,8 @@ function buildOrthorhombic(habit: string, a: number, b: number, c: number): THRE
     habit.includes('needle') ||
     habit.includes('aguja')
   ) {
-    // Acicular: aguja tetragonal muy delgada y estirada con puntas piramidales
-    const needleGeom = buildPrismWithPyramidalCaps(4, 0.08, 1.8, 0.15)
+    // Acicular: aguja tetragonal con un radio lo suficientemente grueso (0.18) para ser visible y legible sin zoom
+    const needleGeom = buildPrismWithPyramidalCaps(4, 0.18, 1.4, 0.2)
     return [makeFlatGeom(needleGeom)]
   }
   // Prismático ortorrómbico: caja rectangular de aristas vivas
@@ -342,7 +342,7 @@ function buildTriclinic(a: number, b: number, c: number): THREE.BufferGeometry[]
 
 // ── TRIGONAL ──────────────────────────────────────────────────────────────────
 function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
-  const height = 0.9 + c * 0.7
+  const height = 0.8 + c * 0.5 // Reducido para acentuar el ancho y evitar distorsión
 
   if (
     habit.includes('rhombohedr') ||
@@ -373,7 +373,7 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('bipiramid')
   ) {
     // Bipirámide trigonal estanca
-    return [makeFlatGeom(buildBipyramid(3, 0.8, height))]
+    return [makeFlatGeom(buildBipyramid(3, 0.85, height))]
   }
   // Prisma trigonal
   return [makeFlatGeom(new THREE.CylinderGeometry(0.8, 0.8, height, 3))]
@@ -399,8 +399,8 @@ function buildRhombohedron(): THREE.BufferGeometry {
 
 function buildScalenohedron(height: number): THREE.BufferGeometry {
   const geom = new THREE.BufferGeometry()
-  const r = 0.8  // Mayor radio para resaltar volumen
-  const shift = height * 0.22  // Zigzag vertical más pronunciado
+  const r = 0.85  // Mayor radio para un volumen robusto y visible
+  const shift = height * 0.18  // Zigzag equilibrado en la corona
   const halfH = height / 2
 
   // 8 vértices

@@ -146,7 +146,7 @@ export default function Crystal3DViewer({
     box.getSize(size)
     const maxDim = Math.max(size.x, size.y, size.z)
     if (maxDim > 0) {
-      const targetScale = 1.25  // Ajustar tamaño para que encaje perfectamente en el visor
+      const targetScale = 1.6  // Adaptado para que llene el visor sin necesidad de hacer zoom
       const scale = targetScale / maxDim
       group.scale.set(scale, scale, scale)
     }
@@ -157,7 +157,7 @@ export default function Crystal3DViewer({
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.dampingFactor = 0.05
-    controls.enableZoom = true
+    controls.enableZoom = false // Deshabilitar zoom (in/out) según requerimiento de visualización pura por rotación
     controls.minDistance = 1.5
     controls.maxDistance = 8
     controls.autoRotate = true
@@ -219,7 +219,7 @@ export default function Crystal3DViewer({
         fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)',
         pointerEvents: 'none', fontFamily: 'Outfit, sans-serif',
       }}>
-        Arrastra para rotar · Rueda para zoom
+        Arrastra para rotar
       </div>
     </div>
   )
