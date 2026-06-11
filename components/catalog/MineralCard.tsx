@@ -153,7 +153,7 @@ export default function MineralCard({
 
       {/* Content */}
       <div style={{ padding: '1.25rem' }}>
-        <Link href={`/selectedMineral/${selectedMineral.id}`} style={{ textDecoration: 'none' }}>
+        <Link href={`/mineral/${selectedMineral.id}`} style={{ textDecoration: 'none' }}>
           <h5 style={{
             fontFamily: 'Fraunces, serif', fontWeight: 500,
             fontSize: '1.1rem', color: 'var(--text-primary)',
