@@ -370,7 +370,8 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('laminar') ||
     habit.includes('hoja')
   ) {
-    return [makeFlatGeom(new THREE.CylinderGeometry(0.95, 0.95, 0.3, 3))] // Prisma trigonal corto
+    // Tabular trigonal: en la naturaleza (Hematites, Cuarzo) suelen ser placas hexagonales
+    return [makeFlatGeom(new THREE.CylinderGeometry(0.95, 0.95, 0.3, 6))]
   }
   if (
     habit.includes('pyramid') ||
@@ -378,15 +379,16 @@ function buildTrigonal(habit: string, c: number): THREE.BufferGeometry[] {
     habit.includes('piramid') ||
     habit.includes('bipiramid')
   ) {
-    // Bipirámide trigonal estanca
+    // Bipirámide trigonal: pseudo-bipyramides hexagonales (como el Corindón)
     const height = 0.8 + Math.min(c, 1.0) * 0.2
-    return [makeFlatGeom(buildBipyramid(3, 1.0, height))]
+    return [makeFlatGeom(buildBipyramid(6, 1.0, height))]
   }
-  // Prismático trigonal: Usamos buildPrismWithPyramidalCaps(3) para un look premium con tapas piramidales
+  // Prismático trigonal: la gran mayoría de trigonal-prismáticos (Cuarzo, Calcita) forman prismas hexagonales (6 lados)
+  // con terminaciones de doble romboedro (tapas piramidales) debido al maclado o crecimiento.
   const robustHeight = 0.7 + Math.min(c, 1.0) * 0.15
   const prismH = robustHeight * 0.45
   const capH = robustHeight * 0.2
-  return [makeFlatGeom(buildPrismWithPyramidalCaps(3, 1.1, prismH, capH))]
+  return [makeFlatGeom(buildPrismWithPyramidalCaps(6, 1.1, prismH, capH))]
 }
 
 // ── AUXILIARY SHAPES ──────────────────────────────────────────────────────────
