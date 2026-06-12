@@ -321,38 +321,184 @@ export const CRYSTAL_HABIT_LABELS: Record<string, string> = {
 
 export function translateHabit(habit: string | null | undefined): string {
   if (!habit) return '—';
-  const clean = habit.toLowerCase().trim();
-  return CRYSTAL_HABIT_LABELS[clean] ?? habit;
+  let clean = habit.toLowerCase().trim();
+  
+  const replacements: [RegExp, string][] = [
+    [/prismatic/gi, 'prismático'],
+    [/rhombohedral/gi, 'romboédrico'],
+    [/tabular/gi, 'tabular'],
+    [/cubic/gi, 'cúbico'],
+    [/octahedral/gi, 'octaédrico'],
+    [/dodecahedral/gi, 'dodecaédrico'],
+    [/pyramidal/gi, 'piramidal'],
+    [/bipyramidal/gi, 'bipiramidal'],
+    [/scalenohedral/gi, 'escalenoédrico'],
+    [/acicular/gi, 'acicular'],
+    [/needle-like/gi, 'en agujas'],
+    [/needle/gi, 'en agujas'],
+    [/platy/gi, 'laminar'],
+    [/plate/gi, 'laminar'],
+    [/earthy/gi, 'terroso'],
+    [/columnar/gi, 'columnar'],
+    [/massive/gi, 'masivo'],
+    [/granular/gi, 'granular'],
+    [/botryoidal/gi, 'botrioidal'],
+    [/fibrous/gi, 'fibroso'],
+    [/stalactitic/gi, 'estalactítico'],
+    [/radiating/gi, 'radiado'],
+    [/reniform/gi, 'reniforme'],
+    [/bladed/gi, 'en hojas'],
+    [/dendritic/gi, 'dendrítico'],
+    [/crusts/gi, 'costras'],
+    [/crust/gi, 'costra'],
+    [/crystals/gi, 'cristales'],
+    [/crystal/gi, 'cristal'],
+    [/aggregates/gi, 'agregados'],
+    [/aggregate/gi, 'agregado'],
+    [/compact/gi, 'compacto'],
+    [/globular/gi, 'globular'],
+    [/nodular/gi, 'nodular'],
+    [/micaceous/gi, 'micáceo'],
+    [/striated/gi, 'estriado'],
+    [/\bas\b/gi, 'como'],
+    [/\bto\b/gi, 'a'],
+    [/\band\b/gi, 'y'],
+    [/\bor\b/gi, 'o'],
+    [/\bwith\b/gi, 'con'],
+    [/\bvery\b/gi, 'muy'],
+    [/\bshort\b/gi, 'corto'],
+    [/\blong\b/gi, 'largo'],
+    [/\bthin\b/gi, 'fino'],
+    [/\bthick\b/gi, 'grueso'],
+  ];
+
+  for (const [regex, replacement] of replacements) {
+    clean = clean.replace(regex, replacement);
+  }
+
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
 
 export function translateLuster(lusterArray: string[] | null | undefined): string {
   if (!lusterArray || lusterArray.length === 0) return '—';
-  return lusterArray.map(l => LUSTER_LABELS[l.toLowerCase().trim()] ?? l).join(', ');
+  return lusterArray.map(l => {
+    let clean = l.toLowerCase().trim();
+    const replacements: [RegExp, string][] = [
+      [/sub-vitreous/gi, 'subvítreo'],
+      [/subvitreous/gi, 'subvítreo'],
+      [/vitreous/gi, 'vítreo'],
+      [/adamantine/gi, 'adamantino'],
+      [/pearly/gi, 'nacarado'],
+      [/greasy/gi, 'graso'],
+      [/silky/gi, 'sedoso'],
+      [/resinous/gi, 'resinoso'],
+      [/waxy/gi, 'ceroso'],
+      [/sub-metallic/gi, 'submetálico'],
+      [/submetallic/gi, 'submetálico'],
+      [/metallic/gi, 'metálico'],
+      [/earthy/gi, 'terroso'],
+      [/dull/gi, 'mate'],
+      [/splendent/gi, 'resplandeciente'],
+      [/\bon\b/gi, 'en'],
+      [/\bfractures\b/gi, 'fracturas'],
+      [/\bcleavages\b/gi, 'exfoliaciones'],
+      [/\bsurfaces\b/gi, 'superficies'],
+      [/\band\b/gi, 'y'],
+      [/\bor\b/gi, 'o'],
+    ];
+    for (const [regex, replacement] of replacements) {
+      clean = clean.replace(regex, replacement);
+    }
+    return clean.charAt(0).toUpperCase() + clean.slice(1);
+  }).join(', ');
 }
 
 export function translateCleavage(cleavage: string | null | undefined): string {
   if (!cleavage) return '—';
-  const clean = cleavage.toLowerCase().replace(/\./g, '').trim();
-  const parts = clean.split(/[\/,;\-]/).map(p => p.trim());
-  return parts.map(p => CLEAVAGE_LABELS[p] ?? p).join(' / ');
+  let clean = cleavage.toLowerCase().replace(/\./g, '').trim();
+  
+  const replacements: [RegExp, string][] = [
+    [/perfect/gi, 'perfecta'],
+    [/imperfect/gi, 'imperfecta'],
+    [/distinct/gi, 'distinguible'],
+    [/indistinct/gi, 'indistinta'],
+    [/good/gi, 'buena'],
+    [/fair/gi, 'regular'],
+    [/poor/gi, 'pobre'],
+    [/none/gi, 'ninguna'],
+    [/\bon\b/gi, 'en'],
+    [/\bparting\b/gi, 'partición'],
+    [/\bcleavage\b/gi, 'exfoliación'],
+    [/\bobserved\b/gi, 'observada'],
+    [/\bnot\b/gi, 'no'],
+    [/\bexhibits\b/gi, 'exhibe'],
+    [/\band\b/gi, 'y'],
+    [/\bor\b/gi, 'o'],
+    [/\btraces\b/gi, 'trazas'],
+    [/\bdirections\b/gi, 'direcciones'],
+    [/\bdirection\b/gi, 'dirección'],
+    [/\bwith\b/gi, 'con'],
+    [/\bangle\b/gi, 'ángulo'],
+  ];
+
+  for (const [regex, replacement] of replacements) {
+    clean = clean.replace(regex, replacement);
+  }
+
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
 
 export function translateFracture(fracture: string | null | undefined): string {
   if (!fracture) return '—';
-  const clean = fracture.toLowerCase().replace(/\./g, '').trim();
-  const parts = clean.split(/[,;\/]/).map(p => p.trim());
-  const mapped = parts.map(p => {
-    const norm = p.replace('-', '');
-    return FRACTURE_LABELS[p] ?? FRACTURE_LABELS[norm] ?? p;
-  });
-  return Array.from(new Set(mapped)).join(', ');
+  let clean = fracture.toLowerCase().replace(/\./g, '').trim();
+  
+  const replacements: [RegExp, string][] = [
+    [/sub-conchoidal/gi, 'subconcoidea'],
+    [/subconchoidal/gi, 'subconcoidea'],
+    [/conchoidal/gi, 'concoidea'],
+    [/uneven/gi, 'irregular'],
+    [/irregular/gi, 'irregular'],
+    [/splintery/gi, 'astillosa'],
+    [/hackly/gi, 'ganchosa'],
+    [/fibrous/gi, 'fibrosa'],
+    [/even/gi, 'regular'],
+    [/brittle/gi, 'frágil'],
+    [/\band\b/gi, 'y'],
+    [/\bor\b/gi, 'o'],
+    [/\bvery\b/gi, 'muy'],
+    [/\bslightly\b/gi, 'ligeramente'],
+    [/\bon\b/gi, 'en'],
+  ];
+
+  for (const [regex, replacement] of replacements) {
+    clean = clean.replace(regex, replacement);
+  }
+
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
 
 export function translateTenacity(tenacity: string | null | undefined): string {
   if (!tenacity) return '—';
-  const clean = tenacity.toLowerCase().replace(/\./g, '').trim();
-  const parts = clean.split(/[,;\/]/).map(p => p.trim());
-  return parts.map(p => TENACITY_LABELS[p] ?? p).join(', ');
+  let clean = tenacity.toLowerCase().replace(/\./g, '').trim();
+  
+  const replacements: [RegExp, string][] = [
+    [/brittle/gi, 'frágil'],
+    [/sectile/gi, 'séctil'],
+    [/malleable/gi, 'maleable'],
+    [/ductile/gi, 'dúctil'],
+    [/flexible/gi, 'flexible'],
+    [/elastic/gi, 'elástica'],
+    [/\band\b/gi, 'y'],
+    [/\bor\b/gi, 'o'],
+    [/\bvery\b/gi, 'muy'],
+    [/\bslightly\b/gi, 'ligeramente'],
+  ];
+
+  for (const [regex, replacement] of replacements) {
+    clean = clean.replace(regex, replacement);
+  }
+
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
 
 export function translateStreak(streak: string | null | undefined): string {
