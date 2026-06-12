@@ -205,11 +205,17 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
       <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
         <div>
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-            {mineral.mineral_class && (
-              <span className="badge badge-violet">{MINERAL_CLASS_LABELS[mineral.mineral_class] ?? mineral.mineral_class}</span>
-            )}
-            {mineral.crystal_system && (
-              <span className="badge badge-cyan">◆ {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system] ?? mineral.crystal_system}</span>
+            {mineral.is_rock ? (
+              <span className="badge badge-rock">ROCA</span>
+            ) : (
+              <>
+                {mineral.mineral_class && (
+                  <span className="badge badge-violet">{MINERAL_CLASS_LABELS[mineral.mineral_class] ?? mineral.mineral_class}</span>
+                )}
+                {mineral.crystal_system && (
+                  <span className="badge badge-cyan">◆ {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system] ?? mineral.crystal_system}</span>
+                )}
+              </>
             )}
             <span className="badge badge-emerald">✓ En colección</span>
           </div>

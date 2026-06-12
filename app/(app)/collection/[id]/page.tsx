@@ -62,7 +62,7 @@ export default async function SpecimenDetailPage({ params }: Props) {
           id, name, name_es, chemical_formula,
           hardness_min, hardness_max, crystal_system,
           mineral_class, thumbnail_url, color, localities,
-          mindat_url, description, parent_mindat_id
+          mindat_url, description, parent_mindat_id, is_rock
         )
       `)
       .eq('id', id)

@@ -22,7 +22,7 @@ export default async function CollectionPage() {
       mineral:mineral_id (
         id, name, name_es, chemical_formula,
         hardness_min, hardness_max, crystal_system,
-        mineral_class, thumbnail_url, color, parent_mindat_id, streak
+        mineral_class, thumbnail_url, color, parent_mindat_id, streak, is_rock
       )
     `)
     .eq('user_id', user.id)
@@ -151,7 +151,7 @@ export default async function CollectionPage() {
             const mineral = item.mineral as {
               id: string; name: string; name_es?: string | null; chemical_formula?: string | null;
               hardness_min?: number | null; crystal_system?: string | null; mineral_class?: string | null;
-              thumbnail_url?: string | null; streak?: string | null;
+              thumbnail_url?: string | null; streak?: string | null; is_rock?: boolean | null;
             } | null
             if (!mineral) return null
 
@@ -159,7 +159,7 @@ export default async function CollectionPage() {
 
             return (
               <Link key={item.id} href={`/collection/${item.id}`} style={{ textDecoration: 'none' }}>
-                <div className="mineral-card in-collection" style={{ cursor: 'pointer', position: 'relative' }}>
+                <div className={`mineral-card in-collection ${mineral.is_rock ? 'is-rock-card' : ''}`} style={{ cursor: 'pointer', position: 'relative' }}>
                   {streakColor && (
                     <div 
                       style={{
@@ -177,7 +177,10 @@ export default async function CollectionPage() {
                   )}
                   <div style={{
                     height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05))',
+                    background: mineral.is_rock 
+                      ? 'linear-gradient(135deg, rgba(125,132,145,0.15), rgba(22,22,28,0.5))' 
+                      : 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05))',
+                    position: 'relative'
                   }}>
                     {item.primary_photo_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -188,7 +191,17 @@ export default async function CollectionPage() {
                       <img src={mineral.thumbnail_url} alt={mineral.name}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <div style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>◆</div>
+                      <div style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>{mineral.is_rock ? '⬡' : '◆'}</div>
+                    )}
+                    {mineral.is_rock && (
+                      <div style={{
+                        position: 'absolute', bottom: '8px', left: '8px',
+                        zIndex: 2,
+                      }}>
+                        <span className="badge badge-rock" style={{ fontSize: '0.6rem', background: 'rgba(22, 22, 28, 0.95)', backdropFilter: 'blur(4px)' }}>
+                          Roca
+                        </span>
+                      </div>
                     )}
                   </div>
                   <div style={{ padding: '0.875rem' }}>

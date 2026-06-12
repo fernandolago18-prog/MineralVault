@@ -68,9 +68,8 @@ export default function MineralCard({
 
   return (
     <div
-      className={`mineral-card ${isOwned ? 'in-collection' : ''}`}
+      className={`mineral-card ${isOwned ? 'in-collection' : ''} ${mergedMineral.is_rock ? 'is-rock-card' : ''}`}
       style={{ 
-        background: isOwned ? 'rgba(45,138,103,0.02)' : 'var(--bg-surface)',
         position: 'relative'
       }}>
       
@@ -109,10 +108,16 @@ export default function MineralCard({
             />
           ) : (
             <div style={{ textAlign: 'center', opacity: isOwned ? 1 : 0.5 }}>
-              {mergedMineral.crystal_system && (
-                <span className="badge" style={{ fontSize: '0.6rem' }}>
-                  {CRYSTAL_SYSTEM_LABELS[mergedMineral.crystal_system] ?? mergedMineral.crystal_system}
+              {mergedMineral.is_rock ? (
+                <span className="badge badge-rock" style={{ fontSize: '0.65rem' }}>
+                  ROCA
                 </span>
+              ) : (
+                mergedMineral.crystal_system && (
+                  <span className="badge badge-cyan" style={{ fontSize: '0.6rem' }}>
+                    {CRYSTAL_SYSTEM_LABELS[mergedMineral.crystal_system] ?? mergedMineral.crystal_system}
+                  </span>
+                )
               )}
             </div>
           )}
@@ -146,6 +151,18 @@ export default function MineralCard({
               zIndex: 2,
             }}>
               DESEADOS
+            </div>
+          )}
+
+          {/* Rock indicator */}
+          {mergedMineral.is_rock && (
+            <div style={{
+              position: 'absolute', bottom: '12px', left: '12px',
+              zIndex: 2,
+            }}>
+              <span className="badge badge-rock" style={{ fontSize: '0.65rem', background: 'rgba(22, 22, 28, 0.95)', backdropFilter: 'blur(4px)' }}>
+                Roca
+              </span>
             </div>
           )}
         </div>

@@ -17,6 +17,8 @@
   --accent-emerald: #2d8a67; /* Deep Emerald */
   --accent-ruby:    #a33b3b; /* Deep Ruby */
   --accent-slate:   #4a5568;
+  --accent-rock:    #7d8491; /* Slate/Stone Gray */
+  --accent-rock-border: rgba(125, 132, 145, 0.25);
 
   /* Text */
   --text-primary:   #f2f2f7;
@@ -66,6 +68,8 @@ html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
+  scrollbar-width: auto;
+  scrollbar-color: var(--bg-overlay) var(--bg-base);
 }
 
 body {
@@ -132,8 +136,8 @@ code, pre {
 /* ============================================================
    SCROLLBAR
    ============================================================ */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--bg-void); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
 ::-webkit-scrollbar-thumb {
   background: var(--bg-overlay);
   border-radius: var(--radius-full);
@@ -300,6 +304,9 @@ label {
 
 .badge-gold { background: rgba(197,160,89,0.05); color: var(--accent-gold); border-color: rgba(197,160,89,0.2); }
 .badge-emerald { background: rgba(45,138,103,0.05); color: var(--accent-emerald); border-color: rgba(45,138,103,0.2); }
+.badge-rock { background: rgba(125, 132, 145, 0.06); color: var(--accent-rock); border-color: rgba(125, 132, 145, 0.25); }
+.badge-violet { background: rgba(139, 92, 246, 0.05); color: #c084fc; border-color: rgba(139, 92, 246, 0.2); }
+.badge-cyan { background: rgba(6, 182, 212, 0.05); color: #22d3ee; border-color: rgba(6, 182, 212, 0.2); }
 
 /* ============================================================
    LAYOUT WRAPPERS
@@ -351,6 +358,26 @@ label {
   border-color: var(--border-strong);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+}
+
+.mineral-card.is-rock-card {
+  background: linear-gradient(135deg, rgba(125, 132, 145, 0.04) 0%, rgba(22, 22, 28, 0.98) 100%);
+  border: 1px dashed var(--accent-rock-border);
+}
+
+.mineral-card.is-rock-card:hover {
+  border-color: var(--accent-rock);
+  border-style: solid;
+  box-shadow: var(--shadow-lg), 0 0 16px rgba(125, 132, 145, 0.08);
+}
+
+.mineral-card.is-rock-card.in-collection {
+  border-color: rgba(45, 138, 103, 0.3);
+  background: linear-gradient(135deg, rgba(125, 132, 145, 0.03) 0%, rgba(45, 138, 103, 0.02) 50%, rgba(22, 22, 28, 0.98) 100%);
+}
+
+.mineral-card.is-rock-card.in-collection:hover {
+  border-color: var(--accent-emerald);
 }
 
 /* ============================================================

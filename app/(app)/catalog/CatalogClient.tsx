@@ -30,6 +30,8 @@ export default function CatalogClient({
   const [search, setSearch] = useState('')
   const [filterClass, setFilterClass] = useState('')
   const [filterSystem, setFilterSystem] = useState('')
+  const [filterType, setFilterType] = useState('')
+  const [filterStreak, setFilterStreak] = useState('')
   const [hardnessMin, setHardnessMin] = useState<number | ''>('')
   const [hardnessMax, setHardnessMax] = useState<number | ''>('')
   const [loading, setLoading] = useState(false)
@@ -98,9 +100,8 @@ export default function CatalogClient({
     setTimeout(() => setToast(null), 3000)
   }
 
-  /** Ejecuta búsqueda usando RPC (ILIKE substring — soporta nombres parciales en cualquier idioma) */
   const executeSearch = useCallback(async (params: {
-    query?: string; cls?: string; system?: string; hMin?: number | ''; hMax?: number | ''; offsetVal?: number
+    query?: string; cls?: string; system?: string; hMin?: number | ''; hMax?: number | ''; offsetVal?: number; typeVal?: string; streakVal?: string
   }) => {
     const isLoadMore = params.offsetVal !== undefined && params.offsetVal > 0
     if (isLoadMore) setLoadingMore(true); else setLoading(true)
@@ -114,7 +115,9 @@ export default function CatalogClient({
         hardness_min_v: params.hMin === '' ? null : params.hMin,
         hardness_max_v: params.hMax === '' ? null : params.hMax,
         page_size:      PAGE_SIZE,
-        page_offset:    params.offsetVal ?? 0
+        page_offset:    params.offsetVal ?? 0,
+        filter_type:    params.typeVal !== undefined ? params.typeVal : (filterType || null),
+        filter_streak:  params.streakVal !== undefined ? params.streakVal : (filterStreak || null)
       })
 
       if (error) throw error
@@ -187,7 +190,7 @@ export default function CatalogClient({
     setSearch(value)
     clearTimeout(searchTimeout.current)
     searchTimeout.current = setTimeout(() => {
-      executeSearch({ query: value, cls: filterClass, system: filterSystem, hMin: hardnessMin, hMax: hardnessMax })
+      executeSearch({ query: value, cls: filterClass, system: filterSystem, hMin: hardnessMin, hMax: hardnessMax, typeVal: filterType, streakVal: filterStreak })
     }, 250)  // 250ms debounce — más rápido para búsqueda ILIKE
   }
 
@@ -196,19 +199,23 @@ export default function CatalogClient({
     let newHMax = hardnessMax
     let newCls = filterClass
     let newSys = filterSystem
+    let newType = filterType
+    let newStreak = filterStreak
 
     if (type === 'class') { setFilterClass(value); newCls = value }
     if (type === 'system') { setFilterSystem(value); newSys = value }
     if (type === 'hMin') { setHardnessMin(value); newHMin = value }
     if (type === 'hMax') { setHardnessMax(value); newHMax = value }
+    if (type === 'type') { setFilterType(value); newType = value }
+    if (type === 'streak') { setFilterStreak(value); newStreak = value }
 
     startTransition(() => {
-      executeSearch({ query: search, cls: newCls, system: newSys, hMin: newHMin, hMax: newHMax })
+      executeSearch({ query: search, cls: newCls, system: newSys, hMin: newHMin, hMax: newHMax, typeVal: newType, streakVal: newStreak })
     })
   }
 
   const handleLoadMore = () => {
-    executeSearch({ query: search, cls: filterClass, system: filterSystem, hMin: hardnessMin, hMax: hardnessMax, offsetVal: offset })
+    executeSearch({ query: search, cls: filterClass, system: filterSystem, hMin: hardnessMin, hMax: hardnessMax, offsetVal: offset, typeVal: filterType, streakVal: filterStreak })
   }
 
   /** Añade/quita un mineral de la colección (owned o wanted) */
@@ -291,23 +298,64 @@ export default function CatalogClient({
       <div className="card-elevated" style={{ padding: '1.25rem', marginBottom: '2rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
           
-          {/* Search */}
-          <div className="form-group">
+          {/* Search & Type (Unified) */}
+          <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
             <label htmlFor="catalog-search">Búsqueda rápida</label>
-            <div style={{ position: 'relative' }}>
-              <span style={{
-                position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)',
-                color: 'var(--text-muted)', fontSize: '1rem', pointerEvents: 'none',
-              }}></span>
-              <input
-                id="catalog-search"
-                type="search"
-                className="input input-search"
-                placeholder="Nombre, fórmula, clase..."
-                value={search}
-                onChange={e => handleSearchChange(e.target.value)}
-              />
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
+                <span style={{
+                  position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)', fontSize: '1rem', pointerEvents: 'none',
+                }}></span>
+                <input
+                  id="catalog-search"
+                  type="search"
+                  className="input input-search"
+                  placeholder="Nombre, fórmula, clase..."
+                  value={search}
+                  onChange={e => handleSearchChange(e.target.value)}
+                />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  type="button"
+                  className={`btn ${filterType === '' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => handleFilterChange('type', '')}
+                >Todos</button>
+                <button 
+                  type="button"
+                  className={`btn ${filterType === 'mineral' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => handleFilterChange('type', 'mineral')}
+                >Minerales</button>
+                <button 
+                  type="button"
+                  className={`btn ${filterType === 'rock' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => handleFilterChange('type', 'rock')}
+                >Rocas</button>
+              </div>
             </div>
+          </div>
+          
+          {/* Streak Color */}
+          <div className="form-group">
+            <label htmlFor="filter-streak">Color de Raya</label>
+            <select
+              id="filter-streak"
+              className="input"
+              value={filterStreak}
+              onChange={e => handleFilterChange('streak', e.target.value)}>
+              <option value="">Todos los colores</option>
+              <option value="blanca">Blanca</option>
+              <option value="negra">Negra</option>
+              <option value="gris">Gris</option>
+              <option value="roja">Roja</option>
+              <option value="marrón">Marrón / Parda</option>
+              <option value="amarilla">Amarilla</option>
+              <option value="verde">Verde</option>
+              <option value="azul">Azul</option>
+              <option value="rosa">Rosa</option>
+            </select>
           </div>
 
           {/* Class */}

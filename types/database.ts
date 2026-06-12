@@ -81,6 +81,7 @@ export interface Mineral {
   thumbnail_url: string | null
   model_3d_config: Crystal3DConfig | null
   parent_mindat_id: number | null
+  is_rock: boolean | null
   created_at: string
   updated_at: string
 }

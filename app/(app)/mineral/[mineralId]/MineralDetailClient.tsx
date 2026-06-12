@@ -163,15 +163,21 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
           {/* Header */}
           <div style={{ marginBottom: '2rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-              {mineral.mineral_class && (
-                <span className="badge badge-violet">
-                  {MINERAL_CLASS_LABELS[mineral.mineral_class] ?? mineral.mineral_class}
-                </span>
-              )}
-              {mineral.crystal_system && (
-                <span className="badge badge-cyan">
-                  ◆ {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system] ?? mineral.crystal_system}
-                </span>
+              {mineral.is_rock ? (
+                <span className="badge badge-rock">ROCA</span>
+              ) : (
+                <>
+                  {mineral.mineral_class && (
+                    <span className="badge badge-violet">
+                      {MINERAL_CLASS_LABELS[mineral.mineral_class] ?? mineral.mineral_class}
+                    </span>
+                  )}
+                  {mineral.crystal_system && (
+                    <span className="badge badge-cyan">
+                      ◆ {CRYSTAL_SYSTEM_LABELS[mineral.crystal_system] ?? mineral.crystal_system}
+                    </span>
+                  )}
+                </>
               )}
               {isOwned && <span className="badge badge-emerald">✓ En tu colección</span>}
             </div>
@@ -438,8 +444,8 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
 
         {/* Right column — 3D + collection */}
         <div style={{ position: 'sticky', top: '2rem' }}>
-          {/* Visores 3D para todos los hábitos disponibles (Solo para sistemas cristalinos válidos) */}
-          {mineral.crystal_system && VALID_3D_SYSTEMS.includes(mineral.crystal_system) && (
+          {/* Visores 3D para todos los hábitos disponibles (Solo para sistemas cristalinos válidos y si NO es roca) */}
+          {!mineral.is_rock && mineral.crystal_system && VALID_3D_SYSTEMS.includes(mineral.crystal_system) && (
             geometricHabits && geometricHabits.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1.25rem' }}>
                 {geometricHabits.map((habit, idx) => (
@@ -488,6 +494,17 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                 )}
               </div>
             )
+          )}
+
+          {/* Información específica de rocas en lugar de visor 3D */}
+          {mineral.is_rock && (
+            <div className="card-elevated" style={{ padding: '1.25rem', background: 'var(--bg-surface)', border: '1px dashed var(--accent-rock-border)', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '2rem', textAlign: 'center', marginBottom: '0.75rem', color: 'var(--accent-rock)' }}>⬡</div>
+              <h5 style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--accent-rock)', marginBottom: '0.5rem', fontWeight: 700 }}>Agregado Rocoso</h5>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.5, textAlign: 'center', margin: 0 }}>
+                Las rocas son agregados cohesivos de uno o más minerales. A diferencia de las especies minerales puras, las rocas no poseen una estructura cristalina única ni una fórmula química homogénea fija.
+              </p>
+            </div>
           )}
 
           {/* Collection button */}
