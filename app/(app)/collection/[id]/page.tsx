@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `Mi ${name} — Colección`,
-    description: `Detalle del ejemplar de ${name} en tu colección personal de MineralVault.`,
+    description: `Detalle del ejemplar de ${name} en tu colección personal de Minerales de la Tierra.`,
   }
 }
 

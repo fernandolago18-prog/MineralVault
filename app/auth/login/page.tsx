@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -54,7 +54,7 @@ function LoginForm() {
           ◆
         </div>
         <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 400 }}>
-          MineralVault
+          Minerales de la Tierra
         </h1>
         <div style={{ 
           fontSize: '0.75rem', color: 'var(--accent-gold)', 
@@ -80,7 +80,7 @@ function LoginForm() {
           <div className="form-group">
             <label htmlFor="email">Identificador (Email)</label>
             <input id="email" type="email" className="input"
-              placeholder="curador@mineralvault.com" value={email}
+              placeholder="curador@Minerales de la Tierra.com" value={email}
               onChange={e => setEmail(e.target.value)} required />
           </div>
 

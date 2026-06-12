@@ -1,4 +1,4 @@
-/**
+﻿/**
  * app/(app)/settings/page.tsx
  * Página de ajustes del usuario — Server Component.
  */
@@ -10,7 +10,7 @@ import SettingsClient from './SettingsClient'
 
 export const metadata: Metadata = {
   title: 'Ajustes de Cuenta',
-  description: 'Gestiona tu perfil y las conexiones externas de MineralVault.',
+  description: 'Gestiona tu perfil y las conexiones externas de Minerales de la Tierra.',
 }
 
 export default async function SettingsPage() {

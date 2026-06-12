@@ -1,6 +1,6 @@
-{
-  "name": "MineralVault",
-  "short_name": "MineralVault",
+﻿{
+  "name": "Minerales de la Tierra",
+  "short_name": "Minerales de la Tierra",
   "description": "Tu colección privada de minerales con respaldo en la nube.",
   "start_url": "/",
   "display": "standalone",

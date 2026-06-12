@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import AppSidebar from './AppSidebar'
@@ -44,7 +44,7 @@ export default function LayoutWrapper({ children, userId, displayName, driveConn
             fontFamily: 'Fraunces, serif', fontWeight: 500, fontSize: '1.2rem',
             color: 'var(--text-primary)',
           }}>
-            MineralVault
+            Minerales de la Tierra
           </div>
 
           <div style={{ width: '40px' }} /> {/* Spacer to center title */}

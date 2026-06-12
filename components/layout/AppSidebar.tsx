@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -59,7 +59,7 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
               fontSize: '1.3rem', letterSpacing: '-0.01em',
               color: 'var(--text-primary)',
             }}>
-              MineralVault
+              Minerales de la Tierra
             </div>
             <div style={{ 
               fontSize: '0.6rem', color: 'var(--text-muted)', 

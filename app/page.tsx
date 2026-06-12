@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function LandingPage() {
@@ -50,7 +50,7 @@ export default async function LandingPage() {
             fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', 
             background: 'var(--gradient-gem)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
           }}>
-            MineralVault
+            Minerales de la Tierra
           </span>
         </div>
         <div>
@@ -162,7 +162,7 @@ export default async function LandingPage() {
         borderTop: '1px solid var(--border-subtle)',
         marginTop: 'auto'
       }}>
-        &copy; 2026 MineralVault — Desarrollado para geólogos y entusiastas.
+        &copy; 2026 Minerales de la Tierra — Desarrollado para geólogos y entusiastas.
       </footer>
     </div>
   )
