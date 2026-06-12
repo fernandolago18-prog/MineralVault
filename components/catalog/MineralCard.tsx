@@ -37,19 +37,39 @@ export default function MineralCard({
   const [selectedMineral, setSelectedMineral] = useState<MineralSearchResult | Mineral>(mineral)
 
   useEffect(() => {
-    // Si hay una búsqueda activa y coincide con el nombre de alguna variedad, la seleccionamos por defecto
     if (searchQuery && varieties.length > 0) {
-      const queryLower = searchQuery.toLowerCase().trim()
-      const matchingVariety = varieties.find(v => 
-        v.name.toLowerCase().includes(queryLower) || 
-        (v.name_es && v.name_es.toLowerCase().includes(queryLower))
+      const q = searchQuery.toLowerCase().trim()
+
+      // 1. ¿Alguna variedad coincide EXACTAMENTE con la búsqueda?
+      const exactVariety = varieties.find(v => 
+        v.name.toLowerCase() === q || 
+        (v.name_es && v.name_es.toLowerCase() === q)
       )
-      if (matchingVariety) {
-        setSelectedMineral(matchingVariety)
+      if (exactVariety) {
+        setSelectedMineral(exactVariety)
+        return
+      }
+
+      // 2. ¿El padre coincide con la búsqueda (parcial o exacta)? -> Preferimos el padre
+      const parentMatches = mineral.name.toLowerCase().includes(q) || 
+                            (mineral.name_es && mineral.name_es.toLowerCase().includes(q))
+      if (parentMatches) {
+        setSelectedMineral(mineral)
+        return
+      }
+
+      // 3. ¿Alguna variedad incluye la búsqueda parcialmente?
+      const partialVariety = varieties.find(v => 
+        v.name.toLowerCase().includes(q) || 
+        (v.name_es && v.name_es.toLowerCase().includes(q))
+      )
+      if (partialVariety) {
+        setSelectedMineral(partialVariety)
         return
       }
     }
-    // Si no, o si cambia el mineral prop, resetear al mineral padre original
+    
+    // Fallback: seleccionar el padre
     setSelectedMineral(mineral)
   }, [mineral, searchQuery, varieties])
 
