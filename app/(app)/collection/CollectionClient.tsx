@@ -16,6 +16,8 @@ export default function CollectionClient({ items, driveConnected }: CollectionCl
   const [filterStreak, setFilterStreak] = useState('')
   const [filterClass, setFilterClass] = useState('')
   const [filterSystem, setFilterSystem] = useState('')
+  const [hardnessMin, setHardnessMin] = useState<number | ''>('')
+  const [hardnessMax, setHardnessMax] = useState<number | ''>('')
 
   // Filtrado en memoria
   const filteredItems = useMemo(() => {
@@ -48,9 +50,18 @@ export default function CollectionClient({ items, driveConnected }: CollectionCl
       // Sistema
       if (filterSystem && mineral.crystal_system !== filterSystem) return false
 
+      // Dureza Mohs
+      if (hardnessMin !== '') {
+        // Asumimos que si no tiene hardness, lo filtramos o lo mostramos? En el catálogo original, si hMin está definido, mineral.hardness_max >= hMin
+        if (mineral.hardness_max === null || mineral.hardness_max === undefined || mineral.hardness_max < hardnessMin) return false
+      }
+      if (hardnessMax !== '') {
+        if (mineral.hardness_min === null || mineral.hardness_min === undefined || mineral.hardness_min > hardnessMax) return false
+      }
+
       return true
     })
-  }, [items, search, filterType, filterStreak, filterClass, filterSystem])
+  }, [items, search, filterType, filterStreak, filterClass, filterSystem, hardnessMin, hardnessMax])
 
   // Estadísticas derivadas de los items FILTRADOS
   const byClass: Record<string, number> = {}
@@ -217,6 +228,41 @@ export default function CollectionClient({ items, driveConnected }: CollectionCl
                 ))}
                 <option value="Amorphous">Amorfo</option>
               </select>
+            </div>
+
+            {/* Dureza Mohs */}
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label>Dureza Mohs</label>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <input
+                  type="number"
+                  min="0" max="10" step="0.5"
+                  className="input"
+                  placeholder="Mín"
+                  value={hardnessMin === '' ? '' : hardnessMin}
+                  onChange={e => setHardnessMin(e.target.value ? parseFloat(e.target.value) : '')}
+                  style={{ maxWidth: '100px' }}
+                />
+                <span style={{ color: 'var(--text-muted)' }}>—</span>
+                <input
+                  type="number"
+                  min="0" max="10" step="0.5"
+                  className="input"
+                  placeholder="Máx"
+                  value={hardnessMax === '' ? '' : hardnessMax}
+                  onChange={e => setHardnessMax(e.target.value ? parseFloat(e.target.value) : '')}
+                  style={{ maxWidth: '100px' }}
+                />
+                {(hardnessMin !== '' || hardnessMax !== '') && (
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary btn-sm" 
+                    onClick={() => { setHardnessMin(''); setHardnessMax('') }}
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
