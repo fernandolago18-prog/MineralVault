@@ -191,7 +191,7 @@ export default function CatalogClient({
     clearTimeout(searchTimeout.current)
     searchTimeout.current = setTimeout(() => {
       executeSearch({ query: value, cls: filterClass, system: filterSystem, hMin: hardnessMin, hMax: hardnessMax, typeVal: filterType, streakVal: filterStreak })
-    }, 250)  // 250ms debounce — más rápido para búsqueda ILIKE
+    }, 500)  // 500ms debounce
   }
 
   const handleFilterChange = (type: string, value: any) => {
