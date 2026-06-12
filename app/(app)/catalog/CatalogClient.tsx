@@ -122,35 +122,7 @@ export default function CatalogClient({
       let results = (data as any[]) ?? []
       let totalCountFromRpc = results[0]?.total_count ? parseInt(results[0].total_count) : 0
 
-      // Búsqueda directa de variedades que coincidan (para soportar variedades como Amethyst independientemente)
-      const q = params.query ? params.query.trim() : ''
-      if (q.length > 0) {
-        const queryBuilder = supabase
-          .from('minerals')
-          .select('*')
-          .not('parent_mindat_id', 'is', null)
-          .or(`name.ilike.%${q}%,name_es.ilike.%${q}%`)
 
-        if (params.cls) queryBuilder.ilike('mineral_class', params.cls)
-        if (params.system) queryBuilder.ilike('crystal_system', params.system)
-        if (params.hMin !== '' && params.hMin !== undefined) queryBuilder.gte('hardness_max', params.hMin)
-        if (params.hMax !== '' && params.hMax !== undefined) queryBuilder.lte('hardness_min', params.hMax)
-
-        // Aplicamos la misma paginación por rangos en la consulta directa
-        const { data: vData } = await queryBuilder.limit(PAGE_SIZE).range(params.offsetVal ?? 0, (params.offsetVal ?? 0) + PAGE_SIZE - 1)
-        const vDataList = (vData as unknown as any[]) ?? []
-        if (vDataList.length > 0) {
-          // Filtrar duplicados
-          vDataList.forEach((v: any) => {
-            if (!results.some(r => r.id === v.id)) {
-              results.push({
-                ...v,
-                total_count: totalCountFromRpc || vDataList.length // fallback
-              })
-            }
-          })
-        }
-      }
 
       // Fusionar propiedades de padres si hay variedades en los resultados
       const parentMindatIds = results
