@@ -26,7 +26,7 @@ import {
   translateMagnetism,
   translateRadioactivity,
   translateFluorescence,
-  getStreakColor
+  getStreakColors
 } from '@/types/database'
 
 // El visor 3D solo se carga en cliente (WebGL)
@@ -278,23 +278,24 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
                 )}
                 {mineral.streak && (
                   <tr>
-                    <td>Raya</td>
+                    <td>Color de Raya</td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {getStreakColor(mineral.streak) && (
-                          <span 
-                            style={{
-                              display: 'inline-block',
-                              width: '12px',
-                              height: '12px',
-                              borderRadius: '50%',
-                              backgroundColor: getStreakColor(mineral.streak)!.hex,
-                              border: getStreakColor(mineral.streak)!.border || '1px solid rgba(255, 255, 255, 0.1)',
-                              flexShrink: 0,
-                            }}
-                          />
-                        )}
                         <span>{translateStreak(mineral.streak)}</span>
+                        {getStreakColors(mineral.streak).length > 0 && (
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            {getStreakColors(mineral.streak).map((color, idx) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  width: '12px', height: '12px', borderRadius: '50%',
+                                  backgroundColor: color.hex,
+                                  border: color.border || '1px solid rgba(255,255,255,0.1)'
+                                }}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>

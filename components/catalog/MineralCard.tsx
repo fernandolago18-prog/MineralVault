@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import type { MineralSearchResult, Mineral } from '@/types/database'
-import { CRYSTAL_SYSTEM_LABELS, mergeMineralWithParent, getStreakColor } from '@/types/database'
+import { CRYSTAL_SYSTEM_LABELS, mergeMineralWithParent, getStreakColors } from '@/types/database'
 
 interface MineralCardProps {
   mineral: MineralSearchResult
@@ -64,7 +64,7 @@ export default function MineralCard({
       : `${mergedMineral.hardness_min}–${mergedMineral.hardness_max}`
     : '—'
 
-  const streakColor = getStreakColor(mergedMineral.streak)
+  const streakColors = getStreakColors(mergedMineral.streak)
 
   return (
     <div
@@ -73,7 +73,7 @@ export default function MineralCard({
         position: 'relative'
       }}>
       
-      {streakColor && (
+      {streakColors.length > 0 && (
         <div 
           style={{
             position: 'absolute',
@@ -81,8 +81,10 @@ export default function MineralCard({
             left: 0,
             bottom: 0,
             width: '4px',
-            backgroundColor: streakColor.hex,
-            borderRight: streakColor.border || 'none',
+            background: streakColors.length === 1 
+              ? streakColors[0].hex 
+              : `linear-gradient(to bottom, ${streakColors.map((c, i) => `${c.hex} ${(i / streakColors.length) * 100}%, ${c.hex} ${((i + 1) / streakColors.length) * 100}%`).join(', ')})`,
+            borderRight: streakColors[0].border || 'none',
             zIndex: 10,
           }}
           title={`Color de raya: ${mergedMineral.streak}`}
