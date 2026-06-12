@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import CatalogClient from './CatalogClient'
+import { mergeMineralWithParent } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Catálogo de Minerales',
@@ -45,6 +46,33 @@ export default async function CatalogPage() {
     ((collection ?? []) as any[]).map((item: any) => [item.mineral_id as string, item.status as string])
   )
 
+  let initialMinerals = (minerals as any[]) ?? []
+
+  // Fusionar con padres para heredar propiedades (como color de raya)
+  const parentMindatIds = initialMinerals
+    .map(m => m.parent_mindat_id)
+    .filter((id): id is number => id !== null && id !== undefined)
+
+  if (parentMindatIds.length > 0) {
+    const { data: parentsData } = await supabase
+      .from('minerals')
+      .select('*')
+      .in('mindat_id', parentMindatIds)
+
+    if (parentsData) {
+      const parentsMap = new Map((parentsData as any[]).map(p => [p.mindat_id, p]))
+      initialMinerals = initialMinerals.map(m => {
+        if (m.parent_mindat_id) {
+          const parent = parentsMap.get(m.parent_mindat_id)
+          return mergeMineralWithParent(m, parent ?? null)
+        }
+        return mergeMineralWithParent(m, null)
+      })
+    }
+  } else {
+    initialMinerals = initialMinerals.map(m => mergeMineralWithParent(m, null))
+  }
+
   // Estadísticas para el header
   const { count: totalMinerals } = await supabase
     .from('minerals')
@@ -52,7 +80,7 @@ export default async function CatalogPage() {
 
   return (
     <CatalogClient
-      initialMinerals={minerals ?? []}
+      initialMinerals={initialMinerals}
       collectionMap={Object.fromEntries(collectionMap)}
       totalInDb={totalMinerals ?? 0}
       userId={user.id}
