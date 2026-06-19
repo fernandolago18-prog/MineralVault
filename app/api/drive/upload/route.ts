@@ -25,6 +25,7 @@ import {
   getOrCreateRootFolder,
   getOrCreateMineralFolder,
   uploadFileToDrive,
+  makeFilePublic,
   buildThumbnailUrl,
 } from '@/lib/google/drive'
 
@@ -129,6 +130,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       file.type,
       filename,
     )
+
+    // Hacer el archivo público para lectura (requerido para los thumbnails e imágenes)
+    try {
+      await makeFilePublic(accessToken, driveFile.id)
+    } catch (permErr) {
+      console.warn('[Drive Permission Warning]: No se pudo hacer público el archivo', permErr)
+    }
 
     // ── 9. Contar fotos existentes (¿es la primera?) ─────────────────────────
     const { count: existingPhotosCount } = await (supabase

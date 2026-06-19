@@ -190,6 +190,25 @@ export async function deleteFileFromDrive(
   })
 }
 
+/**
+ * Hace un archivo de Drive visible para cualquiera con el enlace (role=reader).
+ * Necesario para que las URLs de thumbnail carguen directamente en <img> sin
+ * necesitar autenticación de Google en el navegador del usuario.
+ */
+export async function makeFilePublic(
+  accessToken: string,
+  fileId:      string,
+): Promise<void> {
+  await fetch(`${DRIVE_API}/files/${fileId}/permissions`, {
+    method:  'POST',
+    headers: {
+      Authorization:  `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ role: 'reader', type: 'anyone' }),
+  })
+}
+
 // ─── Thumbnails ───────────────────────────────────────────────────────────────
 
 /**
