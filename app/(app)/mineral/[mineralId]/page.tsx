@@ -144,13 +144,12 @@ export default async function MineralDetailPage({ params }: Props) {
     }
   }
 
-  // Estado en la colección del usuario
-  const { data: collectionItem } = await (supabase
+  // Estado en la colección del usuario (múltiples ejemplares)
+  const { data: collectionItems } = await (supabase
     .from('user_collection')
     .select('*, specimen_photos(*)')
     .eq('user_id', user.id)
-    .eq('mineral_id', realMineralId)
-    .single() as any)
+    .eq('mineral_id', realMineralId) as any)
 
   // Obtener variedades y/o mineral principal (padre)
   let varieties: any[] = []
@@ -189,7 +188,7 @@ export default async function MineralDetailPage({ params }: Props) {
   return (
     <MineralDetailClient
       mineral={displayMineral}
-      collectionItem={collectionItem ?? null}
+      collectionItems={collectionItems ?? []}
       userId={user.id}
       varieties={varieties}
       parentMineral={parentMineral}

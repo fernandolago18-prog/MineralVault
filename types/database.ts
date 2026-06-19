@@ -104,6 +104,7 @@ export interface CollectionItem {
   price_eur: number | null
   drive_folder_id: string | null
   primary_photo_url: string | null
+  specimen_label: string | null
   created_at: string
   updated_at: string
 }

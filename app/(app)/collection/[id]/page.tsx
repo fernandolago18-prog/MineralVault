@@ -24,13 +24,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { data } = await supabase
     .from('user_collection')
-    .select('mineral:mineral_id(name, name_es)')
+    .select('specimen_label, mineral:mineral_id(name, name_es)')
     .eq('id', id)
     .single()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mineral = (data as any)?.mineral as { name?: string; name_es?: string } | null
-  const name = mineral?.name ?? 'Espécimen'
+  const item = data as any
+  const name = item?.specimen_label || item?.mineral?.name_es || item?.mineral?.name || 'Espécimen'
 
   return {
     title: `Mi ${name} — Colección`,
@@ -57,7 +57,7 @@ export default async function SpecimenDetailPage({ params }: Props) {
       .select(`
         id, user_id, mineral_id, status, acquired_at, origin,
         notes, quality, dimensions, weight_g, price_eur,
-        drive_folder_id, primary_photo_url, created_at, updated_at,
+        drive_folder_id, primary_photo_url, specimen_label, created_at, updated_at,
         mineral:mineral_id (
           id, name, name_es, chemical_formula,
           hardness_min, hardness_max, crystal_system,

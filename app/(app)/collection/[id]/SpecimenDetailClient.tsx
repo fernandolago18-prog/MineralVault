@@ -31,6 +31,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Form state — editable fields
+  const [specimenLabel, setSpecimenLabel] = useState(item.specimen_label ?? '')
   const [quality,     setQuality]     = useState<number>(item.quality ?? 0)
   const [origin,      setOrigin]      = useState(item.origin ?? '')
   const [acquiredAt,  setAcquiredAt]  = useState(item.acquired_at ?? '')
@@ -52,6 +53,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
       const { error } = await (supabase
         .from('user_collection') as any)
         .update({
+          specimen_label: specimenLabel.trim() || null,
           quality:     quality || null,
           origin:      origin.trim() || null,
           acquired_at: acquiredAt || null,
@@ -198,7 +200,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
         <span>/</span>
         <Link href={`/mineral/${mineral.id}`} style={{ color: 'var(--text-muted)' }}>{mineral.name_es || mineral.name}</Link>
         <span>/</span>
-        <span style={{ color: 'var(--text-primary)' }}>Mi ejemplar</span>
+        <span style={{ color: 'var(--text-primary)' }}>{specimenLabel || 'Mi ejemplar'}</span>
       </nav>
 
       {/* Header */}
@@ -219,8 +221,15 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
             )}
             <span className="badge badge-emerald">✓ En colección</span>
           </div>
-          <h1 style={{ marginBottom: '0.25rem' }}>{mineral.name_es || mineral.name}</h1>
-          {mineral.name_es && mineral.name_es !== mineral.name && <p style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{mineral.name}</p>}
+          <h1 style={{ marginBottom: '0.25rem' }}>{specimenLabel || mineral.name_es || mineral.name}</h1>
+          {specimenLabel && (
+            <p style={{ fontStyle: 'italic', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+              {mineral.name_es || mineral.name}
+            </p>
+          )}
+          {(!specimenLabel && mineral.name_es && mineral.name_es !== mineral.name) && (
+            <p style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>{mineral.name}</p>
+          )}
           {mineral.chemical_formula && (
             <code 
               style={{ color: 'var(--accent-cyan)', background: 'rgba(6,182,212,0.08)', padding: '0.2rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(6,182,212,0.2)', fontSize: '0.9rem' }}
@@ -418,6 +427,11 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
 
           {/* Form fields */}
           <div className="card-elevated" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            <div className="form-group">
+              <label>Etiqueta / Nombre del ejemplar</label>
+              <input className="input" placeholder="Ej: Drusa de Cuarzo rosa, Ejemplar #2" value={specimenLabel}
+                onChange={e => setSpecimenLabel(e.target.value)} />
+            </div>
             <div className="form-group">
               <label>Procedencia / Yacimiento</label>
               <input className="input" placeholder="Ej: Almería, España" value={origin}

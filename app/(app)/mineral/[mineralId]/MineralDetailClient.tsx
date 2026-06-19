@@ -61,21 +61,24 @@ function isGeometricHabit(habit: string): boolean {
   return GEOMETRIC_HABITS_KEYWORDS.some(kw => lowercase.includes(kw))
 }
 
+import AddSpecimenModal from '@/components/catalog/AddSpecimenModal'
+
 interface Props {
   mineral: Mineral
-  collectionItem: (CollectionItem & { specimen_photos: SpecimenPhoto[] }) | null
+  collectionItems: (CollectionItem & { specimen_photos: SpecimenPhoto[] })[]
   userId: string
   varieties?: any[]
   parentMineral?: any
 }
 
-export default function MineralDetailClient({ mineral, collectionItem: initialItem, userId, varieties = [], parentMineral }: Props) {
-  const [collectionItem, setCollectionItem] = useState(initialItem)
+export default function MineralDetailClient({ mineral, collectionItems: initialItems = [], userId, varieties = [], parentMineral }: Props) {
+  const [collectionItems, setCollectionItems] = useState(initialItems)
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   const supabase = createClient()
-  const isOwned = collectionItem?.status === 'owned'
+  const isOwned = collectionItems.length > 0
 
   const geometricHabits = useMemo(() => {
     if (!mineral.crystal_habits) return []
@@ -86,33 +89,27 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
     setToast(msg); setTimeout(() => setToast(null), 3000)
   }
 
-  const handleToggle = async () => {
+  const handleSaveSpecimen = async (specimenData: any) => {
     setLoading(true)
     try {
-      if (isOwned && collectionItem) {
-        await (supabase.from('user_collection') as any).delete().eq('id', collectionItem.id)
-        setCollectionItem(null)
-        showToast('Eliminado de tu colección')
-      } else {
-        // Payload tipado explícitamente para evitar inferencia errónea de never[]
-        // cuando los tipos de Database son artesanales (sin supabase gen types).
-        const payload: Pick<CollectionItem, 'user_id' | 'mineral_id' | 'status'> = {
-          user_id: userId,
-          mineral_id: mineral.id,
-          status: 'owned',
-        }
-        const { data, error } = await (supabase
-          .from('user_collection') as any)
-          .upsert(payload, { onConflict: 'user_id,mineral_id' })
-          .select('*, specimen_photos(*)')
-          .single()
-        if (error) throw error
-        setCollectionItem(data as (CollectionItem & { specimen_photos: SpecimenPhoto[] }))
-        showToast('¡Añadido a tu colección!')
+      const payload = {
+        user_id: userId,
+        mineral_id: mineral.id,
+        status: 'owned',
+        ...specimenData,
       }
+      const { data, error } = await (supabase
+        .from('user_collection') as any)
+        .insert(payload)
+        .select('*, specimen_photos(*)')
+        .single()
+      if (error) throw error
+      setCollectionItems(prev => [data as (CollectionItem & { specimen_photos: SpecimenPhoto[] }), ...prev])
+      showToast('¡Ejemplar añadido a tu colección!')
     } catch (err) {
-      console.error('[Toggle Error]:', err)
-      showToast('Error al actualizar la colección')
+      console.error('[Add Specimen Error]:', err)
+      showToast('Error al añadir el ejemplar')
+      throw err
     } finally {
       setLoading(false)
     }
@@ -508,25 +505,78 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
             </div>
           )}
 
-          {/* Collection button */}
-          <button
-            id={`collection-toggle-${mineral.id}`}
-            className={`btn btn-lg ${isOwned ? 'btn-danger' : 'btn-primary'}`}
-            style={{ width: '100%', marginBottom: '1rem' }}
-            onClick={handleToggle}
-            disabled={loading}>
-            {loading ? <><span className="spinner" style={{ width: 18, height: 18 }} /> Actualizando...</>
-              : isOwned ? '✕ Quitar de mi colección' : '+ Tengo este mineral'}
-          </button>
+          {/* Collection section */}
+          <div className="card-elevated" style={{ padding: '1.25rem', marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            <h5 style={{ fontSize: '0.85rem', fontWeight: 700, fontFamily: 'Outfit', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Mi Colección
+            </h5>
+            
+            {collectionItems.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Tienes {collectionItems.length} ejemplar{collectionItems.length > 1 ? 'es' : ''} de este {mineral.is_rock ? 'agregado' : 'mineral'}:
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {collectionItems.map((item, idx) => (
+                    <Link key={item.id} href={`/collection/${item.id}`} style={{ textDecoration: 'none' }}>
+                      <div className="card" style={{
+                        padding: '0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.5rem',
+                        background: 'var(--bg-void)',
+                        border: '1px solid var(--border-default)',
+                        borderRadius: 'var(--radius-sm)',
+                        transition: 'border-color var(--transition-fast)',
+                        cursor: 'pointer'
+                      }}
+                        onMouseEnter={e => {
+                          const target = e.currentTarget as HTMLDivElement;
+                          target.style.borderColor = 'var(--accent-purple)';
+                        }}
+                        onMouseLeave={e => {
+                          const target = e.currentTarget as HTMLDivElement;
+                          target.style.borderColor = 'var(--border-default)';
+                        }}
+                      >
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            {item.specimen_label || `${mineral.name_es || mineral.name} #${collectionItems.length - idx}`}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', alignItems: 'center' }}>
+                            {item.origin && (
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                📍 {item.origin}
+                              </span>
+                            )}
+                            {item.quality && (
+                              <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber)' }}>
+                                {'★'.repeat(item.quality)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>➜</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.5rem 0' }}>
+                Aún no tienes este {mineral.is_rock ? 'agregado' : 'mineral'} en tu colección.
+              </p>
+            )}
 
-          {/* Collection detail link */}
-          {isOwned && collectionItem && (
-            <Link href={`/collection/${collectionItem.id}`}>
-              <button className="btn btn-secondary" style={{ width: '100%' }}>
-                Ver mi ejemplar y fotos
-              </button>
-            </Link>
-          )}
+            <button
+              className="btn btn-primary"
+              style={{ width: '100%' }}
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              + Registrar Ejemplar
+            </button>
+          </div>
 
           {/* Associated minerals */}
           {mineral.associated_minerals && mineral.associated_minerals.length > 0 && (
@@ -551,6 +601,14 @@ export default function MineralDetailClient({ mineral, collectionItem: initialIt
           <div className="toast toast-success">{toast}</div>
         </div>
       )}
+
+      {/* Add specimen modal */}
+      <AddSpecimenModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={handleSaveSpecimen}
+        mineralName={mineral.name_es || mineral.name}
+      />
     </div>
   )
 }

@@ -79,6 +79,30 @@ export default function CollectionClient({ items, driveConnected }: CollectionCl
     return Array.from(classes).sort()
   }, [items])
 
+  // Agrupar ejemplares por especie mineral/roca
+  const groupedItems = useMemo(() => {
+    const groups: Record<string, { mineral: any, specimens: any[] }> = {}
+    
+    filteredItems.forEach(item => {
+      const mineralId = item.mineral?.id
+      if (!mineralId) return
+
+      if (!groups[mineralId]) {
+        groups[mineralId] = {
+          mineral: item.mineral,
+          specimens: []
+        }
+      }
+      groups[mineralId].specimens.push(item)
+    })
+
+    return Object.values(groups).sort((a, b) => {
+      const nameA = a.mineral.name_es || a.mineral.name || ''
+      const nameB = b.mineral.name_es || b.mineral.name || ''
+      return nameA.localeCompare(nameB)
+    })
+  }, [filteredItems])
+
   return (
     <div style={{ minHeight: '100dvh', padding: '2rem 1.5rem' }}>
       {/* Header */}
@@ -281,92 +305,128 @@ export default function CollectionClient({ items, driveConnected }: CollectionCl
           )}
         </div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-          gap: '1rem',
-        }}>
-          {filteredItems.map(item => {
-            const mineral = item.mineral
-            const streakColors = getStreakColors(mineral.streak)
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          {groupedItems.map(group => {
+            const mineral = group.mineral
+            const specimens = group.specimens
+            const title = mineral.name_es || mineral.name
 
             return (
-              <Link key={item.id} href={`/collection/${item.id}`} style={{ textDecoration: 'none' }}>
-                <div className={`mineral-card in-collection ${mineral.is_rock ? 'is-rock-card' : ''}`} style={{ cursor: 'pointer', position: 'relative' }}>
-                  {streakColors.length > 0 && (
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        bottom: 0,
-                        width: '4px',
-                        background: streakColors.length === 1 
-                          ? streakColors[0].hex 
-                          : `linear-gradient(to bottom, ${streakColors.map((c, i) => `${c.hex} ${(i / streakColors.length) * 100}%, ${c.hex} ${((i + 1) / streakColors.length) * 100}%`).join(', ')})`,
-                        borderRight: streakColors[0].border || 'none',
-                        zIndex: 10,
-                      }}
-                      title={`Color de raya: ${mineral.streak}`}
-                    />
-                  )}
-                  <div style={{
-                    height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: mineral.is_rock 
-                      ? 'linear-gradient(135deg, rgba(125,132,145,0.15), rgba(22,22,28,0.5))' 
-                      : 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05))',
-                    position: 'relative'
-                  }}>
-                    {item.primary_photo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.primary_photo_url} alt={mineral.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : mineral.thumbnail_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={mineral.thumbnail_url} alt={mineral.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>{mineral.is_rock ? '⬡' : '◆'}</div>
-                    )}
-                    {mineral.is_rock && (
-                      <div style={{
-                        position: 'absolute', bottom: '8px', left: '8px',
-                        zIndex: 2,
-                      }}>
-                        <span className="badge badge-rock" style={{ fontSize: '0.6rem', background: 'rgba(22, 22, 28, 0.95)', backdropFilter: 'blur(4px)' }}>
-                          Roca
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ padding: '0.875rem' }}>
-                    <h5 style={{ marginBottom: '0.125rem' }}>{mineral.name_es || mineral.name}</h5>
-                    {mineral.name_es && mineral.name_es !== mineral.name && (
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '0.5rem' }}>
-                        {mineral.name}
-                      </p>
-                    )}
-                    {mineral.chemical_formula && (
-                      <code 
-                        style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)' }}
-                        dangerouslySetInnerHTML={{ __html: mineral.chemical_formula }}
-                      />
-                    )}
-                    <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.625rem', flexWrap: 'wrap' }}>
-                      {item.quality && (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber)' }}>
-                          {'★'.repeat(item.quality as number)}{'☆'.repeat(5 - (item.quality as number))}
-                        </span>
-                      )}
-                      {item.acquired_at && (
-                        <span className="badge badge-violet" style={{ fontSize: '0.65rem' }}>
-                          {new Date(item.acquired_at as string).getFullYear()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+              <div key={mineral.id}>
+                {/* Header for the group */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: '0.75rem',
+                  marginBottom: '1rem',
+                  borderBottom: '1px solid var(--border-subtle)',
+                  paddingBottom: '0.5rem'
+                }}>
+                  <h3 style={{ fontSize: '1.25rem', fontFamily: 'Outfit', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {title}
+                  </h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                    {specimens.length} ejemplar{specimens.length !== 1 ? 'es' : ''}
+                  </span>
                 </div>
-              </Link>
+
+                {/* Specimens grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                  gap: '1rem',
+                }}>
+                  {specimens.map(item => {
+                    const streakColors = getStreakColors(mineral.streak)
+
+                    return (
+                      <Link key={item.id} href={`/collection/${item.id}`} style={{ textDecoration: 'none' }}>
+                        <div className={`mineral-card in-collection ${mineral.is_rock ? 'is-rock-card' : ''}`} style={{ cursor: 'pointer', position: 'relative' }}>
+                          {streakColors.length > 0 && (
+                            <div 
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                bottom: 0,
+                                width: '4px',
+                                background: streakColors.length === 1 
+                                  ? streakColors[0].hex 
+                                  : `linear-gradient(to bottom, ${streakColors.map((c, i) => `${c.hex} ${(i / streakColors.length) * 100}%, ${c.hex} ${((i + 1) / streakColors.length) * 100}%`).join(', ')})`,
+                                borderRight: streakColors[0].border || 'none',
+                                zIndex: 10,
+                              }}
+                              title={`Color de raya: ${mineral.streak}`}
+                            />
+                          )}
+                          <div style={{
+                            height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: mineral.is_rock 
+                              ? 'linear-gradient(135deg, rgba(125,132,145,0.15), rgba(22,22,28,0.5))' 
+                              : 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05))',
+                            position: 'relative'
+                          }}>
+                            {item.primary_photo_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.primary_photo_url} alt={item.specimen_label || mineral.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : mineral.thumbnail_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={mineral.thumbnail_url} alt={mineral.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>{mineral.is_rock ? '⬡' : '◆'}</div>
+                            )}
+                            {mineral.is_rock && (
+                              <div style={{
+                                position: 'absolute', bottom: '8px', left: '8px',
+                                zIndex: 2,
+                              }}>
+                                <span className="badge badge-rock" style={{ fontSize: '0.6rem', background: 'rgba(22, 22, 28, 0.95)', backdropFilter: 'blur(4px)' }}>
+                                  Roca
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ padding: '0.875rem' }}>
+                            <h5 style={{ marginBottom: '0.125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.specimen_label || title}>
+                              {item.specimen_label || title}
+                            </h5>
+                            {item.specimen_label && (
+                              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '0.5rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {title}
+                              </p>
+                            )}
+                            {mineral.chemical_formula && (
+                              <code 
+                                style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)' }}
+                                dangerouslySetInnerHTML={{ __html: mineral.chemical_formula }}
+                              />
+                            )}
+                            <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.625rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                              {item.quality && (
+                                <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber)' }}>
+                                  {'★'.repeat(item.quality as number)}{'☆'.repeat(5 - (item.quality as number))}
+                                </span>
+                              )}
+                              {item.acquired_at && (
+                                <span className="badge badge-violet" style={{ fontSize: '0.65rem' }}>
+                                  {new Date(item.acquired_at as string).getFullYear()}
+                                </span>
+                              )}
+                              {item.origin && (
+                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100px' }} title={item.origin}>
+                                  📍 {item.origin}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
             )
           })}
         </div>

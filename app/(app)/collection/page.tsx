@@ -18,7 +18,7 @@ export default async function CollectionPage() {
     .from('user_collection') as any)
     .select(`
       id, status, acquired_at, origin, quality,
-      price_eur, primary_photo_url, created_at,
+      price_eur, primary_photo_url, created_at, specimen_label,
       mineral:mineral_id (
         id, name, name_es, chemical_formula,
         hardness_min, hardness_max, crystal_system,
