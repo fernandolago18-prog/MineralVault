@@ -10,7 +10,7 @@ interface MineralCardProps {
   varieties?: Mineral[]
   collectionMap: Record<string, string>
   collectionCounts: Record<string, number>
-  onToggleCollection: (mineralId: string, status: 'owned' | 'wanted') => void
+  onToggleCollection: (mineralId: string, status: 'owned' | 'wanted' | 'remove_all') => void
   searchQuery?: string
 }
 
@@ -286,6 +286,22 @@ export default function MineralCard({
             onClick={(e) => { e.preventDefault(); onToggleCollection(selectedMineral.id, 'owned') }}>
             {isOwned ? '+ Ejemplar' : '+ Colección'}
           </button>
+
+          {isOwned && (
+            <button
+              title="Quitar mineral de mi colección"
+              className="btn btn-sm btn-danger"
+              style={{ padding: '0 0.75rem' }}
+              onClick={(e) => {
+                e.preventDefault()
+                if (confirm(`¿Seguro que quieres quitar el mineral "${mergedMineral.name_es || mergedMineral.name}" por completo de tu colección? Se eliminarán todos sus ejemplares y fotos asociadas.`)) {
+                  onToggleCollection(selectedMineral.id, 'remove_all')
+                }
+              }}
+            >
+              Quitar
+            </button>
+          )}
           
           <button
             title={isWanted ? 'Quitar de deseados' : 'Añadir a deseados'}

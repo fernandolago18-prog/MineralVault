@@ -29,10 +29,10 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'Falta parámetro: collectionId' }, { status: 400 })
     }
 
-    // 3. Verificar propiedad del ejemplar
+    // 3. Verificar propiedad del ejemplar y obtener mineral_id
     const { data: specimen, error: specError } = await (supabase
       .from('user_collection') as any)
-      .select('id')
+      .select('id, mineral_id')
       .eq('id', collectionId)
       .eq('user_id', user.id)
       .single()
@@ -40,6 +40,15 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     if (specError || !specimen) {
       return NextResponse.json({ error: 'Ejemplar no encontrado o sin permisos' }, { status: 404 })
     }
+
+    // Contar cuántos ejemplares del mismo mineral tiene el usuario
+    const { count } = await (supabase
+      .from('user_collection') as any)
+      .select('id', { count: 'exact', head: true })
+      .eq('mineral_id', specimen.mineral_id)
+      .eq('user_id', user.id)
+
+    const hasMultiple = (count ?? 0) > 1
 
     // 4. Obtener todas las fotos asociadas
     const { data: photos } = await (supabase
@@ -72,15 +81,46 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // 6. Eliminar ejemplar de la colección (el cascade borra automáticamente los registros en specimen_photos)
-    const { error: deleteError } = await (supabase
-      .from('user_collection') as any)
-      .delete()
-      .eq('id', collectionId)
-      .eq('user_id', user.id)
+    if (hasMultiple) {
+      // 6. Eliminar ejemplar por completo si el usuario tiene más de uno
+      const { error: deleteError } = await (supabase
+        .from('user_collection') as any)
+        .delete()
+        .eq('id', collectionId)
+        .eq('user_id', user.id)
 
-    if (deleteError) {
-      throw new Error(`Error al eliminar ejemplar de la base de datos: ${deleteError.message}`)
+      if (deleteError) {
+        throw new Error(`Error al eliminar ejemplar de la base de datos: ${deleteError.message}`)
+      }
+    } else {
+      // 6. Si es el único ejemplar, limpiar todos los campos para mantener la propiedad del mineral
+      const { error: updateError } = await (supabase
+        .from('user_collection') as any)
+        .update({
+          specimen_label: null,
+          acquired_at: null,
+          origin: null,
+          notes: null,
+          quality: null,
+          dimensions: null,
+          weight_g: null,
+          price_eur: null,
+          primary_photo_url: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', collectionId)
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        throw new Error(`Error al vaciar los detalles del ejemplar: ${updateError.message}`)
+      }
+
+      // Eliminar registros de fotos ya que no se dispara el ON DELETE CASCADE
+      await (supabase
+        .from('specimen_photos') as any)
+        .delete()
+        .eq('collection_id', collectionId)
+        .eq('user_id', user.id)
     }
 
     return NextResponse.json({ success: true })

@@ -222,10 +222,25 @@ export default function CatalogClient({
   }
 
   /** Añade/quita un mineral de la colección (owned o wanted) */
-  const toggleCollection = async (mineralId: string, status: 'owned' | 'wanted' = 'owned') => {
+  const toggleCollection = async (mineralId: string, status: 'owned' | 'wanted' | 'remove_all' = 'owned') => {
     const currentStatus = collectionMap[mineralId]
     
     try {
+      if (status === 'remove_all') {
+        // Quitar completamente el mineral de la colección
+        const { error } = await (supabase
+          .from('user_collection') as any)
+          .delete()
+          .eq('user_id', userId)
+          .eq('mineral_id', mineralId)
+
+        if (error) throw error
+        setCollectionMap(prev => { const next = { ...prev }; delete next[mineralId]; return next })
+        setCollectionCounts(prev => { const next = { ...prev }; delete next[mineralId]; return next })
+        showToast('Mineral eliminado de tu colección', 'info')
+        return
+      }
+
       if (status === 'owned') {
         // Añadir otro ejemplar (se permite duplicados)
         const { error } = await (supabase
