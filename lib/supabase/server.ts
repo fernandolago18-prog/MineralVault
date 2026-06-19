@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 
 /**
@@ -28,5 +29,17 @@ export async function createClient() {
         },
       },
     }
+  )
+}
+
+/**
+ * Supabase client con privilegios service_role.
+ * ÚNICAMENTE para uso en operaciones de servidor seguras.
+ * Salta RLS y permite acceder a tablas restringidas (como user_google_tokens).
+ */
+export function createAdminClient() {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 }

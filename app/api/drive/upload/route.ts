@@ -19,7 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { refreshAccessToken }        from '@/lib/google/auth'
 import {
   getOrCreateRootFolder,
@@ -101,19 +101,33 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ── 5. Obtener refresh_token del usuario ─────────────────────────────────
     const { data: profile, error: profileError } = await (supabase
       .from('user_profiles') as any)
-      .select('google_refresh_token, google_drive_connected')
+      .select('google_drive_connected')
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile?.google_refresh_token) {
+    if (profileError || !profile?.google_drive_connected) {
       return NextResponse.json(
         { error: 'Google Drive no conectado. Ve a Ajustes para conectar tu cuenta.' },
         { status: 400 },
       )
     }
 
+    const adminSupabase = createAdminClient()
+    const { data: tokenData, error: tokenError } = await (adminSupabase
+      .from('user_google_tokens') as any)
+      .select('refresh_token')
+      .eq('user_id', user.id)
+      .single()
+
+    if (tokenError || !tokenData?.refresh_token) {
+      return NextResponse.json(
+        { error: 'Google Drive no conectado o credenciales corruptas. Reconecta en Ajustes.' },
+        { status: 400 },
+      )
+    }
+
     // ── 6. Obtener access_token fresco ───────────────────────────────────────
-    const accessToken = await refreshAccessToken(profile.google_refresh_token)
+    const accessToken = await refreshAccessToken(tokenData.refresh_token)
 
     // ── 7. Buscar / crear estructura de carpetas en Drive ────────────────────
     const rootFolderId    = await getOrCreateRootFolder(accessToken)

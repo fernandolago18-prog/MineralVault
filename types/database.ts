@@ -27,6 +27,11 @@ export interface Database {
         Insert: Omit<UserProfile, 'created_at' | 'updated_at'>
         Update: Partial<Omit<UserProfile, 'id' | 'created_at'>>
       }
+      user_google_tokens: {
+        Row: UserGoogleToken
+        Insert: Omit<UserGoogleToken, 'created_at' | 'updated_at'>
+        Update: Partial<Omit<UserGoogleToken, 'user_id' | 'created_at'>>
+      }
     }
     Functions: {
       search_minerals: {
@@ -132,7 +137,13 @@ export interface UserProfile {
   bio: string | null
   location: string | null
   google_drive_connected: boolean
-  google_refresh_token: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface UserGoogleToken {
+  user_id: string
+  refresh_token: string
   created_at: string
   updated_at: string
 }

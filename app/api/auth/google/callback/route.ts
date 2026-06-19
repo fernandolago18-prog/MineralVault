@@ -14,7 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { exchangeCodeForTokens }     from '@/lib/google/auth'
 
 export const dynamic = 'force-dynamic'
@@ -65,22 +65,33 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       // Aún así marcamos como conectado (puede que ya tenga token)
     }
 
-    // — Guardar refresh_token en Supabase —
-    const updateData: Record<string, unknown> = {
-      google_drive_connected: true,
-      updated_at: new Date().toISOString(),
-    }
-    if (tokens.refresh_token) {
-      updateData.google_refresh_token = tokens.refresh_token
-    }
-
+    // — Guardar estado de conexión en user_profiles —
     const { error: updateError } = await (supabase
       .from('user_profiles') as any)
-      .update(updateData)
+      .update({
+        google_drive_connected: true,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', user.id)
 
     if (updateError) {
-      throw new Error(`Failed to save Google token: ${updateError.message}`)
+      throw new Error(`Failed to save Google connection status: ${updateError.message}`)
+    }
+
+    // — Guardar refresh_token de forma segura en user_google_tokens usando admin client —
+    if (tokens.refresh_token) {
+      const adminSupabase = createAdminClient()
+      const { error: tokenError } = await (adminSupabase
+        .from('user_google_tokens') as any)
+        .upsert({
+          user_id: user.id,
+          refresh_token: tokens.refresh_token,
+          updated_at: new Date().toISOString(),
+        })
+
+      if (tokenError) {
+        throw new Error(`Failed to save secure Google token: ${tokenError.message}`)
+      }
     }
 
     // — Limpiar cookie de state —

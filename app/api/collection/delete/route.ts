@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { refreshAccessToken }        from '@/lib/google/auth'
 import { deleteFileFromDrive }       from '@/lib/google/drive'
 
@@ -59,15 +59,16 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
 
     // 5. Si hay fotos, borrarlas de Google Drive
     if (photos && photos.length > 0) {
-      const { data: profile } = await (supabase
-        .from('user_profiles') as any)
-        .select('google_refresh_token')
-        .eq('id', user.id)
+      const adminSupabase = createAdminClient()
+      const { data: tokenData } = await (adminSupabase
+        .from('user_google_tokens') as any)
+        .select('refresh_token')
+        .eq('user_id', user.id)
         .single()
 
-      if (profile?.google_refresh_token) {
+      if (tokenData?.refresh_token) {
         try {
-          const accessToken = await refreshAccessToken(profile.google_refresh_token)
+          const accessToken = await refreshAccessToken(tokenData.refresh_token)
           for (const photo of photos) {
             try {
               await deleteFileFromDrive(accessToken, photo.drive_file_id)

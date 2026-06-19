@@ -50,16 +50,15 @@ export default function SettingsClient({ profile, userEmail }: Props) {
     if (!confirm('¿Seguro que quieres desconectar Google Drive? No se borrarán tus fotos actuales, pero no podrás subir nuevas.')) return
     
     try {
-      const { error } = await (supabase
-        .from('user_profiles') as any)
-        .update({
-          google_drive_connected: false,
-          google_refresh_token: null, // Limpiamos el token
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profile.id)
+      const res = await fetch('/api/auth/google/disconnect', {
+        method: 'POST'
+      })
 
-      if (error) throw error
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to disconnect')
+      }
+
       showToast('Google Drive desconectado')
       router.refresh()
     } catch (err) {
