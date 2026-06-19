@@ -7,12 +7,12 @@ interface AddSpecimenModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (data: {
-    specimen_label: string
+    specimen_label: string | null
     acquired_at: string | null
-    origin: string
-    notes: string
-    quality: number
-    dimensions: string
+    origin: string | null
+    notes: string | null
+    quality: number | null
+    dimensions: string | null
     weight_g: number | null
     price_eur: number | null
     files: File[]
@@ -95,12 +95,12 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
       setCompressingProgress(false)
 
       await onSave({
-        specimen_label: specimenLabel.trim(),
+        specimen_label: specimenLabel.trim() || null,
         acquired_at: acquiredAt || null,
-        origin: origin.trim(),
-        notes: notes.trim(),
-        quality,
-        dimensions: dimensions.trim(),
+        origin: origin.trim() || null,
+        notes: notes.trim() || null,
+        quality: quality || null,
+        dimensions: dimensions.trim() || null,
         weight_g: weightG ? parseFloat(weightG) : null,
         price_eur: priceEur ? parseFloat(priceEur) : null,
         files: compressedFiles,
