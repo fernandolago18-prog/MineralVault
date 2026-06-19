@@ -76,6 +76,55 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
     }
   }
 
+  // ── Image compression (client-side, keeps size under Vercel 4.5 MB limit) ──
+  const compressImage = useCallback(async (file: File): Promise<File> => {
+    const MAX_BYTES = 4 * 1024 * 1024   // 4 MB target
+    const MAX_DIM   = 2000              // max width or height in px
+
+    // HEIC/HEIF cannot be drawn on canvas in most browsers — skip compression
+    if (file.type === 'image/heic' || file.type === 'image/heif') return file
+    // Already small enough
+    if (file.size <= MAX_BYTES) return file
+
+    return new Promise<File>((resolve) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const canvas = document.createElement('canvas')
+        let { naturalWidth: w, naturalHeight: h } = img
+
+        // Downscale if needed
+        if (w > MAX_DIM || h > MAX_DIM) {
+          if (w >= h) { h = Math.round((h / w) * MAX_DIM); w = MAX_DIM }
+          else        { w = Math.round((w / h) * MAX_DIM); h = MAX_DIM }
+        }
+
+        canvas.width  = w
+        canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+
+        // Try quality 0.82 first; if still too large drop to 0.65
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return }
+          if (blob.size <= MAX_BYTES) {
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }))
+          } else {
+            canvas.toBlob((blob2) => {
+              resolve(blob2
+                ? new File([blob2], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+                : file)
+            }, 'image/jpeg', 0.65)
+          }
+        }, 'image/jpeg', 0.82)
+      }
+
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+      img.src = url
+    })
+  }, [])
+
   // ── Upload photos ──────────────────────────────────────────────────────────
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return
@@ -90,11 +139,14 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
     let failCount = 0
 
     for (let i = 0; i < fileArray.length; i++) {
-      const file = fileArray[i]
+      const raw  = fileArray[i]
       // Progreso aproximado basado en el archivo actual
       setUploadProgress(Math.round(((i) / fileArray.length) * 100) + 10)
 
       try {
+        // Compress before sending to stay under Vercel's 4.5 MB body limit
+        const file = await compressImage(raw)
+
         const fd = new FormData()
         fd.append('file',         file)
         fd.append('collectionId', item.id)
