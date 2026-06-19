@@ -15,6 +15,7 @@ interface AddSpecimenModalProps {
     dimensions: string
     weight_g: number | null
     price_eur: number | null
+    files: File[]
   }) => Promise<void>
   mineralName: string
 }
@@ -28,14 +29,71 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
   const [dimensions, setDimensions] = useState('')
   const [weightG, setWeightG] = useState('')
   const [priceEur, setPriceEur] = useState('')
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
   const [loading, setLoading] = useState(false)
+  const [compressingProgress, setCompressingProgress] = useState(false)
+
+  // ── Image compression (client-side) ──
+  const compressImage = async (file: File): Promise<File> => {
+    const MAX_BYTES = 4 * 1024 * 1024   // 4 MB target
+    const MAX_DIM   = 2000              // max width or height in px
+
+    if (file.type === 'image/heic' || file.type === 'image/heif') return file
+    if (file.size <= MAX_BYTES) return file
+
+    return new Promise<File>((resolve) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const canvas = document.createElement('canvas')
+        let { naturalWidth: w, naturalHeight: h } = img
+
+        if (w > MAX_DIM || h > MAX_DIM) {
+          if (w >= h) { h = Math.round((h / w) * MAX_DIM); w = MAX_DIM }
+          else        { w = Math.round((w / h) * MAX_DIM); h = MAX_DIM }
+        }
+
+        canvas.width  = w
+        canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return }
+          if (blob.size <= MAX_BYTES) {
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }))
+          } else {
+            canvas.toBlob((blob2) => {
+              resolve(blob2
+                ? new File([blob2], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+                : file)
+            }, 'image/jpeg', 0.65)
+          }
+        }, 'image/jpeg', 0.82)
+      }
+
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+      img.src = url
+    })
+  }
 
   if (!isOpen) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setCompressingProgress(true)
     try {
+      const compressedFiles: File[] = []
+      if (selectedFiles && selectedFiles.length > 0) {
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const file = await compressImage(selectedFiles[i])
+          compressedFiles.push(file)
+        }
+      }
+      setCompressingProgress(false)
+
       await onSave({
         specimen_label: specimenLabel.trim(),
         acquired_at: acquiredAt || null,
@@ -45,10 +103,12 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
         dimensions: dimensions.trim(),
         weight_g: weightG ? parseFloat(weightG) : null,
         price_eur: priceEur ? parseFloat(priceEur) : null,
+        files: compressedFiles,
       })
       onClose()
     } catch (err) {
       console.error(err)
+      setCompressingProgress(false)
     } finally {
       setLoading(false)
     }
@@ -211,6 +271,25 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
               onChange={e => setNotes(e.target.value)}
               style={{ resize: 'vertical', fontFamily: 'inherit' }}
             />
+          </div>
+
+          {/* Photos */}
+          <div className="form-group">
+            <label htmlFor="photos">Fotos del Ejemplar (Opcional)</label>
+            <input
+              id="photos"
+              className="input"
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              onChange={e => setSelectedFiles(e.target.files)}
+              style={{ padding: '0.375rem' }}
+            />
+            {selectedFiles && selectedFiles.length > 0 && (
+              <p style={{ fontSize: '0.75rem', color: 'var(--accent-purple)', marginTop: '0.25rem', fontWeight: 600 }}>
+                ✓ {selectedFiles.length} foto{selectedFiles.length > 1 ? 's' : ''} seleccionada{selectedFiles.length > 1 ? 's' : ''}
+              </p>
+            )}
           </div>
 
           {/* Actions */}

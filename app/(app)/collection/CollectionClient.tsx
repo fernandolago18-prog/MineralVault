@@ -31,16 +31,36 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
   const handleSaveSpecimen = async (specimenData: any) => {
     if (!activeMineralForAdd) return
     try {
-      const { error } = await (supabase
+      const { files, ...fields } = specimenData
+      const { data, error } = await (supabase
         .from('user_collection') as any)
         .insert({
           user_id: userId,
           mineral_id: activeMineralForAdd.id,
           status: 'owned',
-          ...specimenData
+          ...fields
         })
+        .select()
+        .single()
 
       if (error) throw error
+
+      // Subir fotos a Drive si se adjuntaron
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            const fd = new FormData()
+            fd.append('file', file)
+            fd.append('collectionId', data.id)
+            fd.append('mineralName', activeMineralForAdd.name)
+
+            await fetch('/api/drive/upload', { method: 'POST', body: fd })
+          } catch (uploadErr) {
+            console.error('[Drive Direct Upload Error]:', uploadErr)
+          }
+        }
+      }
+
       router.refresh()
     } catch (err) {
       console.error('[Add Specimen Error]:', err)

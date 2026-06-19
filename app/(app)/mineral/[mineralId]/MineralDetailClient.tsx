@@ -92,19 +92,46 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
   const handleSaveSpecimen = async (specimenData: any) => {
     setLoading(true)
     try {
+      const { files, ...fields } = specimenData
       const payload = {
         user_id: userId,
         mineral_id: mineral.id,
         status: 'owned',
-        ...specimenData,
+        ...fields,
       }
       const { data, error } = await (supabase
         .from('user_collection') as any)
         .insert(payload)
-        .select('*, specimen_photos(*)')
+        .select()
         .single()
       if (error) throw error
-      setCollectionItems(prev => [data as (CollectionItem & { specimen_photos: SpecimenPhoto[] }), ...prev])
+
+      // Subir fotos a Drive si se adjuntaron
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            const fd = new FormData()
+            fd.append('file', file)
+            fd.append('collectionId', data.id)
+            fd.append('mineralName', mineral.name)
+
+            await fetch('/api/drive/upload', { method: 'POST', body: fd })
+          } catch (uploadErr) {
+            console.error('[Drive Direct Upload Error]:', uploadErr)
+          }
+        }
+      }
+
+      // Obtener el item final con las fotos registradas
+      const { data: finalItem, error: queryError } = await (supabase
+        .from('user_collection') as any)
+        .select('*, specimen_photos(*)')
+        .eq('id', data.id)
+        .single()
+
+      if (queryError) throw queryError
+
+      setCollectionItems(prev => [finalItem as (CollectionItem & { specimen_photos: SpecimenPhoto[] }), ...prev])
       showToast('¡Ejemplar añadido a tu colección!')
     } catch (err) {
       console.error('[Add Specimen Error]:', err)
