@@ -66,5 +66,5 @@ export default async function CollectionPage() {
 
   const driveConnected = profile?.google_drive_connected ?? false
 
-  return <CollectionClient items={items} driveConnected={driveConnected} />
+  return <CollectionClient items={items} driveConnected={driveConnected} userId={user.id} />
 }

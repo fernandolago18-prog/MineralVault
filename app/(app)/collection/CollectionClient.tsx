@@ -2,15 +2,19 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import AddSpecimenModal from '@/components/catalog/AddSpecimenModal'
 import { getStreakColors, MINERAL_CLASS_LABELS, CRYSTAL_SYSTEM_LABELS, VALID_3D_SYSTEMS } from '@/types/database'
 
 interface CollectionClientProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   items: any[]
   driveConnected: boolean
+  userId: string
 }
 
-export default function CollectionClient({ items, driveConnected }: CollectionClientProps) {
+export default function CollectionClient({ items, driveConnected, userId }: CollectionClientProps) {
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState('') // '' | 'mineral' | 'rock'
   const [filterStreak, setFilterStreak] = useState('')
@@ -18,6 +22,33 @@ export default function CollectionClient({ items, driveConnected }: CollectionCl
   const [filterSystem, setFilterSystem] = useState('')
   const [hardnessMin, setHardnessMin] = useState<number | ''>('')
   const [hardnessMax, setHardnessMax] = useState<number | ''>('')
+
+  const [activeMineralForAdd, setActiveMineralForAdd] = useState<any | null>(null)
+
+  const supabase = createClient()
+  const router = useRouter()
+
+  const handleSaveSpecimen = async (specimenData: any) => {
+    if (!activeMineralForAdd) return
+    try {
+      const { error } = await (supabase
+        .from('user_collection') as any)
+        .insert({
+          user_id: userId,
+          mineral_id: activeMineralForAdd.id,
+          status: 'owned',
+          ...specimenData
+        })
+
+      if (error) throw error
+      router.refresh()
+    } catch (err) {
+      console.error('[Add Specimen Error]:', err)
+      alert('Error al registrar el ejemplar')
+    } finally {
+      setActiveMineralForAdd(null)
+    }
+  }
 
   // Filtrado en memoria
   const filteredItems = useMemo(() => {
@@ -425,11 +456,55 @@ export default function CollectionClient({ items, driveConnected }: CollectionCl
                       </Link>
                     )
                   })}
+
+                  {/* Tarjeta para registrar un nuevo ejemplar */}
+                  <div
+                    onClick={() => setActiveMineralForAdd(mineral)}
+                    style={{
+                      borderRadius: 'var(--radius-lg)',
+                      border: '2px dashed var(--border-default)',
+                      background: 'rgba(255,255,255,0.01)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      gap: '0.5rem',
+                      padding: '2rem 1rem',
+                      minHeight: '210px',
+                      transition: 'all var(--transition-base)',
+                    }}
+                    onMouseEnter={e => {
+                      const t = e.currentTarget as HTMLDivElement
+                      t.style.borderColor = 'var(--accent-purple)'
+                      t.style.background = 'rgba(124,58,237,0.03)'
+                    }}
+                    onMouseLeave={e => {
+                      const t = e.currentTarget as HTMLDivElement
+                      t.style.borderColor = 'var(--border-default)'
+                      t.style.background = 'rgba(255,255,255,0.01)'
+                    }}
+                  >
+                    <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>+</span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Añadir Ejemplar</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>de {title}</span>
+                  </div>
+
                 </div>
               </div>
             )
           })}
         </div>
+      )}
+
+      {/* Modal para añadir ejemplar desde la colección */}
+      {activeMineralForAdd && (
+        <AddSpecimenModal
+          isOpen={true}
+          onClose={() => setActiveMineralForAdd(null)}
+          onSave={handleSaveSpecimen}
+          mineralName={activeMineralForAdd.name_es || activeMineralForAdd.name}
+        />
       )}
     </div>
   )

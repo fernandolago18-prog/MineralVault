@@ -11,6 +11,7 @@ import MineralCard from '@/components/catalog/MineralCard'
 interface CatalogClientProps {
   initialMinerals: MineralSearchResult[]
   collectionMap: Record<string, string>
+  collectionCounts: Record<string, number>
   totalInDb: number
   userId: string
 }
@@ -22,11 +23,13 @@ const PAGE_SIZE = 24
 export default function CatalogClient({
   initialMinerals,
   collectionMap: initialCollectionMap,
+  collectionCounts: initialCollectionCounts = {},
   totalInDb,
   userId,
 }: CatalogClientProps) {
   const [minerals, setMinerals] = useState<MineralSearchResult[]>(initialMinerals)
   const [collectionMap, setCollectionMap] = useState<Record<string, string>>(initialCollectionMap)
+  const [collectionCounts, setCollectionCounts] = useState<Record<string, number>>(initialCollectionCounts)
   const [search, setSearch] = useState('')
   const [filterClass, setFilterClass] = useState('')
   const [filterSystem, setFilterSystem] = useState('')
@@ -223,24 +226,55 @@ export default function CatalogClient({
     const currentStatus = collectionMap[mineralId]
     
     try {
-      if (currentStatus === status) {
-        // Si ya tiene ese estado, lo quitamos
+      if (status === 'owned') {
+        // Añadir otro ejemplar (se permite duplicados)
         const { error } = await (supabase
           .from('user_collection') as any)
-          .delete()
-          .eq('user_id', userId)
-          .eq('mineral_id', mineralId)
+          .insert({ user_id: userId, mineral_id: mineralId, status: 'owned' })
+
         if (error) throw error
-        setCollectionMap(prev => { const next = { ...prev }; delete next[mineralId]; return next })
-        showToast(status === 'owned' ? 'Eliminado de tu colección' : 'Quitado de tu lista de deseos', 'info')
+        setCollectionMap(prev => ({ ...prev, [mineralId]: 'owned' }))
+        setCollectionCounts(prev => ({ ...prev, [mineralId]: (prev[mineralId] ?? 0) + 1 }))
+        showToast('¡Ejemplar añadido a tu colección!', 'success')
       } else {
-        // Insertamos o actualizamos al nuevo estado
-        const { error } = await (supabase
-          .from('user_collection') as any)
-          .upsert({ user_id: userId, mineral_id: mineralId, status } as any, { onConflict: 'user_id,mineral_id' })
-        if (error) throw error
-        setCollectionMap(prev => ({ ...prev, [mineralId]: status }))
-        showToast(status === 'owned' ? '¡Añadido a tu colección!' : 'Añadido a tu lista de deseos', 'success')
+        // Toggle wanted (lista de deseos)
+        if (currentStatus === 'wanted') {
+          // Ya era wanted, lo quitamos
+          const { error } = await (supabase
+            .from('user_collection') as any)
+            .delete()
+            .eq('user_id', userId)
+            .eq('mineral_id', mineralId)
+            .eq('status', 'wanted')
+          
+          if (error) throw error
+          setCollectionMap(prev => { const next = { ...prev }; delete next[mineralId]; return next })
+          showToast('Quitado de tu lista de deseos', 'info')
+        } else {
+          // Si era owned, pedir confirmación antes de borrar los ejemplares existentes
+          if (currentStatus === 'owned') {
+            if (!confirm('Este mineral ya tiene ejemplares en tu colección. Si lo añades a la lista de deseos, se eliminarán todos tus ejemplares existentes. ¿Deseas continuar?')) {
+              return
+            }
+            // Borrar los ejemplares existentes
+            const { error: delError } = await (supabase
+              .from('user_collection') as any)
+              .delete()
+              .eq('user_id', userId)
+              .eq('mineral_id', mineralId)
+            if (delError) throw delError
+          }
+
+          // Insertar wanted
+          const { error } = await (supabase
+            .from('user_collection') as any)
+            .insert({ user_id: userId, mineral_id: mineralId, status: 'wanted' })
+
+          if (error) throw error
+          setCollectionMap(prev => ({ ...prev, [mineralId]: 'wanted' }))
+          setCollectionCounts(prev => { const next = { ...prev }; delete next[mineralId]; return next })
+          showToast('Añadido a tu lista de deseos', 'success')
+        }
       }
     } catch (err) {
       console.error('[Collection Toggle Error]:', err)
@@ -464,6 +498,7 @@ export default function CatalogClient({
                 mineral={mineral}
                 varieties={mineral.mindat_id ? (varietiesMap[mineral.mindat_id] || []) : []}
                 collectionMap={collectionMap}
+                collectionCounts={collectionCounts}
                 onToggleCollection={toggleCollection}
                 searchQuery={search}
               />

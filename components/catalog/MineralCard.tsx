@@ -9,6 +9,7 @@ interface MineralCardProps {
   mineral: MineralSearchResult
   varieties?: Mineral[]
   collectionMap: Record<string, string>
+  collectionCounts: Record<string, number>
   onToggleCollection: (mineralId: string, status: 'owned' | 'wanted') => void
   searchQuery?: string
 }
@@ -31,6 +32,7 @@ export default function MineralCard({
   mineral,
   varieties = [],
   collectionMap,
+  collectionCounts = {},
   onToggleCollection,
   searchQuery,
 }: MineralCardProps) {
@@ -75,7 +77,8 @@ export default function MineralCard({
 
   const mergedMineral = mergeMineralWithParent(selectedMineral, selectedMineral.parent_mindat_id ? mineral : null)
 
-  const isOwned = collectionMap[selectedMineral.id] === 'owned'
+  const ownedCount = collectionCounts[selectedMineral.id] ?? 0
+  const isOwned = ownedCount > 0
   const isWanted = collectionMap[selectedMineral.id] === 'wanted'
   
   const hardnessLabel = mergedMineral.hardness_min != null
@@ -155,7 +158,7 @@ export default function MineralCard({
               letterSpacing: '0.05em',
               zIndex: 2,
             }}>
-              COLECCIONADO
+              COLECCIONADO ({ownedCount})
             </div>
           )}
           
@@ -262,11 +265,14 @@ export default function MineralCard({
               }}
             >
               <option value={mineral.id}>{mineral.name_es || mineral.name} (General)</option>
-              {varieties.map(v => (
-                <option key={v.id} value={v.id}>
-                  {v.name_es || v.name} {collectionMap[v.id] === 'owned' ? ' (Coleccionado)' : ''}
-                </option>
-              ))}
+              {varieties.map(v => {
+                const count = collectionCounts[v.id] ?? 0
+                return (
+                  <option key={v.id} value={v.id}>
+                    {v.name_es || v.name} {count > 0 ? ` (Coleccionado: ${count})` : ''}
+                  </option>
+                )
+              })}
             </select>
           </div>
         )}
@@ -274,11 +280,11 @@ export default function MineralCard({
         {/* Action buttons row */}
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
           <button
-            title={isOwned ? 'Quitar de mi colección' : 'Añadir a mi colección'}
-            className={`btn btn-sm ${isOwned ? 'btn-danger' : 'btn-primary'}`}
+            title={isOwned ? 'Registrar otro ejemplar' : 'Añadir a mi colección'}
+            className="btn btn-sm btn-primary"
             style={{ flex: 1 }}
             onClick={(e) => { e.preventDefault(); onToggleCollection(selectedMineral.id, 'owned') }}>
-            {isOwned ? 'Quitar' : '+ Colección'}
+            {isOwned ? '+ Ejemplar' : '+ Colección'}
           </button>
           
           <button

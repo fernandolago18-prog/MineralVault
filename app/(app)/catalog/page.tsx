@@ -41,10 +41,17 @@ export default async function CatalogPage() {
     .select('mineral_id, status')
     .eq('user_id', user.id)
 
-  const collectionMap = new Map(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ((collection ?? []) as any[]).map((item: any) => [item.mineral_id as string, item.status as string])
-  )
+  const collectionMap = new Map()
+  const collectionCounts: Record<string, number> = {}
+  
+  if (collection) {
+    (collection as any[]).forEach((item: any) => {
+      collectionMap.set(item.mineral_id, item.status)
+      if (item.status === 'owned') {
+        collectionCounts[item.mineral_id] = (collectionCounts[item.mineral_id] ?? 0) + 1
+      }
+    })
+  }
 
   let initialMinerals = (minerals as any[]) ?? []
 
@@ -82,6 +89,7 @@ export default async function CatalogPage() {
     <CatalogClient
       initialMinerals={initialMinerals}
       collectionMap={Object.fromEntries(collectionMap)}
+      collectionCounts={collectionCounts}
       totalInDb={totalMinerals ?? 0}
       userId={user.id}
     />

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { CollectionItem, Mineral, SpecimenPhoto } from '@/types/database'
 import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS } from '@/types/database'
@@ -18,6 +19,7 @@ type ToastType = 'success' | 'error' | 'info'
 export default function SpecimenDetailClient({ item, initialPhotos, driveConnected, userId }: Props) {
   const mineral = item.mineral
   const supabase = createClient()
+  const router = useRouter()
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [photos, setPhotos]           = useState<SpecimenPhoto[]>(initialPhotos)
@@ -25,6 +27,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
   const [uploadProgress, setUploadProgress] = useState(0)
   const [saving, setSaving]           = useState(false)
   const [deleting, setDeleting]       = useState<string | null>(null)
+  const [deletingSpecimen, setDeletingSpecimen] = useState(false)
   const [lightbox, setLightbox]       = useState<SpecimenPhoto | null>(null)
   const [toast, setToast]             = useState<{ msg: string; type: ToastType } | null>(null)
   const [dragOver, setDragOver]       = useState(false)
@@ -231,6 +234,30 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
     } catch (err) {
       console.error('[SetPrimary Error]:', err)
       showToast('Error al actualizar foto principal', 'error')
+    }
+  }
+
+  // ── Delete entire specimen ──────────────────────────────────────────────────
+  const handleDeleteSpecimen = async () => {
+    if (!confirm('¿Seguro que quieres eliminar por completo este ejemplar de tu colección? Esto también borrará todas sus fotos asociadas en Google Drive.')) return
+    setDeletingSpecimen(true)
+    try {
+      const res = await fetch('/api/collection/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collectionId: item.id }),
+      })
+      const data = await res.json() as { success?: boolean; error?: string }
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Error al eliminar')
+      
+      showToast('Ejemplar eliminado ✓', 'success')
+      router.push('/collection')
+      router.refresh()
+    } catch (err) {
+      console.error('[Delete Specimen Error]:', err)
+      showToast('Error al eliminar el ejemplar', 'error')
+    } finally {
+      setDeletingSpecimen(false)
     }
   }
 
@@ -523,6 +550,25 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
             <button className="btn btn-primary" onClick={handleSave} disabled={saving}
               style={{ marginTop: '0.25rem' }}>
               {saving ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Guardando...</> : 'Guardar cambios'}
+            </button>
+
+            <button 
+              className="btn" 
+              onClick={handleDeleteSpecimen} 
+              disabled={saving || deletingSpecimen}
+              style={{ 
+                marginTop: '0.5rem', 
+                background: 'rgba(244,63,94,0.1)', 
+                color: 'var(--accent-rose)', 
+                border: '1px solid rgba(244,63,94,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                width: '100%'
+              }}
+            >
+              {deletingSpecimen ? <><span className="spinner" style={{ width: 16, height: 16, borderLeftColor: 'var(--accent-rose)' }} /> Eliminando...</> : '✕ Eliminar Ejemplar'}
             </button>
           </div>
 
