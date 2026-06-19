@@ -165,7 +165,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
         })
         successCount++
       } catch (err) {
-        console.error(`[Upload Error] ${file.name}:`, err)
+        console.error(`[Upload Error] ${raw.name}:`, err)
         failCount++
       }
     }
