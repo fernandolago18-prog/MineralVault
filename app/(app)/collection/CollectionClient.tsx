@@ -194,7 +194,8 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
         gap: '1rem', marginBottom: '2rem',
       }}>
         {[
-          { label: 'Total mostrados', value: filteredItems.length, icon: '◆', color: 'var(--accent-purple)' },
+          { label: 'Especies distintas', value: groupedItems.length, icon: '◆', color: 'var(--accent-purple)' },
+          { label: 'Ejemplares totales', value: filteredItems.length, icon: '🪨', color: 'var(--accent-amber)' },
           { label: 'Clases distintas', value: Object.keys(byClass).length, icon: '■', color: 'var(--accent-cyan)' },
         ].map(stat => (
           <div key={stat.label} className="card" style={{ padding: '1.25rem' }}>
