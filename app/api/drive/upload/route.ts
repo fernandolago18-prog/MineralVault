@@ -127,7 +127,33 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     // ── 6. Obtener access_token fresco ───────────────────────────────────────
-    const accessToken = await refreshAccessToken(tokenData.refresh_token)
+    let accessToken: string
+    try {
+      accessToken = await refreshAccessToken(tokenData.refresh_token)
+    } catch (tokenErr) {
+      const msg = tokenErr instanceof Error ? tokenErr.message : String(tokenErr)
+      if (msg.includes('invalid_grant')) {
+        console.warn(`[Drive Upload] Refresh token expired/invalid for user ${user.id}. Resetting connection status.`)
+        
+        // Desconectar en perfil para que la UI pida reconectar
+        await (supabase.from('user_profiles') as any)
+          .update({ google_drive_connected: false, updated_at: new Date().toISOString() })
+          .eq('id', user.id)
+
+        await (adminSupabase.from('user_google_tokens') as any)
+          .delete()
+          .eq('user_id', user.id)
+
+        return NextResponse.json(
+          {
+            error: 'Tu sesión de Google Drive ha expirado. Por favor, vuelve a conectar tu cuenta en Ajustes.',
+            code: 'GOOGLE_TOKEN_EXPIRED',
+          },
+          { status: 401 },
+        )
+      }
+      throw tokenErr
+    }
 
     // ── 7. Buscar / crear estructura de carpetas en Drive ────────────────────
     const rootFolderId    = await getOrCreateRootFolder(accessToken)

@@ -29,6 +29,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
   const [deleting, setDeleting]       = useState<string | null>(null)
   const [deletingSpecimen, setDeletingSpecimen] = useState(false)
   const [lightbox, setLightbox]       = useState<SpecimenPhoto | null>(null)
+  const [isDriveConnected, setIsDriveConnected] = useState(driveConnected)
   const [toast, setToast]             = useState<{ msg: string; type: ToastType } | null>(null)
   const [dragOver, setDragOver]       = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -131,7 +132,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
   // ── Upload photos ──────────────────────────────────────────────────────────
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return
-    if (!driveConnected) {
+    if (!isDriveConnected) {
       showToast('Conecta tu Google Drive primero', 'error'); return
     }
 
@@ -156,7 +157,13 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
         fd.append('mineralName',  mineral.name)
 
         const res  = await fetch('/api/drive/upload', { method: 'POST', body: fd })
-        const data = await res.json() as { photo?: SpecimenPhoto; error?: string }
+        const data = await res.json() as { photo?: SpecimenPhoto; error?: string; code?: string }
+
+        if (res.status === 401 || data.code === 'GOOGLE_TOKEN_EXPIRED' || (data.error && data.error.includes('expirado'))) {
+          setIsDriveConnected(false)
+          showToast('Tu sesión de Google Drive ha expirado. Por favor reconecta tu cuenta.', 'error')
+          break
+        }
 
         if (!res.ok || data.error) throw new Error(data.error ?? 'Error al subir')
 
@@ -332,7 +339,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
           </div>
 
           {/* Upload zone */}
-          {driveConnected ? (
+          {isDriveConnected ? (
             <div
               onDrop={handleDrop}
               onDragOver={e => { e.preventDefault(); setDragOver(true) }}
