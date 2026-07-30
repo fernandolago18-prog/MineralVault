@@ -29,7 +29,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
   const handleSendPasswordReset = async () => {
     setResetSending(true)
     try {
-      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/update-password`
+      const redirectTo = `${window.location.origin}/auth/callback/recovery`
       const { error } = await supabase.auth.resetPasswordForEmail(userEmail, { redirectTo })
       if (error) throw error
       setResetSent(true)
