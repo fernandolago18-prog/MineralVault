@@ -15,12 +15,31 @@ export default function SettingsClient({ profile, userEmail }: Props) {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   
+  const [resetSending, setResetSending] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+
   const supabase = createClient()
   const router = useRouter()
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type })
     setTimeout(() => setToast(null), 3000)
+  }
+
+  const handleSendPasswordReset = async () => {
+    setResetSending(true)
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/update-password`
+      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, { redirectTo })
+      if (error) throw error
+      setResetSent(true)
+      showToast('Correo de recuperación enviado ✓')
+    } catch (err) {
+      console.error('[Password Reset Error]:', err)
+      showToast('Error al enviar el correo de recuperación', 'error')
+    } finally {
+      setResetSending(false)
+    }
   }
 
   const handleSave = async () => {
@@ -111,6 +130,37 @@ export default function SettingsClient({ profile, userEmail }: Props) {
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
+        </div>
+      </section>
+
+      {/* Security Section */}
+      <section className="card-elevated" style={{ padding: '1.5rem' }}>
+        <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Seguridad y Contraseña</h3>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            Solicita un enlace seguro a tu correo electrónico para cambiar o restablecer la contraseña de tu cuenta.
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleSendPasswordReset}
+              disabled={resetSending}
+            >
+              {resetSending ? 'Enviando correo...' : 'Enviar correo para cambiar contraseña'}
+            </button>
+          </div>
+
+          {resetSent && (
+            <div style={{
+              fontSize: '0.8rem', padding: '0.875rem 1rem', borderRadius: 'var(--radius-md)',
+              background: 'rgba(16,185,129,0.08)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.2)',
+              lineHeight: 1.5
+            }}>
+              ✓ Hemos enviado las instrucciones de restablecimiento a <strong>{userEmail}</strong>. Revisa tu bandeja de entrada o carpeta de spam.
+            </div>
+          )}
         </div>
       </section>
 
