@@ -49,7 +49,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (user && isAuthRoute && !pathname.startsWith('/auth/callback')) {
+  if (user && isAuthRoute && !pathname.startsWith('/auth/callback') && !pathname.startsWith('/auth/update-password')) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/catalog'
     return NextResponse.redirect(redirectUrl)

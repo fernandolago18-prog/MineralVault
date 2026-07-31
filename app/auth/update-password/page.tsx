@@ -20,8 +20,8 @@ export default function UpdatePasswordPage() {
   useEffect(() => {
     // Verificar si el usuario tiene una sesión activa o de recuperación
     const checkUserSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
         setHasSession(true)
       } else {
         // Escuchar el evento de autenticación por si el token viene en el hash de la URL

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -12,7 +12,7 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(searchParams.get('error'))
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   const supabase = createClient()
