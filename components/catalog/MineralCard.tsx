@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import type { MineralSearchResult, Mineral } from '@/types/database'
-import { CRYSTAL_SYSTEM_LABELS, mergeMineralWithParent, getStreakColors } from '@/types/database'
+import { CRYSTAL_SYSTEM_LABELS, mergeMineralWithParent, getStreakColors, normalizeText, matchesSearch } from '@/types/database'
 
 interface MineralCardProps {
   mineral: MineralSearchResult
@@ -40,12 +40,12 @@ export default function MineralCard({
 
   useEffect(() => {
     if (searchQuery && varieties.length > 0) {
-      const q = searchQuery.toLowerCase().trim()
+      const q = normalizeText(searchQuery)
 
       // 1. ¿Alguna variedad coincide EXACTAMENTE con la búsqueda?
       const exactVariety = varieties.find(v => 
-        v.name.toLowerCase() === q || 
-        (v.name_es && v.name_es.toLowerCase() === q)
+        normalizeText(v.name) === q || 
+        normalizeText(v.name_es) === q
       )
       if (exactVariety) {
         setSelectedMineral(exactVariety)
@@ -53,8 +53,7 @@ export default function MineralCard({
       }
 
       // 2. ¿El padre coincide con la búsqueda (parcial o exacta)? -> Preferimos el padre
-      const parentMatches = mineral.name.toLowerCase().includes(q) || 
-                            (mineral.name_es && mineral.name_es.toLowerCase().includes(q))
+      const parentMatches = matchesSearch(q, mineral.name, mineral.name_es)
       if (parentMatches) {
         setSelectedMineral(mineral)
         return
@@ -62,8 +61,7 @@ export default function MineralCard({
 
       // 3. ¿Alguna variedad incluye la búsqueda parcialmente?
       const partialVariety = varieties.find(v => 
-        v.name.toLowerCase().includes(q) || 
-        (v.name_es && v.name_es.toLowerCase().includes(q))
+        matchesSearch(q, v.name, v.name_es)
       )
       if (partialVariety) {
         setSelectedMineral(partialVariety)
@@ -129,6 +127,8 @@ export default function MineralCard({
             <img
               src={mergedMineral.thumbnail_url}
               alt={`Foto de ${mergedMineral.name_es || mergedMineral.name}`}
+              referrerPolicy="no-referrer"
+              loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isOwned ? 1 : 0.7 }}
             />
           ) : (
@@ -194,11 +194,11 @@ export default function MineralCard({
       </Link>
 
       {/* Content */}
-      <div style={{ padding: '1.25rem' }}>
+      <div style={{ padding: '1rem' }}>
         <Link href={`/mineral/${selectedMineral.id}`} style={{ textDecoration: 'none' }}>
           <h5 style={{
             fontFamily: 'Fraunces, serif', fontWeight: 500,
-            fontSize: '1.1rem', color: 'var(--text-primary)',
+            fontSize: '1.05rem', color: 'var(--text-primary)',
             textTransform: 'none', letterSpacing: 'normal',
             marginBottom: '0.25rem',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -278,11 +278,11 @@ export default function MineralCard({
         )}
 
         {/* Action buttons row */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.875rem' }}>
           <button
             title={isOwned ? 'Registrar otro ejemplar' : 'Añadir a mi colección'}
             className="btn btn-sm btn-primary"
-            style={{ flex: 1 }}
+            style={{ flex: 1, minWidth: 0, padding: '0.35rem 0.4rem', fontSize: '0.72rem' }}
             onClick={(e) => { e.preventDefault(); onToggleCollection(selectedMineral.id, 'owned') }}>
             {isOwned ? '+ Ejemplar' : '+ Colección'}
           </button>
@@ -291,7 +291,7 @@ export default function MineralCard({
             <button
               title="Quitar mineral de mi colección"
               className="btn btn-sm btn-danger"
-              style={{ padding: '0 0.75rem' }}
+              style={{ padding: '0 0.5rem', flexShrink: 0, fontSize: '0.72rem' }}
               onClick={(e) => {
                 e.preventDefault()
                 if (confirm(`¿Seguro que quieres quitar el mineral "${mergedMineral.name_es || mergedMineral.name}" por completo de tu colección? Se eliminarán todos sus ejemplares y fotos asociadas.`)) {
@@ -306,7 +306,7 @@ export default function MineralCard({
           <button
             title={isWanted ? 'Quitar de deseados' : 'Añadir a deseados'}
             className={`btn btn-sm ${isWanted ? 'btn-danger' : 'btn-secondary'}`}
-            style={{ padding: '0 0.75rem' }}
+            style={{ padding: '0 0.5rem', flexShrink: 0, fontSize: '0.8rem' }}
             onClick={(e) => { e.preventDefault(); onToggleCollection(selectedMineral.id, 'wanted') }}>
             {isWanted ? '★' : '☆'}
           </button>

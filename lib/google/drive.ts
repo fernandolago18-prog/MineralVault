@@ -221,5 +221,5 @@ export function buildEmbedUrl(fileId: string): string {
 }
 
 export function buildThumbnailUrl(fileId: string): string {
-  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`
+  return `https://lh3.googleusercontent.com/d/${fileId}=w400`
 }

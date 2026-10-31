@@ -304,9 +304,9 @@ export default function CatalogClient({
   return (
     <div className="catalog-container">
       {/* Header */}
-      <div style={{ marginBottom: '3.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem' }}>
-          <div style={{ flex: 1, minWidth: '300px' }}>
+      <div style={{ marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
+          <div style={{ flex: '1 1 280px', minWidth: 'min(100%, 280px)' }}>
             <h1 style={{ marginBottom: '0.75rem' }}>
               <span style={{ color: 'var(--accent-gold)', fontStyle: 'italic' }}>Minerales</span> de la Tierra
             </h1>
@@ -345,13 +345,13 @@ export default function CatalogClient({
 
       {/* Filters & Search */}
       <div className="card-elevated" style={{ padding: '1.25rem', marginBottom: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))', gap: '1.25rem' }}>
           
           {/* Search & Type (Unified) */}
           <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
             <label htmlFor="catalog-search">Búsqueda rápida</label>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ position: 'relative', flex: '1 1 200px', minWidth: 'min(100%, 200px)' }}>
                 <span style={{
                   position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)',
                   color: 'var(--text-muted)', fontSize: '1rem', pointerEvents: 'none',
@@ -366,20 +366,23 @@ export default function CatalogClient({
                 />
               </div>
               
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', width: 'auto' }}>
                 <button 
                   type="button"
-                  className={`btn ${filterType === '' ? 'btn-primary' : 'btn-secondary'}`}
+                  className={`btn btn-sm ${filterType === '' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: '1 1 auto' }}
                   onClick={() => handleFilterChange('type', '')}
                 >Todos</button>
                 <button 
                   type="button"
-                  className={`btn ${filterType === 'mineral' ? 'btn-primary' : 'btn-secondary'}`}
+                  className={`btn btn-sm ${filterType === 'mineral' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: '1 1 auto' }}
                   onClick={() => handleFilterChange('type', 'mineral')}
                 >Minerales</button>
                 <button 
                   type="button"
-                  className={`btn ${filterType === 'rock' ? 'btn-primary' : 'btn-secondary'}`}
+                  className={`btn btn-sm ${filterType === 'rock' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ flex: '1 1 auto' }}
                   onClick={() => handleFilterChange('type', 'rock')}
                 >Rocas</button>
               </div>
@@ -472,7 +475,7 @@ export default function CatalogClient({
         {/* Clear & Stats */}
         <div style={{ 
           marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem'
         }}>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Mostrando <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{minerals.length}</span> de {totalCount.toLocaleString()} resultados
@@ -488,13 +491,13 @@ export default function CatalogClient({
 
       {/* Minerals grid */}
       {loading || isPending ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))', gap: '1rem' }}>
           {[...Array(12)].map((_, i) => (
             <div key={i} className="skeleton" style={{ height: '240px', borderRadius: 'var(--radius-lg)' }} />
           ))}
         </div>
       ) : minerals.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+        <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-muted)' }}>
           <div style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--border-strong)' }}>◆</div>
           <h3>Sin resultados</h3>
           <p>Prueba con otros filtros o términos de búsqueda.</p>
@@ -503,7 +506,7 @@ export default function CatalogClient({
         <>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))',
             gap: '1rem',
             marginBottom: '2rem',
           }}>
@@ -522,7 +525,7 @@ export default function CatalogClient({
 
           {minerals.length < totalCount && (
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <button className="btn btn-secondary btn-lg" onClick={handleLoadMore} disabled={loadingMore}>
+              <button className="btn btn-secondary btn-lg" onClick={handleLoadMore} disabled={loadingMore} style={{ width: 'min(100%, 360px)' }}>
                 {loadingMore ? <><span className="spinner" /> Cargando...</> : `Cargar más (${totalCount - minerals.length} restantes)`}
               </button>
             </div>
@@ -532,7 +535,7 @@ export default function CatalogClient({
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000 }}>
+        <div className="toast-container">
           <div className={`toast toast-${toast.type}`}>{toast.msg}</div>
         </div>
       )}

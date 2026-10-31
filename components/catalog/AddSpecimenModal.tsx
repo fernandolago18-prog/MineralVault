@@ -122,28 +122,29 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '1rem',
+      padding: 'max(0.75rem, var(--safe-area-top, 0px)) max(0.75rem, var(--safe-area-right, 0px)) max(0.75rem, var(--safe-area-bottom, 0px)) max(0.75rem, var(--safe-area-left, 0px))',
       background: 'rgba(0, 0, 0, 0.75)',
       backdropFilter: 'blur(4px)',
     }}>
       <div className="card-elevated" style={{
         width: '100%',
         maxWidth: '500px',
-        maxHeight: '90vh',
+        maxHeight: 'calc(100dvh - 2rem)',
         overflowY: 'auto',
-        padding: '1.75rem',
+        WebkitOverflowScrolling: 'touch',
+        padding: '1.25rem',
         border: '1px solid var(--border-default)',
         background: 'var(--bg-surface)',
         display: 'flex',
         flexDirection: 'column',
         gap: '1.25rem',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ fontSize: '1.25rem', fontFamily: 'Outfit', fontWeight: 700 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h3 style={{ fontSize: '1.15rem', fontFamily: 'Outfit', fontWeight: 700 }}>
               Añadir Ejemplar
             </h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               Registrar espécimen de <strong>{mineralName}</strong>
             </p>
           </div>
@@ -156,8 +157,14 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
               color: 'var(--text-muted)',
               fontSize: '1.25rem',
               cursor: 'pointer',
-              padding: '0.25rem',
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
             }}
+            aria-label="Cerrar modal"
           >
             ✕
           </button>
@@ -194,7 +201,7 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
           </div>
 
           {/* Origin & Date */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', gap: '0.75rem' }}>
             <div className="form-group">
               <label htmlFor="origin">Procedencia</label>
               <input
@@ -218,7 +225,7 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
           </div>
 
           {/* Price & Weight */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', gap: '0.75rem' }}>
             <div className="form-group">
               <label htmlFor="price_eur">Precio (€)</label>
               <input
@@ -293,12 +300,13 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
           </div>
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
             <button
               type="button"
               className="btn btn-secondary"
               onClick={onClose}
               disabled={loading}
+              style={{ flex: 1 }}
             >
               Cancelar
             </button>
@@ -306,6 +314,7 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
               type="submit"
               className="btn btn-primary"
               disabled={loading}
+              style={{ flex: 2 }}
             >
               {loading ? 'Guardando...' : 'Guardar Ejemplar'}
             </button>

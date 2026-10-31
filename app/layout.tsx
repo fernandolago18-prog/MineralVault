@@ -2,10 +2,15 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const viewport: Viewport = {
-  themeColor: '#7c3aed',
+  themeColor: '#08080a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
 }
 
 export const metadata: Metadata = {
+  referrer: 'no-referrer',
   title: {
     default: 'Minerales de la Tierra — Tu Colección de Minerales',
     template: '%s | Minerales de la Tierra',
@@ -34,6 +39,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        <meta name="referrer" content="no-referrer" />
         <meta name="application-name" content="Minerales de la Tierra" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

@@ -90,7 +90,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       
       {/* Profile Section */}
-      <section className="card-elevated" style={{ padding: '1.5rem' }}>
+      <section className="card-elevated" style={{ padding: '1.25rem' }}>
         <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Perfil del Coleccionista</h3>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -134,7 +134,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
       </section>
 
       {/* Security Section */}
-      <section className="card-elevated" style={{ padding: '1.5rem' }}>
+      <section className="card-elevated" style={{ padding: '1.25rem' }}>
         <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Seguridad y Contraseña</h3>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -165,23 +165,25 @@ export default function SettingsClient({ profile, userEmail }: Props) {
       </section>
 
       {/* Cloud Section */}
-      <section className="card-elevated" style={{ padding: '1.5rem' }}>
+      <section className="card-elevated" style={{ padding: '1.25rem' }}>
         <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Almacenamiento en la Nube</h3>
         
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
           padding: '1rem',
           background: 'var(--bg-surface)',
           borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border-subtle)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0, flex: '1 1 200px' }}>
             <div style={{ 
-              width: '48px', height: '48px', borderRadius: '50%', 
+              width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
               background: profile?.google_drive_connected ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem'
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem'
             }}>
               {profile?.google_drive_connected ? (
                 <span style={{ color: 'var(--accent-emerald)', fontSize: '1.25rem', lineHeight: 1 }}>●</span>
@@ -189,7 +191,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
                 <span style={{ color: 'var(--accent-amber)', fontSize: '1.25rem', lineHeight: 1 }}>○</span>
               )}
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <h4 style={{ fontSize: '0.95rem', marginBottom: '0.1rem' }}>Google Drive</h4>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 {profile?.google_drive_connected 
@@ -210,7 +212,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
       </section>
 
       {/* Danger Zone */}
-      <section style={{ marginTop: '1rem', padding: '1rem', border: '1px solid rgba(244,63,94,0.2)', borderRadius: 'var(--radius-md)', background: 'rgba(244,63,94,0.02)' }}>
+      <section style={{ marginTop: '0.5rem', padding: '1rem', border: '1px solid rgba(244,63,94,0.2)', borderRadius: 'var(--radius-md)', background: 'rgba(244,63,94,0.02)' }}>
         <h4 style={{ color: 'var(--accent-rose)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Zona de Peligro</h4>
         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
           Si deseas eliminar tu cuenta permanentemente, contacta con soporte. No hay vuelta atrás.
@@ -220,7 +222,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000 }}>
+        <div className="toast-container">
           <div className={`toast toast-${toast.type}`}>{toast.msg}</div>
         </div>
       )}

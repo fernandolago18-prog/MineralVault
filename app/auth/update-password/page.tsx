@@ -74,7 +74,7 @@ export default function UpdatePasswordPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '2rem',
+      padding: '1.5rem 1rem',
       background: 'radial-gradient(circle at 50% 50%, #16161c 0%, var(--bg-void) 100%)',
     }}>
       {/* Fondo con líneas estilizadas */}
@@ -89,20 +89,20 @@ export default function UpdatePasswordPage() {
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px' }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
-            width: '56px', height: '56px', margin: '0 auto 1.25rem',
+            width: '52px', height: '52px', margin: '0 auto 1.25rem',
             background: 'var(--bg-void)',
             border: '2px solid var(--accent-gold)',
             borderRadius: 'var(--radius-sm)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '24px',
+            fontSize: '22px',
             color: 'var(--accent-gold)',
             boxShadow: 'var(--shadow-lg)',
           }}>
             ◆
           </div>
-          <h1 style={{ fontSize: '2.25rem', marginBottom: '0.35rem', fontWeight: 400 }}>
+          <h1 style={{ fontSize: 'clamp(1.75rem, 5vw, 2.25rem)', marginBottom: '0.35rem', fontWeight: 400 }}>
             Minerales de la Tierra
           </h1>
           <div style={{ 
@@ -114,7 +114,7 @@ export default function UpdatePasswordPage() {
         </div>
 
         {/* Card */}
-        <div className="glass-strong" style={{ borderRadius: 'var(--radius-sm)', padding: '2.25rem', border: '1px solid var(--border-strong)' }}>
+        <div className="glass-strong" style={{ borderRadius: 'var(--radius-sm)', padding: '1.75rem 1.25rem', border: '1px solid var(--border-strong)' }}>
           {checkingSession ? (
             <div style={{ textAlign: 'center', padding: '2rem 0' }}>
               <div className="spinner" style={{ margin: '0 auto 1rem', width: 24, height: 24 }} />

@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function LandingPage() {
@@ -26,29 +26,32 @@ export default async function LandingPage() {
 
       {/* Header / Nav */}
       <header style={{ 
-        padding: '1.5rem 2rem', 
+        padding: '1.25rem max(1rem, env(safe-area-inset-right, 0px)) 1.25rem max(1rem, env(safe-area-inset-left, 0px))', 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '0.75rem',
         position: 'relative',
         zIndex: 10
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', minWidth: 0 }}>
           <div style={{
-            width: '42px', height: '42px',
+            width: '38px', height: '38px', flexShrink: 0,
             background: 'var(--bg-void)',
             border: '1.5px solid var(--accent-gold)',
-            borderRadius: '12px',
+            borderRadius: '10px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '18px',
+            fontSize: '16px',
             color: 'var(--accent-gold)',
             boxShadow: 'var(--shadow-gem)',
           }}>
             ◆
           </div>
           <span style={{ 
-            fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', 
-            background: 'var(--gradient-gem)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+            fontFamily: 'Outfit', fontWeight: 800, fontSize: 'clamp(1.1rem, 4vw, 1.4rem)', 
+            background: 'var(--gradient-gem)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
           }}>
             Minerales de la Tierra
           </span>
@@ -56,11 +59,11 @@ export default async function LandingPage() {
         <div>
           {user ? (
             <Link href="/catalog">
-              <button className="btn btn-secondary">Ir al Catálogo</button>
+              <button className="btn btn-secondary btn-sm">Ir al Catálogo</button>
             </Link>
           ) : (
             <Link href="/auth/login">
-              <button className="btn btn-ghost">Iniciar Sesión</button>
+              <button className="btn btn-ghost btn-sm">Iniciar Sesión</button>
             </Link>
           )}
         </div>
@@ -74,17 +77,17 @@ export default async function LandingPage() {
         alignItems: 'center', 
         justifyContent: 'center',
         textAlign: 'center',
-        padding: '2rem',
+        padding: '3rem 1.25rem',
         position: 'relative',
         zIndex: 10
       }}>
         <div style={{ 
           marginBottom: '1rem',
-          padding: '0.5rem 1rem',
+          padding: '0.4rem 0.875rem',
           background: 'rgba(124,58,237,0.1)',
           border: '1px solid rgba(124,58,237,0.2)',
           borderRadius: 'var(--radius-full)',
-          fontSize: '0.8rem',
+          fontSize: '0.75rem',
           color: 'var(--accent-purple)',
           fontWeight: 600,
           fontFamily: 'Outfit',
@@ -96,9 +99,9 @@ export default async function LandingPage() {
         
         <h1 style={{ 
           maxWidth: '800px', 
-          fontSize: 'clamp(2.5rem, 8vw, 5rem)',
-          lineHeight: 1.05,
-          marginBottom: '1.5rem'
+          fontSize: 'clamp(2.2rem, 7vw, 4.5rem)',
+          lineHeight: 1.1,
+          marginBottom: '1.25rem'
         }}>
           Documenta tu pasión <br/>
           <span className="gradient-text">cristal por cristal.</span>
@@ -106,24 +109,24 @@ export default async function LandingPage() {
 
         <p style={{ 
           maxWidth: '600px', 
-          fontSize: 'clamp(1rem, 2vw, 1.25rem)', 
+          fontSize: 'clamp(0.95rem, 2vw, 1.2rem)', 
           color: 'var(--text-secondary)',
-          marginBottom: '2.5rem',
+          marginBottom: '2rem',
           lineHeight: 1.6
         }}>
           Gestiona tu colección privada con datos científicos, modelos 3D y 
           respaldo automático de tus fotografías en Google Drive.
         </p>
 
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Link href={user ? "/catalog" : "/auth/login"}>
-            <button className="btn btn-primary btn-lg" style={{ minWidth: '200px' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '440px' }}>
+          <Link href={user ? "/catalog" : "/auth/login"} style={{ flex: '1 1 200px' }}>
+            <button className="btn btn-primary btn-lg" style={{ width: '100%' }}>
               {user ? 'Explorar mi colección' : 'Empezar ahora gratis'}
             </button>
           </Link>
           {!user && (
-             <Link href="/catalog">
-              <button className="btn btn-secondary btn-lg" style={{ minWidth: '200px' }}>
+            <Link href="/catalog" style={{ flex: '1 1 200px' }}>
+              <button className="btn btn-secondary btn-lg" style={{ width: '100%' }}>
                 Ver el Catálogo
               </button>
             </Link>
@@ -132,21 +135,22 @@ export default async function LandingPage() {
 
         {/* Feature cards */}
         <div style={{ 
-          marginTop: '5rem',
+          marginTop: '3.5rem',
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1.5rem',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
+          gap: '1rem',
           maxWidth: '900px',
           width: '100%',
-          opacity: 0.8
+          opacity: 0.9
         }}>
           {[
-            { title: 'Base de Datos', desc: '+10k especies de Mindat.org' },
-            { title: 'Visor 3D', desc: 'Hábitos y sistemas cristalinos' },
-            { title: 'Google Drive', desc: 'Tus fotos siempre seguras' },
+            { title: 'Base de Datos', desc: '+10k especies de Mindat.org', icon: '◆' },
+            { title: 'Visor 3D', desc: 'Hábitos y sistemas cristalinos', icon: '💎' },
+            { title: 'Google Drive', desc: 'Tus fotos siempre seguras', icon: '☁' },
           ].map((feat, i) => (
-            <div key={i} className="card" style={{ padding: '1.5rem', textAlign: 'left' }}>
-              <h4 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{feat.title}</h4>
+            <div key={i} className="card" style={{ padding: '1.25rem', textAlign: 'left' }}>
+              <div style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'var(--accent-gold)' }}>{feat.icon}</div>
+              <h4 style={{ fontSize: '0.95rem', marginBottom: '0.25rem' }}>{feat.title}</h4>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{feat.desc}</p>
             </div>
           ))}
@@ -155,10 +159,10 @@ export default async function LandingPage() {
 
       {/* Footer */}
       <footer style={{ 
-        padding: '2rem', 
+        padding: '1.5rem 1rem', 
         textAlign: 'center', 
         color: 'var(--text-muted)', 
-        fontSize: '0.8rem',
+        fontSize: '0.75rem',
         borderTop: '1px solid var(--border-subtle)',
         marginTop: 'auto'
       }}>

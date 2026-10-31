@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AddSpecimenModal from '@/components/catalog/AddSpecimenModal'
-import { getStreakColors, MINERAL_CLASS_LABELS, CRYSTAL_SYSTEM_LABELS, VALID_3D_SYSTEMS } from '@/types/database'
+import { getStreakColors, MINERAL_CLASS_LABELS, CRYSTAL_SYSTEM_LABELS, VALID_3D_SYSTEMS, getDriveImageUrl, matchesSearch } from '@/types/database'
 
 interface CollectionClientProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,23 +76,26 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
       const mineral = item.mineral
       if (!mineral) return false
 
-      // Texto
+      // Búsqueda por texto (insensible a mayúsculas, minúsculas y tildes)
       if (search.trim()) {
-        const q = search.toLowerCase().trim()
-        const matchName = mineral.name?.toLowerCase().includes(q)
-        const matchNameEs = mineral.name_es?.toLowerCase().includes(q)
-        const matchFormula = mineral.chemical_formula?.toLowerCase().includes(q)
-        if (!matchName && !matchNameEs && !matchFormula) return false
+        const matches = matchesSearch(
+          search,
+          mineral.name,
+          mineral.name_es,
+          item.specimen_label,
+          item.origin,
+          mineral.chemical_formula
+        )
+        if (!matches) return false
       }
 
       // Tipo
       if (filterType === 'rock' && !mineral.is_rock) return false
       if (filterType === 'mineral' && mineral.is_rock) return false
 
-      // Raya
+      // Raya (también insensible a tildes)
       if (filterStreak) {
-        const streakStr = mineral.streak?.toLowerCase() || ''
-        if (!streakStr.includes(filterStreak.toLowerCase())) return false
+        if (!matchesSearch(filterStreak, mineral.streak)) return false
       }
 
       // Clase
@@ -155,7 +158,7 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
   }, [filteredItems])
 
   return (
-    <div style={{ minHeight: '100dvh', padding: '2rem 1.5rem' }}>
+    <div className="catalog-container">
       {/* Header */}
       <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
@@ -171,9 +174,10 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
           <div style={{ 
             padding: '0.75rem 1rem', background: 'rgba(245,158,11,0.06)', 
             border: '1px solid rgba(245,158,11,0.2)', borderRadius: 'var(--radius-md)',
-            display: 'flex', alignItems: 'center', gap: '0.75rem'
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem',
+            maxWidth: '100%'
           }}>
-            <div>
+            <div style={{ minWidth: 0, flex: 1 }}>
               <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-amber)', marginBottom: '0.1rem' }}>
                 Google Drive desconectado
               </p>
@@ -190,20 +194,20 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
 
       {/* Stats */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-        gap: '1rem', marginBottom: '2rem',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 100px), 1fr))',
+        gap: '0.75rem', marginBottom: '2rem',
       }}>
         {[
-          { label: 'Especies distintas', value: groupedItems.length, icon: '◆', color: 'var(--accent-purple)' },
-          { label: 'Ejemplares totales', value: filteredItems.length, icon: '🪨', color: 'var(--accent-amber)' },
-          { label: 'Clases distintas', value: Object.keys(byClass).length, icon: '■', color: 'var(--accent-cyan)' },
+          { label: 'Especies', value: groupedItems.length, icon: '◆', color: 'var(--accent-purple)' },
+          { label: 'Ejemplares', value: filteredItems.length, icon: '🪨', color: 'var(--accent-amber)' },
+          { label: 'Clases', value: Object.keys(byClass).length, icon: '■', color: 'var(--accent-cyan)' },
         ].map(stat => (
-          <div key={stat.label} className="card" style={{ padding: '1.25rem' }}>
-            <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: stat.color }}>{stat.icon}</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, fontFamily: 'Outfit', color: stat.color }}>
+          <div key={stat.label} className="card" style={{ padding: '0.875rem 0.75rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem', color: stat.color }}>{stat.icon}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'Outfit', color: stat.color, lineHeight: 1.1 }}>
               {stat.value}
             </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
               {stat.label}
             </div>
           </div>
@@ -213,37 +217,40 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
       {/* Filters */}
       {items.length > 0 && (
         <div className="card-elevated" style={{ padding: '1.25rem', marginBottom: '2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))', gap: '1.25rem' }}>
             
             {/* Search & Type (Unified) */}
             <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
               <label htmlFor="collection-search">Buscar en tu colección</label>
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: '1 1 200px', minWidth: 'min(100%, 200px)' }}>
                   <input
                     id="collection-search"
                     type="search"
                     className="input input-search"
-                    placeholder="Nombre o fórmula..."
+                    placeholder="Nombre, etiqueta, origen o fórmula..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                   />
                 </div>
                 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', width: 'auto' }}>
                   <button 
                     type="button"
-                    className={`btn ${filterType === '' ? 'btn-primary' : 'btn-secondary'}`}
+                    className={`btn btn-sm ${filterType === '' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ flex: '1 1 auto' }}
                     onClick={() => setFilterType('')}
                   >Todos</button>
                   <button 
                     type="button"
-                    className={`btn ${filterType === 'mineral' ? 'btn-primary' : 'btn-secondary'}`}
+                    className={`btn btn-sm ${filterType === 'mineral' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ flex: '1 1 auto' }}
                     onClick={() => setFilterType('mineral')}
                   >Minerales</button>
                   <button 
                     type="button"
-                    className={`btn ${filterType === 'rock' ? 'btn-primary' : 'btn-secondary'}`}
+                    className={`btn btn-sm ${filterType === 'rock' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ flex: '1 1 auto' }}
                     onClick={() => setFilterType('rock')}
                   >Rocas</button>
                 </div>
@@ -385,7 +392,7 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
                 {/* Specimens grid */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))',
                   gap: '1rem',
                 }}>
                   {specimens.map(item => {
@@ -420,12 +427,30 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
                           }}>
                             {item.primary_photo_url ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={item.primary_photo_url} alt={item.specimen_label || mineral.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img
+                                src={getDriveImageUrl(item.primary_photo_url, 400)}
+                                alt={item.specimen_label || mineral.name}
+                                referrerPolicy="no-referrer"
+                                loading="lazy"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                onError={(e) => {
+                                  const target = e.currentTarget
+                                  if (mineral.thumbnail_url && target.src !== mineral.thumbnail_url) {
+                                    target.src = mineral.thumbnail_url
+                                  } else {
+                                    target.style.display = 'none'
+                                  }
+                                }}
+                              />
                             ) : mineral.thumbnail_url ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={mineral.thumbnail_url} alt={mineral.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img
+                                src={mineral.thumbnail_url}
+                                alt={mineral.name}
+                                referrerPolicy="no-referrer"
+                                loading="lazy"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
                             ) : (
                               <div style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>{mineral.is_rock ? '⬡' : '◆'}</div>
                             )}

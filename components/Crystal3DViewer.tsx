@@ -158,10 +158,14 @@ export default function Crystal3DViewer({
     controls.enableDamping = true
     controls.dampingFactor = 0.05
     controls.enableZoom = false // Deshabilitar zoom (in/out) según requerimiento de visualización pura por rotación
+    controls.enablePan = false
     controls.minDistance = 1.5
     controls.maxDistance = 8
     controls.autoRotate = true
     controls.autoRotateSpeed = 1.5
+
+    // Permitir desplazamiento vertical de la página en dispositivos móviles (evita atrapar el scroll)
+    renderer.domElement.style.touchAction = 'pan-y'
 
     // ── Animation loop ─────────────────────────────────────
     let animationId = 0

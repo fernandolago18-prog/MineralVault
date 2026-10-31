@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { CollectionItem, Mineral, SpecimenPhoto } from '@/types/database'
-import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS } from '@/types/database'
+import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS, getDriveImageUrl } from '@/types/database'
 
 interface Props {
   item: CollectionItem & { mineral: Mineral }
@@ -278,7 +278,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100dvh', padding: '2rem 1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="catalog-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
       {/* Breadcrumb */}
       <nav style={{ marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -329,7 +329,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
       </div>
 
       {/* Main grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2rem', alignItems: 'start' }}>
+      <div className="detail-grid">
 
         {/* ── Left: Photos ── */}
         <div>
@@ -415,20 +415,24 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                   )}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={photo.drive_thumb_url ?? photo.drive_view_url}
+                    src={getDriveImageUrl(photo.drive_thumb_url || photo.drive_file_id, 400)}
                     alt={photo.caption ?? photo.filename ?? 'Foto del mineral'}
+                    referrerPolicy="no-referrer"
+                    loading="lazy"
                     style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
                     onClick={() => setLightbox(photo)}
                     onError={e => { (e.target as HTMLImageElement).src = '/placeholder-mineral.svg' }}
                   />
                   {/* Overlay actions */}
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex', gap: '4px',
-                    alignItems: 'center', justifyContent: 'center',
-                    opacity: 0, transition: 'opacity 0.2s',
-                  }}
+                  <div
+                    className="photo-actions-overlay"
+                    style={{
+                      position: 'absolute', inset: 0,
+                      background: 'rgba(0,0,0,0.5)',
+                      display: 'flex', gap: '4px',
+                      alignItems: 'center', justifyContent: 'center',
+                      opacity: 0, transition: 'opacity 0.2s',
+                    }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0' }}
                   >
@@ -469,7 +473,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
         </div>
 
         {/* ── Right: Edit form ── */}
-        <div style={{ position: 'sticky', top: '2rem' }}>
+        <div className="detail-sidebar">
           {/* Preview */}
           <div style={{
             height: '200px', borderRadius: 'var(--radius-lg)',
@@ -480,8 +484,13 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
           }}>
             {primaryPhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={primaryPhoto.drive_thumb_url ?? primaryPhoto.drive_view_url}
-                alt={mineral.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img
+                src={getDriveImageUrl(primaryPhoto.drive_thumb_url || primaryPhoto.drive_file_id, 600)}
+                alt={mineral.name}
+                referrerPolicy="no-referrer"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={e => { (e.target as HTMLImageElement).src = '/placeholder-mineral.svg' }}
+              />
             ) : (
               <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>◆</div>
@@ -618,10 +627,19 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={lightbox.drive_thumb_url ?? lightbox.drive_view_url}
+            src={getDriveImageUrl(lightbox.drive_file_id || lightbox.drive_thumb_url, 's0')}
             alt={lightbox.caption ?? 'Foto del mineral'}
+            referrerPolicy="no-referrer"
             style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)' }}
             onClick={e => e.stopPropagation()}
+            onError={e => {
+              // Si la resolución original fallara, intentar con w1600
+              const target = e.currentTarget
+              const fallback = getDriveImageUrl(lightbox.drive_file_id || lightbox.drive_thumb_url, 1600)
+              if (target.src !== fallback) {
+                target.src = fallback
+              }
+            }}
           />
           {lightbox.caption && (
             <p style={{ position: 'absolute', bottom: '2rem', color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem', textAlign: 'center' }}>
@@ -633,7 +651,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
 
       {/* ── Toast ── */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 300 }}>
+        <div className="toast-container">
           <div className={`toast toast-${toast.type}`}>{toast.msg}</div>
         </div>
       )}

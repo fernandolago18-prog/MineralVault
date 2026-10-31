@@ -173,7 +173,7 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
   const densityMax = (mineral.density_max && mineral.density_max > 0) ? mineral.density_max : null
 
   return (
-    <div style={{ minHeight: '100dvh', padding: '2rem 1.5rem' }}>
+    <div className="catalog-container">
       {/* Breadcrumb */}
       <nav style={{ marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
         <Link href="/catalog" style={{ color: 'var(--text-muted)' }}>Catálogo</Link>
@@ -181,7 +181,7 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
         <span style={{ color: 'var(--text-primary)' }}>{mineral.name_es || mineral.name}</span>
       </nav>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2rem', alignItems: 'start' }}>
+      <div className="detail-grid">
         {/* Left column — mineral info */}
         <div>
           {/* Header */}
@@ -370,7 +370,7 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
                     }}>
                       {parentMineral.thumbnail_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={parentMineral.thumbnail_url} alt={parentMineral.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={parentMineral.thumbnail_url} alt={parentMineral.name} referrerPolicy="no-referrer" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <div style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>◆</div>
                       )}
@@ -417,7 +417,7 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
                           }}>
                             {v.thumbnail_url ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={v.thumbnail_url} alt={v.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img src={v.thumbnail_url} alt={v.name} referrerPolicy="no-referrer" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                               <div style={{ fontSize: '1.0rem', color: 'var(--text-muted)' }}>◆</div>
                             )}
@@ -468,7 +468,7 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
         </div>
 
         {/* Right column — 3D + collection */}
-        <div style={{ position: 'sticky', top: '2rem' }}>
+        <div className="detail-sidebar">
           {/* Visores 3D para todos los hábitos disponibles (Solo para sistemas cristalinos válidos y si NO es roca) */}
           {!mineral.is_rock && mineral.crystal_system && VALID_3D_SYSTEMS.includes(mineral.crystal_system) && (
             geometricHabits && geometricHabits.length > 0 ? (
@@ -624,7 +624,7 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000 }}>
+        <div className="toast-container">
           <div className="toast toast-success">{toast}</div>
         </div>
       )}
