@@ -36,7 +36,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Rutas que requieren autenticación
-  const protectedPaths = ['/catalog', '/collection', '/mineral']
+  const protectedPaths = ['/catalog', '/collection', '/mineral', '/settings']
   const isProtected = protectedPaths.some(path => pathname.startsWith(path))
 
   // Rutas de auth
@@ -46,13 +46,21 @@ export async function proxy(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/auth/login'
     redirectUrl.searchParams.set('redirectTo', pathname)
-    return NextResponse.redirect(redirectUrl)
+    const redirectResponse = NextResponse.redirect(redirectUrl)
+    supabaseResponse.cookies.getAll().forEach(cookie => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
   }
 
   if (user && isAuthRoute && !pathname.startsWith('/auth/callback') && !pathname.startsWith('/auth/update-password')) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/catalog'
-    return NextResponse.redirect(redirectUrl)
+    const redirectResponse = NextResponse.redirect(redirectUrl)
+    supabaseResponse.cookies.getAll().forEach(cookie => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
   }
 
   return supabaseResponse

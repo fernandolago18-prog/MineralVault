@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import CatalogClient from './CatalogClient'
 import { mergeMineralWithParent } from '@/types/database'
+import { getDriveImageUrl } from '@/lib/images'
 
 export const metadata: Metadata = {
   title: 'Catálogo de Minerales',
@@ -35,14 +36,15 @@ export default async function CatalogPage() {
     console.error('[Catalog Load Error]:', error.message)
   }
 
-  // IDs de minerales que el usuario ya tiene en su colección
-  const { data: collection } = await supabase
+  // IDs y fotos de ejemplares que el usuario ya tiene en su colección
+  const { data: collection } = await (supabase
     .from('user_collection')
-    .select('mineral_id, status')
-    .eq('user_id', user.id)
+    .select('mineral_id, status, primary_photo_url, specimen_photos(drive_thumb_url, drive_file_id, is_primary)')
+    .eq('user_id', user.id) as any)
 
   const collectionMap = new Map()
   const collectionCounts: Record<string, number> = {}
+  const collectionPhotos: Record<string, string> = {}
   
   if (collection) {
     (collection as any[]).forEach((item: any) => {
@@ -50,6 +52,15 @@ export default async function CatalogPage() {
         collectionCounts[item.mineral_id] = (collectionCounts[item.mineral_id] ?? 0) + 1
         if (!collectionMap.has(item.mineral_id)) {
           collectionMap.set(item.mineral_id, 'owned')
+        }
+        // Asignar la mejor foto guardada del ejemplar para la portada del mineral
+        if (!collectionPhotos[item.mineral_id]) {
+          const photos = item.specimen_photos || []
+          const primaryPhoto = photos.find((p: any) => p.is_primary) || photos[0]
+          const photoUrlOrId = primaryPhoto?.drive_thumb_url || primaryPhoto?.drive_file_id || item.primary_photo_url
+          if (photoUrlOrId) {
+            collectionPhotos[item.mineral_id] = getDriveImageUrl(photoUrlOrId, 400)
+          }
         }
       } else if (item.status === 'wanted') {
         collectionMap.set(item.mineral_id, 'wanted')
@@ -94,6 +105,7 @@ export default async function CatalogPage() {
       initialMinerals={initialMinerals}
       collectionMap={Object.fromEntries(collectionMap)}
       collectionCounts={collectionCounts}
+      collectionPhotos={collectionPhotos}
       totalInDb={totalMinerals ?? 0}
       userId={user.id}
     />

@@ -1,15 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import type { MineralSearchResult, Mineral } from '@/types/database'
-import { CRYSTAL_SYSTEM_LABELS, mergeMineralWithParent, getStreakColors, normalizeText, matchesSearch } from '@/types/database'
+import { CRYSTAL_SYSTEM_LABELS, mergeMineralWithParent, getStreakColors, normalizeText, matchesSearch, sanitizeChemicalFormula } from '@/types/database'
+import { Star, Camera } from 'lucide-react'
 
 interface MineralCardProps {
   mineral: MineralSearchResult
   varieties?: Mineral[]
   collectionMap: Record<string, string>
   collectionCounts: Record<string, number>
+  collectionPhotos?: Record<string, string>
   onToggleCollection: (mineralId: string, status: 'owned' | 'wanted' | 'remove_all') => void
   searchQuery?: string
 }
@@ -33,45 +35,48 @@ export default function MineralCard({
   varieties = [],
   collectionMap,
   collectionCounts = {},
+  collectionPhotos = {},
   onToggleCollection,
   searchQuery,
 }: MineralCardProps) {
-  const [selectedMineral, setSelectedMineral] = useState<MineralSearchResult | Mineral>(mineral)
+  const [manualVarietyId, setManualVarietyId] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (searchQuery && varieties.length > 0) {
-      const q = normalizeText(searchQuery)
+  // Derivación directa y reactiva en render (evita renders en cascada y warnings en React 19)
+  let selectedMineral: MineralSearchResult | Mineral = mineral
 
-      // 1. ¿Alguna variedad coincide EXACTAMENTE con la búsqueda?
-      const exactVariety = varieties.find(v => 
-        normalizeText(v.name) === q || 
-        normalizeText(v.name_es) === q
-      )
-      if (exactVariety) {
-        setSelectedMineral(exactVariety)
-        return
-      }
-
-      // 2. ¿El padre coincide con la búsqueda (parcial o exacta)? -> Preferimos el padre
-      const parentMatches = matchesSearch(q, mineral.name, mineral.name_es)
-      if (parentMatches) {
-        setSelectedMineral(mineral)
-        return
-      }
-
-      // 3. ¿Alguna variedad incluye la búsqueda parcialmente?
-      const partialVariety = varieties.find(v => 
-        matchesSearch(q, v.name, v.name_es)
-      )
-      if (partialVariety) {
-        setSelectedMineral(partialVariety)
-        return
+  if (manualVarietyId) {
+    if (manualVarietyId === mineral.id) {
+      selectedMineral = mineral
+    } else {
+      const manualFound = varieties.find(v => v.id === manualVarietyId)
+      if (manualFound) {
+        selectedMineral = manualFound
       }
     }
-    
-    // Fallback: seleccionar el padre
-    setSelectedMineral(mineral)
-  }, [mineral, searchQuery, varieties])
+  } else if (searchQuery && varieties.length > 0) {
+    const q = normalizeText(searchQuery)
+
+    // 1. ¿Alguna variedad coincide EXACTAMENTE con la búsqueda?
+    const exactVariety = varieties.find(v => 
+      normalizeText(v.name) === q || 
+      normalizeText(v.name_es) === q
+    )
+    if (exactVariety) {
+      selectedMineral = exactVariety
+    } else {
+      // 2. ¿El padre coincide con la búsqueda (parcial o exacta)? -> Preferimos el padre
+      const parentMatches = matchesSearch(q, mineral.name, mineral.name_es)
+      if (!parentMatches) {
+        // 3. ¿Alguna variedad incluye la búsqueda parcialmente?
+        const partialVariety = varieties.find(v => 
+          matchesSearch(q, v.name, v.name_es)
+        )
+        if (partialVariety) {
+          selectedMineral = partialVariety
+        }
+      }
+    }
+  }
 
   const mergedMineral = mergeMineralWithParent(selectedMineral, selectedMineral.parent_mindat_id ? mineral : null)
 
@@ -86,6 +91,12 @@ export default function MineralCard({
     : '—'
 
   const streakColors = getStreakColors(mergedMineral.streak)
+
+  const userPhoto = collectionPhotos?.[selectedMineral.id] 
+    || collectionPhotos?.[mineral.id] 
+    || null
+
+  const displayImage = userPhoto || mergedMineral.thumbnail_url
 
   return (
     <div
@@ -116,20 +127,25 @@ export default function MineralCard({
       {/* Top section: image or crystal preview */}
       <Link href={`/mineral/${selectedMineral.id}`} style={{ display: 'block', textDecoration: 'none' }}>
         <div style={{
-          height: '140px', position: 'relative',
+          height: '135px', position: 'relative',
           background: 'var(--bg-void)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           overflow: 'hidden',
           borderBottom: '1px solid var(--border-default)',
         }}>
-          {mergedMineral.thumbnail_url ? (
+          {displayImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={mergedMineral.thumbnail_url}
+              src={displayImage}
               alt={`Foto de ${mergedMineral.name_es || mergedMineral.name}`}
               referrerPolicy="no-referrer"
               loading="lazy"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isOwned ? 1 : 0.7 }}
+              onError={(e) => {
+                if (userPhoto && mergedMineral.thumbnail_url && (e.currentTarget as HTMLImageElement).src !== mergedMineral.thumbnail_url) {
+                  (e.currentTarget as HTMLImageElement).src = mergedMineral.thumbnail_url
+                }
+              }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isOwned ? 1 : 0.75 }}
             />
           ) : (
             <div style={{ textAlign: 'center', opacity: isOwned ? 1 : 0.5 }}>
@@ -150,12 +166,12 @@ export default function MineralCard({
           {/* Owned indicator */}
           {isOwned && (
             <div style={{
-              position: 'absolute', top: '12px', left: '12px',
+              position: 'absolute', top: '10px', left: '10px',
               background: 'var(--accent-emerald)',
               color: 'white', borderRadius: 'var(--radius-xs)',
-              padding: '2px 8px',
-              fontSize: '0.65rem', fontWeight: 800,
-              letterSpacing: '0.05em',
+              padding: '2px 7px',
+              fontSize: '0.62rem', fontWeight: 800,
+              letterSpacing: '0.04em',
               zIndex: 2,
             }}>
               COLECCIONADO ({ownedCount})
@@ -165,7 +181,7 @@ export default function MineralCard({
           {/* Wanted indicator */}
           {isWanted && (
             <div style={{
-              position: 'absolute', top: '12px', right: '12px',
+              position: 'absolute', top: '10px', right: '10px',
               background: 'var(--bg-void)',
               color: 'var(--accent-gold)',
               border: '1px solid var(--accent-gold)',
@@ -179,13 +195,33 @@ export default function MineralCard({
             </div>
           )}
 
-          {/* Rock indicator */}
-          {mergedMineral.is_rock && (
+          {/* Badge de Foto propia del coleccionista */}
+          {userPhoto && (
             <div style={{
-              position: 'absolute', bottom: '12px', left: '12px',
+              position: 'absolute', bottom: '8px', right: '8px',
+              background: 'rgba(14, 14, 18, 0.88)',
+              backdropFilter: 'blur(4px)',
+              color: 'var(--accent-gold)',
+              border: '1px solid var(--border-default)',
+              borderRadius: 'var(--radius-xs)',
+              padding: '2px 5px',
+              display: 'flex', alignItems: 'center', gap: '3px',
+              fontSize: '0.58rem', fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
               zIndex: 2,
             }}>
-              <span className="badge badge-rock" style={{ fontSize: '0.65rem', background: 'rgba(22, 22, 28, 0.95)', backdropFilter: 'blur(4px)' }}>
+              <Camera size={10} /> Tu foto
+            </div>
+          )}
+
+          {/* Rock indicator */}
+          {mergedMineral.is_rock && !userPhoto && (
+            <div style={{
+              position: 'absolute', bottom: '10px', left: '10px',
+              zIndex: 2,
+            }}>
+              <span className="badge badge-rock" style={{ fontSize: '0.62rem', background: 'rgba(22, 22, 28, 0.95)', backdropFilter: 'blur(4px)' }}>
                 Roca
               </span>
             </div>
@@ -194,7 +230,7 @@ export default function MineralCard({
       </Link>
 
       {/* Content */}
-      <div style={{ padding: '1rem' }}>
+      <div style={{ padding: '0.85rem' }}>
         <Link href={`/mineral/${selectedMineral.id}`} style={{ textDecoration: 'none' }}>
           <h5 style={{
             fontFamily: 'Fraunces, serif', fontWeight: 500,
@@ -224,7 +260,7 @@ export default function MineralCard({
                 fontSize: '0.7rem', color: 'var(--accent-primary)',
                 display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}
-              dangerouslySetInnerHTML={{ __html: mergedMineral.chemical_formula }}
+              dangerouslySetInnerHTML={{ __html: sanitizeChemicalFormula(mergedMineral.chemical_formula) }}
             />
           </div>
         )}
@@ -255,13 +291,7 @@ export default function MineralCard({
               }}
               value={selectedMineral.id}
               onChange={(e) => {
-                const val = e.target.value
-                if (val === mineral.id) {
-                  setSelectedMineral(mineral)
-                } else {
-                  const found = varieties.find(v => v.id === val)
-                  if (found) setSelectedMineral(found)
-                }
+                setManualVarietyId(e.target.value)
               }}
             >
               <option value={mineral.id}>{mineral.name_es || mineral.name} (General)</option>
@@ -278,11 +308,11 @@ export default function MineralCard({
         )}
 
         {/* Action buttons row */}
-        <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.875rem' }}>
+        <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.75rem', alignItems: 'center' }}>
           <button
             title={isOwned ? 'Registrar otro ejemplar' : 'Añadir a mi colección'}
             className="btn btn-sm btn-primary"
-            style={{ flex: 1, minWidth: 0, padding: '0.35rem 0.4rem', fontSize: '0.72rem' }}
+            style={{ flex: 1, minWidth: 0, padding: '0.35rem 0.3rem', fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis' }}
             onClick={(e) => { e.preventDefault(); onToggleCollection(selectedMineral.id, 'owned') }}>
             {isOwned ? '+ Ejemplar' : '+ Colección'}
           </button>
@@ -291,7 +321,7 @@ export default function MineralCard({
             <button
               title="Quitar mineral de mi colección"
               className="btn btn-sm btn-danger"
-              style={{ padding: '0 0.5rem', flexShrink: 0, fontSize: '0.72rem' }}
+              style={{ padding: '0 0.35rem', flexShrink: 0, fontSize: '0.7rem' }}
               onClick={(e) => {
                 e.preventDefault()
                 if (confirm(`¿Seguro que quieres quitar el mineral "${mergedMineral.name_es || mergedMineral.name}" por completo de tu colección? Se eliminarán todos sus ejemplares y fotos asociadas.`)) {
@@ -306,9 +336,9 @@ export default function MineralCard({
           <button
             title={isWanted ? 'Quitar de deseados' : 'Añadir a deseados'}
             className={`btn btn-sm ${isWanted ? 'btn-danger' : 'btn-secondary'}`}
-            style={{ padding: '0 0.5rem', flexShrink: 0, fontSize: '0.8rem' }}
+            style={{ padding: '0 0.35rem', width: '30px', height: '30px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={(e) => { e.preventDefault(); onToggleCollection(selectedMineral.id, 'wanted') }}>
-            {isWanted ? '★' : '☆'}
+            <Star size={13} fill={isWanted ? 'currentColor' : 'none'} stroke="currentColor" />
           </button>
         </div>
       </div>

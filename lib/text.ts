@@ -44,3 +44,29 @@ export function matchesSearch(
   const words = cleanQuery.split(/\s+/).filter(Boolean)
   return words.every(word => fullHaystack.includes(word))
 }
+
+/**
+ * Sanitiza de forma estricta una fórmula química eliminando cualquier script, evento
+ * o etiqueta HTML peligrosa. Permite exclusivamente <sub> y <sup> planos para subíndices
+ * y superíndices químicos. Previene Stored XSS e inyecciones en el DOM.
+ */
+export function sanitizeChemicalFormula(formula: string | null | undefined): string {
+  if (!formula) return ''
+
+  const tokenSubOpen = '__SUB_OPEN__'
+  const tokenSubClose = '__SUB_CLOSE__'
+  const tokenSupOpen = '__SUP_OPEN__'
+  const tokenSupClose = '__SUP_CLOSE__'
+
+  return formula
+    .replace(/<sub\b[^>]*>/gi, tokenSubOpen)
+    .replace(/<\/sub>/gi, tokenSubClose)
+    .replace(/<sup\b[^>]*>/gi, tokenSupOpen)
+    .replace(/<\/sup>/gi, tokenSupClose)
+    .replace(/[<>]/g, '')
+    .replace(new RegExp(tokenSubOpen, 'g'), '<sub>')
+    .replace(new RegExp(tokenSubClose, 'g'), '</sub>')
+    .replace(new RegExp(tokenSupOpen, 'g'), '<sup>')
+    .replace(new RegExp(tokenSupClose, 'g'), '</sup>')
+}
+

@@ -857,6 +857,6 @@ export function getStreakColors(streak: string | null | undefined): Array<{ hex:
 }
 
 export { getDriveImageUrl } from '@/lib/images';
-export { normalizeText, matchesSearch } from '@/lib/text';
+export { normalizeText, matchesSearch, sanitizeChemicalFormula } from '@/lib/text';
 
 

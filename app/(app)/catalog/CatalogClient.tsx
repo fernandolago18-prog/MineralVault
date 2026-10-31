@@ -13,6 +13,7 @@ interface CatalogClientProps {
   initialMinerals: MineralSearchResult[]
   collectionMap: Record<string, string>
   collectionCounts: Record<string, number>
+  collectionPhotos?: Record<string, string>
   totalInDb: number
   userId: string
 }
@@ -25,12 +26,14 @@ export default function CatalogClient({
   initialMinerals,
   collectionMap: initialCollectionMap,
   collectionCounts: initialCollectionCounts = {},
+  collectionPhotos: initialCollectionPhotos = {},
   totalInDb,
   userId,
 }: CatalogClientProps) {
   const [minerals, setMinerals] = useState<MineralSearchResult[]>(initialMinerals)
   const [collectionMap, setCollectionMap] = useState<Record<string, string>>(initialCollectionMap)
   const [collectionCounts, setCollectionCounts] = useState<Record<string, number>>(initialCollectionCounts)
+  const [collectionPhotos, setCollectionPhotos] = useState<Record<string, string>>(initialCollectionPhotos)
   const [search, setSearch] = useState('')
   const [filterClass, setFilterClass] = useState('')
   const [filterSystem, setFilterSystem] = useState('')
@@ -239,6 +242,7 @@ export default function CatalogClient({
 
         setCollectionMap(prev => { const next = { ...prev }; delete next[mineralId]; return next })
         setCollectionCounts(prev => { const next = { ...prev }; delete next[mineralId]; return next })
+        setCollectionPhotos(prev => { const next = { ...prev }; delete next[mineralId]; return next })
         showToast('Mineral eliminado de tu colección', 'info')
         return
       }
@@ -333,8 +337,8 @@ export default function CatalogClient({
             </div>
           </div>
           
-          <Link href="/collection">
-            <button className="btn btn-primary btn-lg">
+          <Link href="/collection" style={{ width: 'auto' }}>
+            <button className="btn btn-primary btn-lg" style={{ width: 'min(100%, 280px)' }}>
               Mi Vitrina ({ownedCount})
             </button>
           </Link>
@@ -364,23 +368,23 @@ export default function CatalogClient({
                 />
               </div>
               
-              <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', width: 'auto' }}>
+              <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', flex: '1 1 210px' }}>
                 <button 
                   type="button"
                   className={`btn btn-sm ${filterType === '' ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ flex: '1 1 auto' }}
+                  style={{ flex: '1 1 0px', minWidth: '65px', padding: '0.4rem 0.5rem' }}
                   onClick={() => handleFilterChange('type', '')}
                 >Todos</button>
                 <button 
                   type="button"
                   className={`btn btn-sm ${filterType === 'mineral' ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ flex: '1 1 auto' }}
+                  style={{ flex: '1 1 0px', minWidth: '65px', padding: '0.4rem 0.5rem' }}
                   onClick={() => handleFilterChange('type', 'mineral')}
                 >Minerales</button>
                 <button 
                   type="button"
                   className={`btn btn-sm ${filterType === 'rock' ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ flex: '1 1 auto' }}
+                  style={{ flex: '1 1 0px', minWidth: '65px', padding: '0.4rem 0.5rem' }}
                   onClick={() => handleFilterChange('type', 'rock')}
                 >Rocas</button>
               </div>
@@ -448,7 +452,7 @@ export default function CatalogClient({
                 max="10"
                 step="0.5"
                 className="input"
-                style={{ padding: '0.5rem' }}
+                style={{ padding: '0.5rem', flex: 1, minWidth: 0 }}
                 placeholder="Mín"
                 value={hardnessMin}
                 onChange={e => handleFilterChange('hMin', e.target.value === '' ? '' : parseFloat(e.target.value))}
@@ -460,7 +464,7 @@ export default function CatalogClient({
                 max="10"
                 step="0.5"
                 className="input"
-                style={{ padding: '0.5rem' }}
+                style={{ padding: '0.5rem', flex: 1, minWidth: 0 }}
                 placeholder="Máx"
                 value={hardnessMax}
                 onChange={e => handleFilterChange('hMax', e.target.value === '' ? '' : parseFloat(e.target.value))}
@@ -491,7 +495,7 @@ export default function CatalogClient({
 
       {/* Minerals grid */}
       {loading || isPending ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))', gap: '1rem' }}>
+        <div className="catalog-grid">
           {[...Array(12)].map((_, i) => (
             <div key={i} className="skeleton" style={{ height: '240px', borderRadius: 'var(--radius-lg)' }} />
           ))}
@@ -504,12 +508,7 @@ export default function CatalogClient({
         </div>
       ) : (
         <>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))',
-            gap: '1rem',
-            marginBottom: '2rem',
-          }}>
+          <div className="catalog-grid">
             {minerals.map(mineral => (
               <MineralCard
                 key={mineral.id}
@@ -517,6 +516,7 @@ export default function CatalogClient({
                 varieties={mineral.mindat_id ? (varietiesMap[mineral.mindat_id] || []) : []}
                 collectionMap={collectionMap}
                 collectionCounts={collectionCounts}
+                collectionPhotos={collectionPhotos}
                 onToggleCollection={toggleCollection}
                 searchQuery={search}
               />

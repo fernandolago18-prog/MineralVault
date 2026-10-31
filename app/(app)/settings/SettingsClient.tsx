@@ -124,7 +124,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
 
           <button 
             className="btn btn-primary" 
-            style={{ alignSelf: 'flex-start', marginTop: '0.5rem' }}
+            style={{ width: 'min(100%, 240px)', marginTop: '0.5rem' }}
             onClick={handleSave}
             disabled={saving}
           >
@@ -138,13 +138,14 @@ export default function SettingsClient({ profile, userEmail }: Props) {
         <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Seguridad y Contraseña</h3>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
             Solicita un enlace seguro a tu correo electrónico para cambiar o restablecer la contraseña de tu cuenta.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <button 
               className="btn btn-secondary" 
+              style={{ width: 'min(100%, 360px)', whiteSpace: 'normal', height: 'auto', padding: '0.65rem 1rem', lineHeight: 1.4 }}
               onClick={handleSendPasswordReset}
               disabled={resetSending}
             >
@@ -156,7 +157,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
             <div style={{
               fontSize: '0.8rem', padding: '0.875rem 1rem', borderRadius: 'var(--radius-md)',
               background: 'rgba(16,185,129,0.08)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.2)',
-              lineHeight: 1.5
+              lineHeight: 1.5, wordBreak: 'break-word'
             }}>
               ✓ Hemos enviado las instrucciones de restablecimiento a <strong>{userEmail}</strong>. Revisa tu bandeja de entrada o carpeta de spam.
             </div>
@@ -202,10 +203,10 @@ export default function SettingsClient({ profile, userEmail }: Props) {
           </div>
 
           {profile?.google_drive_connected ? (
-            <button className="btn btn-danger btn-sm" onClick={handleDisconnectDrive}>Desconectar</button>
+            <button className="btn btn-danger btn-sm" style={{ width: 'min(100%, 160px)' }} onClick={handleDisconnectDrive}>Desconectar</button>
           ) : (
-            <a href="/api/auth/google/connect">
-              <button className="btn btn-secondary btn-sm">Conectar Drive</button>
+            <a href="/api/auth/google/connect" style={{ display: 'inline-block', width: 'min(100%, 160px)' }}>
+              <button className="btn btn-secondary btn-sm" style={{ width: '100%' }}>Conectar Drive</button>
             </a>
           )}
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useMemo } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import {
@@ -43,12 +43,23 @@ export default function Crystal3DViewer({
     animationId: number
   } | null>(null)
 
+  const system = crystalOptions.system
+  const habit = crystalOptions.habit ?? ''
+  const axisRatioKey = JSON.stringify(crystalOptions.axisRatio ?? {})
+
+  const memoizedOptions = useMemo<CrystalGeometryOptions>(() => ({
+    system,
+    habit,
+    axisRatio: crystalOptions.axisRatio,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [system, habit, axisRatioKey])
+
   const getColor = useCallback((): number => {
     if (mineralColor) {
       return parseInt(mineralColor.replace('#', ''), 16)
     }
-    return SYSTEM_COLORS[crystalOptions.system] ?? 0x9955ff
-  }, [mineralColor, crystalOptions.system])
+    return SYSTEM_COLORS[system] ?? 0x9955ff
+  }, [mineralColor, system])
 
   useEffect(() => {
     if (!mountRef.current) return
@@ -102,7 +113,7 @@ export default function Crystal3DViewer({
     scene.add(rimLight)
 
     // ── Crystal geometries ─────────────────────────────────
-    const geometries = buildCrystalGeometry(crystalOptions)
+    const geometries = buildCrystalGeometry(memoizedOptions)
     const color = getColor()
     const meshes: THREE.Mesh[] = []
     const group = new THREE.Group()
@@ -207,7 +218,7 @@ export default function Crystal3DViewer({
         container.removeChild(renderer.domElement)
       }
     }
-  }, [crystalOptions, getColor, transparency])
+  }, [memoizedOptions, getColor, transparency])
 
   return (
     <div

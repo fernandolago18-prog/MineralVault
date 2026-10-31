@@ -4,7 +4,8 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ChevronRight, MapPin, Star } from 'lucide-react'
+import { ChevronRight, MapPin, Star, Camera } from 'lucide-react'
+import { getDriveImageUrl } from '@/lib/images'
 import type { Mineral, CollectionItem, SpecimenPhoto } from '@/types/database'
 import {
   CRYSTAL_SYSTEM_LABELS,
@@ -174,6 +175,83 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
   const densityMin = (mineral.density_min && mineral.density_min > 0) ? mineral.density_min : null
   const densityMax = (mineral.density_max && mineral.density_max > 0) ? mineral.density_max : null
 
+  const userCoverPhoto = useMemo(() => {
+    const allPhotos = collectionItems.flatMap(ci => ci.specimen_photos || [])
+    const primary = allPhotos.find(p => p.is_primary) || allPhotos[0]
+    if (primary) {
+      return primary.drive_thumb_url || primary.drive_file_id
+    }
+    const withPrimaryUrl = collectionItems.find(ci => ci.primary_photo_url)
+    if (withPrimaryUrl) {
+      return withPrimaryUrl.primary_photo_url
+    }
+    return null
+  }, [collectionItems])
+
+  const coverImageUrl = userCoverPhoto 
+    ? getDriveImageUrl(userCoverPhoto, 800) 
+    : (mineral.thumbnail_url || null)
+  
+  const isUserPhoto = Boolean(userCoverPhoto)
+
+  const renderCoverPhotoCard = (className?: string) => {
+    if (!coverImageUrl) return null
+    return (
+      <div 
+        className={`card-elevated ${className || ''}`}
+        style={{
+          overflow: 'hidden',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--border-default)',
+          background: 'var(--bg-void)',
+          position: 'relative',
+        }}
+      >
+        <div style={{ position: 'relative', width: '100%', height: '240px', overflow: 'hidden' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={coverImageUrl}
+            alt={`Foto de ${mineral.name_es || mineral.name}`}
+            referrerPolicy="no-referrer"
+            loading="eager"
+            onError={(e) => {
+              if (isUserPhoto && mineral.thumbnail_url && (e.currentTarget as HTMLImageElement).src !== mineral.thumbnail_url) {
+                (e.currentTarget as HTMLImageElement).src = mineral.thumbnail_url
+              }
+            }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+          <div style={{
+            position: 'absolute', top: '10px', left: '10px',
+            background: isUserPhoto ? 'rgba(45, 138, 103, 0.92)' : 'rgba(14, 14, 18, 0.85)',
+            backdropFilter: 'blur(6px)',
+            color: 'white',
+            borderRadius: 'var(--radius-xs)',
+            padding: '3px 8px',
+            fontSize: '0.65rem',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            boxShadow: 'var(--shadow-sm)',
+            zIndex: 2,
+          }}>
+            {isUserPhoto ? (
+              <>
+                <Camera size={12} />
+                <span>Foto de tu ejemplar</span>
+              </>
+            ) : (
+              <span>Foto de archivo</span>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="catalog-container">
       {/* Breadcrumb */}
@@ -222,11 +300,17 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
                   background: 'rgba(6,182,212,0.08)',
                   padding: '0.25rem 0.75rem', borderRadius: '6px',
                   border: '1px solid rgba(6,182,212,0.2)',
+                  maxWidth: '100%',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
                 }}
                 dangerouslySetInnerHTML={{ __html: sanitizeChemicalFormula(mineral.chemical_formula) }}
               />
             )}
           </div>
+
+          {/* Cover photo on mobile devices */}
+          {renderCoverPhotoCard('mobile-cover-photo')}
 
           {/* Description */}
           {mineral.description ? (
@@ -471,6 +555,9 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
 
         {/* Right column — 3D + collection */}
         <div className="detail-sidebar">
+          {/* Cover photo on desktop devices */}
+          {renderCoverPhotoCard('desktop-cover-photo')}
+
           {/* Visores 3D para todos los hábitos disponibles (Solo para sistemas cristalinos válidos y si NO es roca) */}
           {!mineral.is_rock && mineral.crystal_system && VALID_3D_SYSTEMS.includes(mineral.crystal_system) && (
             geometricHabits && geometricHabits.length > 0 ? (

@@ -85,7 +85,7 @@ BEGIN
   FROM filtered f
   ORDER BY 
     CASE WHEN f.thumbnail_url IS NOT NULL THEN 0 ELSE 1 END,
-    f.name ASC
+    COALESCE(f.name_es, f.name) ASC
   LIMIT page_size
   OFFSET page_offset;
 END;

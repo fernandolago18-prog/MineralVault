@@ -41,9 +41,14 @@ export async function getOrCreateRootFolder(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
 
-  const searchData = await searchRes.json() as { files: DriveFile[] }
+  if (!searchRes.ok) {
+    const errorText = await searchRes.text()
+    throw new Error(`Error al buscar carpeta raíz en Drive (${searchRes.status}): ${errorText}`)
+  }
 
-  if (searchData.files.length > 0) {
+  const searchData = await searchRes.json() as { files?: DriveFile[] }
+
+  if (searchData.files && searchData.files.length > 0) {
     return searchData.files[0].id
   }
 
@@ -59,6 +64,11 @@ export async function getOrCreateRootFolder(
       mimeType: 'application/vnd.google-apps.folder',
     }),
   })
+
+  if (!createRes.ok) {
+    const errorText = await createRes.text()
+    throw new Error(`Error al crear carpeta raíz en Drive (${createRes.status}): ${errorText}`)
+  }
 
   const folder = await createRes.json() as DriveFile
   return folder.id
@@ -84,9 +94,14 @@ export async function getOrCreateMineralFolder(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
 
-  const searchData = await searchRes.json() as { files: DriveFile[] }
+  if (!searchRes.ok) {
+    const errorText = await searchRes.text()
+    throw new Error(`Error al buscar carpeta del mineral en Drive (${searchRes.status}): ${errorText}`)
+  }
 
-  if (searchData.files.length > 0) {
+  const searchData = await searchRes.json() as { files?: DriveFile[] }
+
+  if (searchData.files && searchData.files.length > 0) {
     return searchData.files[0].id
   }
 
@@ -102,6 +117,11 @@ export async function getOrCreateMineralFolder(
       parents:  [parentFolderId],
     }),
   })
+
+  if (!createRes.ok) {
+    const errorText = await createRes.text()
+    throw new Error(`Error al crear carpeta del mineral en Drive (${createRes.status}): ${errorText}`)
+  }
 
   const folder = await createRes.json() as DriveFile
   return folder.id
@@ -184,10 +204,14 @@ export async function deleteFileFromDrive(
   accessToken: string,
   fileId:      string,
 ): Promise<void> {
-  await fetch(`${DRIVE_API}/files/${fileId}`, {
+  const res = await fetch(`${DRIVE_API}/files/${fileId}`, {
     method:  'DELETE',
     headers: { Authorization: `Bearer ${accessToken}` },
   })
+  if (!res.ok && res.status !== 404) {
+    const errorText = await res.text()
+    console.warn(`Drive deleteFile advertencia (${res.status}): ${errorText}`)
+  }
 }
 
 /**
@@ -199,7 +223,7 @@ export async function makeFilePublic(
   accessToken: string,
   fileId:      string,
 ): Promise<void> {
-  await fetch(`${DRIVE_API}/files/${fileId}/permissions`, {
+  const res = await fetch(`${DRIVE_API}/files/${fileId}/permissions`, {
     method:  'POST',
     headers: {
       Authorization:  `Bearer ${accessToken}`,
@@ -207,6 +231,10 @@ export async function makeFilePublic(
     },
     body: JSON.stringify({ role: 'reader', type: 'anyone' }),
   })
+  if (!res.ok) {
+    const errorText = await res.text()
+    console.warn(`Drive makeFilePublic advertencia (${res.status}): ${errorText}`)
+  }
 }
 
 // ─── Thumbnails ───────────────────────────────────────────────────────────────

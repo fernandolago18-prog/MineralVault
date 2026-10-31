@@ -2,7 +2,6 @@ const CACHE_NAME = 'mineralvault-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
-  '/globals.css',
 ];
 
 // Instalar Service Worker y cachear recursos básicos
@@ -36,11 +35,25 @@ self.addEventListener('fetch', (event) => {
   // Solo interceptar peticiones GET
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+
+  // Solo interceptar peticiones del mismo origen (no interceptar Supabase, Google Drive, CDNs)
+  if (url.origin !== self.location.origin) return;
+
+  // Ignorar rutas de API, endpoints de autenticación y Hot Module Replacement
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/auth/') ||
+    url.pathname.startsWith('/_next/webpack-hmr')
+  ) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Si la red funciona, clonar y guardar en cache
-        if (response.status === 200) {
+        // Si la red funciona y es una respuesta básica válida, clonar y guardar en cache
+        if (response.status === 200 && response.type === 'basic') {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);

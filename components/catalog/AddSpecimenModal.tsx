@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { CollectionItem } from '@/types/database'
+import { Star, X } from 'lucide-react'
 
 interface AddSpecimenModalProps {
   isOpen: boolean
@@ -166,7 +167,7 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
             }}
             aria-label="Cerrar modal"
           >
-            ✕
+            <X size={20} />
           </button>
         </div>
 
@@ -186,15 +187,19 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
           {/* Quality */}
           <div className="form-group">
             <label>Calidad</label>
-            <div className="star-rating" style={{ justifyContent: 'flex-start', gap: '0.5rem' }}>
+            <div className="star-rating" style={{ justifyContent: 'flex-start', gap: '0.5rem', display: 'flex' }}>
               {[1, 2, 3, 4, 5].map(n => (
                 <span
                   key={n}
                   className={`star ${n <= quality ? 'active' : ''}`}
                   onClick={() => setQuality(n === quality ? 0 : n)}
-                  style={{ fontSize: '1.5rem', cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
                 >
-                  {n <= quality ? '★' : '☆'}
+                  <Star
+                    size={22}
+                    fill={n <= quality ? 'var(--accent-amber)' : 'none'}
+                    stroke={n <= quality ? 'var(--accent-amber)' : 'var(--border-strong)'}
+                  />
                 </span>
               ))}
             </div>

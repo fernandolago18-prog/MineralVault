@@ -27,9 +27,9 @@ export default async function SettingsPage() {
 
   return (
     <div className="catalog-container" style={{ maxWidth: '800px' }}>
-      <header style={{ marginBottom: '2rem' }}>
-        <h1 style={{ marginBottom: '0.375rem' }}>Ajustes</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Configura tu perfil y preferencias de almacenamiento.</p>
+      <header style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ marginBottom: '0.375rem', wordBreak: 'break-word' }}>Ajustes</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Configura tu perfil y preferencias de almacenamiento.</p>
       </header>
 
       <SettingsClient 
