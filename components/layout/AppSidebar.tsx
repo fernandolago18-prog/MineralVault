@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { BookOpen, Gem, Settings, X, LogOut } from 'lucide-react'
 
 interface AppSidebarProps {
   userId: string
@@ -14,9 +15,9 @@ interface AppSidebarProps {
 }
 
 const navItems = [
-  { href: '/catalog',    label: 'Minerales', description: 'Enciclopedia completa', icon: '◆' },
-  { href: '/collection', label: 'Mi Colección', description: 'Mis ejemplares', icon: '🪨' },
-  { href: '/settings',   label: 'Ajustes', description: 'Perfil y conexión', icon: '⚙' },
+  { href: '/catalog',    label: 'Minerales', description: 'Enciclopedia completa', icon: <BookOpen size={18} /> },
+  { href: '/collection', label: 'Mi Colección', description: 'Mis ejemplares', icon: <Gem size={18} /> },
+  { href: '/settings',   label: 'Ajustes', description: 'Perfil y conexión', icon: <Settings size={18} /> },
 ]
 
 export default function AppSidebar({ userId, displayName, driveConnected, isOpen, onClose }: AppSidebarProps) {
@@ -40,7 +41,13 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Logo & Close (Mobile) */}
-      <div style={{ padding: '1.5rem 1.25rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+      <div style={{
+        padding: '1.25rem 1.25rem 1rem',
+        paddingTop: 'max(1.25rem, calc(0.75rem + var(--safe-area-top)))',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem',
+        borderBottom: '1px solid var(--border-subtle)',
+        flexShrink: 0
+      }}>
         <Link href="/catalog" onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', minWidth: 0, flex: 1 }}>
           <div style={{
             width: '36px', height: '36px', flexShrink: 0,
@@ -73,11 +80,11 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
         {onClose && (
           <button 
             onClick={onClose} 
-            className="btn btn-ghost btn-icon" 
-            style={{ width: '36px', height: '36px', flexShrink: 0, fontSize: '1rem' }} 
+            className="btn btn-ghost btn-icon sidebar-close-btn" 
+            style={{ width: '36px', height: '36px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
             aria-label="Cerrar menú"
           >
-            ✕
+            <X size={18} />
           </button>
         )}
       </div>
@@ -101,7 +108,7 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
               }}
               onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--border-subtle)' }}
               onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                <span style={{ fontSize: '1rem', color: isActive ? 'var(--accent-gold)' : 'var(--text-muted)' }}>{item.icon}</span>
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: isActive ? 'var(--accent-gold)' : 'var(--text-muted)' }}>{item.icon}</span>
                 <div style={{ minWidth: 0, paddingLeft: '0.25rem' }}>
                   <div style={{
                     fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.85rem',
@@ -148,7 +155,13 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
       </nav>
 
       {/* User section */}
-      <div style={{ padding: '1rem', paddingBottom: 'calc(1rem + var(--safe-area-bottom, 0px))' }}>
+      <div style={{
+        padding: '1rem',
+        paddingBottom: 'max(1rem, calc(0.75rem + var(--safe-area-bottom)))',
+        borderTop: '1px solid var(--border-subtle)',
+        background: 'var(--bg-surface)',
+        flexShrink: 0
+      }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: '0.75rem',
           padding: '0.75rem',
@@ -182,8 +195,8 @@ export default function AppSidebar({ userId, displayName, driveConnected, isOpen
             disabled={signingOut}
             title="Cerrar sesión"
             className="btn btn-ghost btn-icon"
-            style={{ width: '48px', height: '32px', flexShrink: 0, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-rose)' }}>
-            {signingOut ? <span className="spinner" style={{ width: 12, height: 12 }} /> : 'Salir'}
+            style={{ width: '36px', height: '36px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-rose)' }}>
+            {signingOut ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <LogOut size={16} />}
           </button>
         </div>
       </div>
