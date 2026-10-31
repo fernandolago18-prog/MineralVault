@@ -27,7 +27,8 @@ import {
   translateMagnetism,
   translateRadioactivity,
   translateFluorescence,
-  getStreakColors
+  getStreakColors,
+  sanitizeChemicalFormula
 } from '@/types/database'
 
 // El visor 3D solo se carga en cliente (WebGL)
@@ -222,7 +223,7 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
                   padding: '0.25rem 0.75rem', borderRadius: '6px',
                   border: '1px solid rgba(6,182,212,0.2)',
                 }}
-                dangerouslySetInnerHTML={{ __html: mineral.chemical_formula }}
+                dangerouslySetInnerHTML={{ __html: sanitizeChemicalFormula(mineral.chemical_formula) }}
               />
             )}
           </div>

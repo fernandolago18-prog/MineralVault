@@ -120,15 +120,15 @@ export default async function LandingPage() {
         </p>
 
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '440px' }}>
-          <Link href={user ? "/catalog" : "/auth/login"} style={{ flex: '1 1 200px' }}>
+          <Link href={user ? "/catalog" : "/auth/register"} style={{ flex: '1 1 200px' }}>
             <button className="btn btn-primary btn-lg" style={{ width: '100%' }}>
               {user ? 'Explorar mi colección' : 'Empezar ahora gratis'}
             </button>
           </Link>
           {!user && (
-            <Link href="/catalog" style={{ flex: '1 1 200px' }}>
+            <Link href="/auth/login?redirectTo=/catalog" style={{ flex: '1 1 200px' }}>
               <button className="btn btn-secondary btn-lg" style={{ width: '100%' }}>
-                Ver el Catálogo
+                Iniciar Sesión
               </button>
             </Link>
           )}

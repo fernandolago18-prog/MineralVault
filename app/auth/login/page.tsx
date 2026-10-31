@@ -9,10 +9,16 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') ?? '/catalog'
 
+  const [view, setView] = useState<'login' | 'forgot_password'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(searchParams.get('error'))
+
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetSuccess, setResetSuccess] = useState(false)
+  const [resetError, setResetError] = useState<string | null>(null)
 
   const supabase = createClient()
 
@@ -32,6 +38,29 @@ function LoginForm() {
       console.error('[Auth Error]:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetEmail.trim()) {
+      setResetError('Por favor, introduce tu correo electrónico.')
+      return
+    }
+    setResetLoading(true)
+    setResetError(null)
+
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback/recovery`
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), { redirectTo })
+      if (error) throw error
+      setResetSuccess(true)
+    } catch (err: unknown) {
+      console.error('[Reset Password Error]:', err)
+      const msg = err instanceof Error ? err.message : 'Error al solicitar el enlace de recuperación.'
+      setResetError(msg)
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -67,42 +96,141 @@ function LoginForm() {
 
       {/* Card */}
       <div className="glass-strong" style={{ borderRadius: 'var(--radius-sm)', padding: '1.75rem 1.25rem', border: '1px solid var(--border-strong)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.15rem', marginBottom: '0.5rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Acceso al Archivo
-          </h2>
-          <div style={{ width: '40px', height: '1px', background: 'var(--accent-gold)', margin: '0 auto' }} />
-        </div>
-
-        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div className="form-group">
-            <label htmlFor="email">Identificador (Email)</label>
-            <input id="email" type="email" className="input"
-              placeholder="curador@Minerales de la Tierra.com" value={email}
-              onChange={e => setEmail(e.target.value)} required />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Clave de Acceso</label>
-            <input id="password" type="password" className="input"
-              placeholder="••••••••"
-              value={password} onChange={e => setPassword(e.target.value)} required />
-          </div>
-
-          {error && (
-            <div className="toast toast-error" style={{ fontSize: '0.8rem', borderRadius: 'var(--radius-xs)', background: 'rgba(163,59,59,0.1)', color: '#fca5a5', border: '1px solid rgba(163,59,59,0.2)' }}>
-              {error}
+        {view === 'login' ? (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.15rem', marginBottom: '0.5rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Acceso al Archivo
+              </h2>
+              <div style={{ width: '40px', height: '1px', background: 'var(--accent-gold)', margin: '0 auto' }} />
             </div>
-          )}
 
-          <button type="submit" className="btn btn-primary btn-lg"
-            style={{ marginTop: '0.5rem', width: '100%', fontSize: '0.85rem' }}
-            disabled={loading}>
-            {loading ? (
-              <><span className="spinner" style={{ width: 14, height: 14 }} /> Validando...</>
-            ) : 'Ingresar al Catálogo'}
-          </button>
-        </form>
+            <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="form-group">
+                <label htmlFor="email">Identificador (Email)</label>
+                <input id="email" type="email" className="input"
+                  placeholder="curador@Minerales de la Tierra.com" value={email}
+                  onChange={e => setEmail(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <label htmlFor="password">Clave de Acceso</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setView('forgot_password')
+                      setResetSuccess(false)
+                      setResetError(null)
+                      setResetEmail(email)
+                    }}
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--accent-gold)',
+                      fontSize: '0.7rem', cursor: 'pointer', padding: 0,
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    ¿Olvidaste tu clave?
+                  </button>
+                </div>
+                <input id="password" type="password" className="input"
+                  placeholder="••••••••"
+                  value={password} onChange={e => setPassword(e.target.value)} required />
+              </div>
+
+              {error && (
+                <div className="toast toast-error" style={{ fontSize: '0.8rem', borderRadius: 'var(--radius-xs)', background: 'rgba(163,59,59,0.1)', color: '#fca5a5', border: '1px solid rgba(163,59,59,0.2)' }}>
+                  {error}
+                </div>
+              )}
+
+              <button type="submit" className="btn btn-primary btn-lg"
+                style={{ marginTop: '0.5rem', width: '100%', fontSize: '0.85rem' }}
+                disabled={loading}>
+                {loading ? (
+                  <><span className="spinner" style={{ width: 14, height: 14 }} /> Validando...</>
+                ) : 'Ingresar al Catálogo'}
+              </button>
+            </form>
+          </>
+        ) : (
+          <>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.15rem', marginBottom: '0.5rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Recuperar Clave
+              </h2>
+              <div style={{ width: '40px', height: '1px', background: 'var(--accent-gold)', margin: '0 auto 0.75rem' }} />
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                Introduce tu correo registrado para recibir las instrucciones de restablecimiento.
+              </p>
+            </div>
+
+            {resetSuccess ? (
+              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div style={{
+                  padding: '0.85rem',
+                  borderRadius: 'var(--radius-xs)',
+                  background: 'rgba(45,138,103,0.1)',
+                  color: 'var(--accent-emerald)',
+                  border: '1px solid rgba(45,138,103,0.3)',
+                  fontSize: '0.825rem',
+                  lineHeight: 1.5,
+                }}>
+                  ✓ Si el correo coincide con una cuenta activa, te hemos enviado un enlace de recuperación.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setView('login')}
+                  className="btn btn-primary btn-lg"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                >
+                  Volver al Acceso
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleResetPassword} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div className="form-group">
+                  <label htmlFor="reset-email">Correo Electrónico</label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    className="input"
+                    placeholder="curador@Minerales de la Tierra.com"
+                    value={resetEmail}
+                    onChange={e => setResetEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {resetError && (
+                  <div className="toast toast-error" style={{ fontSize: '0.8rem', borderRadius: 'var(--radius-xs)', background: 'rgba(163,59,59,0.1)', color: '#fca5a5', border: '1px solid rgba(163,59,59,0.2)' }}>
+                    {resetError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg"
+                  style={{ marginTop: '0.5rem', width: '100%', fontSize: '0.85rem' }}
+                  disabled={resetLoading}
+                >
+                  {resetLoading ? (
+                    <><span className="spinner" style={{ width: 14, height: 14 }} /> Enviando...</>
+                  ) : 'Enviar Enlace de Recuperación'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setView('login')}
+                  className="btn btn-ghost btn-sm"
+                  style={{ width: '100%', fontSize: '0.78rem', color: 'var(--text-muted)' }}
+                >
+                  ← Volver al Acceso
+                </button>
+              </form>
+            )}
+          </>
+        )}
       </div>
 
       <p style={{ textAlign: 'center', marginTop: '1.75rem', color: 'var(--text-muted)', fontSize: '0.72rem', letterSpacing: '0.02em' }}>

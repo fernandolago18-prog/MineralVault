@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AddSpecimenModal from '@/components/catalog/AddSpecimenModal'
-import { getStreakColors, MINERAL_CLASS_LABELS, CRYSTAL_SYSTEM_LABELS, VALID_3D_SYSTEMS, getDriveImageUrl, matchesSearch } from '@/types/database'
+import { getStreakColors, MINERAL_CLASS_LABELS, CRYSTAL_SYSTEM_LABELS, VALID_3D_SYSTEMS, getDriveImageUrl, matchesSearch, sanitizeChemicalFormula } from '@/types/database'
 import { Gem, Layers, Sparkles, MapPin, Star, Plus } from 'lucide-react'
 
 interface CollectionClientProps {
@@ -24,10 +24,33 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
   const [hardnessMin, setHardnessMin] = useState<number | ''>('')
   const [hardnessMax, setHardnessMax] = useState<number | ''>('')
 
+  const [activeTab, setActiveTab] = useState<'owned' | 'wanted'>('owned')
   const [activeMineralForAdd, setActiveMineralForAdd] = useState<any | null>(null)
 
   const supabase = createClient()
   const router = useRouter()
+
+  const ownedItems = useMemo(() => items.filter(i => i.status === 'owned'), [items])
+  const wantedItems = useMemo(() => items.filter(i => i.status === 'wanted'), [items])
+  const currentTabItems = useMemo(() => activeTab === 'owned' ? ownedItems : wantedItems, [activeTab, ownedItems, wantedItems])
+
+  const handleRemoveWanted = async (item: any) => {
+    const title = item.mineral?.name_es || item.mineral?.name || 'mineral'
+    if (!confirm(`¿Quitar "${title}" de tu lista de deseos?`)) return
+    try {
+      const { error } = await (supabase
+        .from('user_collection') as any)
+        .delete()
+        .eq('id', item.id)
+        .eq('user_id', userId)
+
+      if (error) throw error
+      router.refresh()
+    } catch (err) {
+      console.error('[Remove Wanted Error]:', err)
+      alert('Error al quitar de la lista de deseos')
+    }
+  }
 
   const handleSaveSpecimen = async (specimenData: any) => {
     if (!activeMineralForAdd) return
@@ -45,6 +68,14 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
         .single()
 
       if (error) throw error
+
+      // Si el mineral estaba en wanted, limpiarlo de la lista de deseos
+      await (supabase
+        .from('user_collection') as any)
+        .delete()
+        .eq('mineral_id', activeMineralForAdd.id)
+        .eq('user_id', userId)
+        .eq('status', 'wanted')
 
       // Subir fotos a Drive si se adjuntaron
       if (files && files.length > 0) {
@@ -71,9 +102,9 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
     }
   }
 
-  // Filtrado en memoria
+  // Filtrado en memoria según la pestaña activa
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
+    return currentTabItems.filter(item => {
       const mineral = item.mineral
       if (!mineral) return false
 
@@ -107,7 +138,6 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
 
       // Dureza Mohs
       if (hardnessMin !== '') {
-        // Asumimos que si no tiene hardness, lo filtramos o lo mostramos? En el catálogo original, si hMin está definido, mineral.hardness_max >= hMin
         if (mineral.hardness_max === null || mineral.hardness_max === undefined || mineral.hardness_max < hardnessMin) return false
       }
       if (hardnessMax !== '') {
@@ -116,7 +146,7 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
 
       return true
     })
-  }, [items, search, filterType, filterStreak, filterClass, filterSystem, hardnessMin, hardnessMax])
+  }, [currentTabItems, search, filterType, filterStreak, filterClass, filterSystem, hardnessMin, hardnessMax])
 
   // Estadísticas derivadas de los items FILTRADOS
   const byClass: Record<string, number> = {}
@@ -193,14 +223,52 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
         )}
       </div>
 
+      {/* Selector de Pestañas: Mis Ejemplares vs Lista de Deseos */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.75rem', borderBottom: '1px solid var(--border-default)', paddingBottom: '0.75rem' }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab('owned')}
+          className={`btn ${activeTab === 'owned' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem' }}
+        >
+          <Layers size={16} />
+          <span>Mis Ejemplares</span>
+          <span className="badge" style={{ marginLeft: '0.25rem', opacity: 0.9 }}>{ownedItems.length}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('wanted')}
+          className={`btn ${activeTab === 'wanted' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem' }}
+        >
+          <Star size={16} fill={activeTab === 'wanted' ? 'currentColor' : 'none'} />
+          <span>Lista de Deseos</span>
+          <span className="badge" style={{ marginLeft: '0.25rem', opacity: 0.9 }}>{wantedItems.length}</span>
+        </button>
+      </div>
+
       {/* Stats */}
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 100px), 1fr))',
         gap: '0.75rem', marginBottom: '2rem',
       }}>
-        {[
+        {activeTab === 'owned' ? [
           { label: 'Especies', value: groupedItems.length, icon: <Gem size={20} />, color: 'var(--accent-purple)' },
           { label: 'Ejemplares', value: filteredItems.length, icon: <Layers size={20} />, color: 'var(--accent-amber)' },
+          { label: 'Clases', value: Object.keys(byClass).length, icon: <Sparkles size={20} />, color: 'var(--accent-cyan)' },
+        ].map(stat => (
+          <div key={stat.label} className="card" style={{ padding: '0.875rem 0.75rem', textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.35rem', color: stat.color }}>{stat.icon}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'Outfit', color: stat.color, lineHeight: 1.1 }}>
+              {stat.value}
+            </div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              {stat.label}
+            </div>
+          </div>
+        )) : [
+          { label: 'Deseados', value: filteredItems.length, icon: <Star size={20} fill="currentColor" />, color: 'var(--accent-gold)' },
           { label: 'Clases', value: Object.keys(byClass).length, icon: <Sparkles size={20} />, color: 'var(--accent-cyan)' },
         ].map(stat => (
           <div key={stat.label} className="card" style={{ padding: '0.875rem 0.75rem', textAlign: 'center' }}>
@@ -352,17 +420,113 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
         </div>
       )}
 
-      {/* Collection grid */}
+      {/* Collection / Wishlist grid */}
       {filteredItems.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
-          <Gem size={48} style={{ color: 'var(--border-strong)', margin: '0 auto 1rem', display: 'block' }} />
-          <h3 style={{ marginBottom: '0.75rem' }}>{items.length === 0 ? 'Tu colección está vacía' : 'No hay resultados'}</h3>
-          <p style={{ marginBottom: '1.5rem' }}>{items.length === 0 ? 'Visita el catálogo y añade tus primeros minerales.' : 'Prueba a cambiar o borrar los filtros de búsqueda.'}</p>
-          {items.length === 0 && (
-            <Link href="/catalog">
-              <button className="btn btn-primary btn-lg">Explorar el Catálogo</button>
-            </Link>
+          {activeTab === 'owned' ? (
+            <>
+              <Gem size={48} style={{ color: 'var(--border-strong)', margin: '0 auto 1rem', display: 'block' }} />
+              <h3 style={{ marginBottom: '0.75rem' }}>{ownedItems.length === 0 ? 'No tienes ejemplares registrados' : 'No hay resultados'}</h3>
+              <p style={{ marginBottom: '1.5rem' }}>{ownedItems.length === 0 ? 'Visita el catálogo para documentar tus primeros ejemplares.' : 'Prueba a cambiar o borrar los filtros de búsqueda.'}</p>
+              {ownedItems.length === 0 && (
+                <Link href="/catalog">
+                  <button className="btn btn-primary btn-lg">Explorar el Catálogo</button>
+                </Link>
+              )}
+            </>
+          ) : (
+            <>
+              <Star size={48} style={{ color: 'var(--border-strong)', margin: '0 auto 1rem', display: 'block' }} />
+              <h3 style={{ marginBottom: '0.75rem' }}>{wantedItems.length === 0 ? 'Tu lista de deseos está vacía' : 'No hay resultados'}</h3>
+              <p style={{ marginBottom: '1.5rem' }}>{wantedItems.length === 0 ? 'Marca cualquier mineral con la estrella (★) en el catálogo para guardarlo aquí.' : 'Prueba a cambiar o borrar los filtros de búsqueda.'}</p>
+              <Link href="/catalog">
+                <button className="btn btn-primary btn-lg">Buscar Minerales para Desear</button>
+              </Link>
+            </>
           )}
+        </div>
+      ) : activeTab === 'wanted' ? (
+        /* Grid de Lista de Deseos */
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))',
+          gap: '1.25rem',
+        }}>
+          {filteredItems.map(item => {
+            const mineral = item.mineral
+            const title = mineral.name_es || mineral.name
+
+            return (
+              <div key={item.id} className={`mineral-card ${mineral.is_rock ? 'is-rock-card' : ''}`} style={{ display: 'flex', flexDirection: 'column' }}>
+                <Link href={`/mineral/${mineral.id}`} style={{ textDecoration: 'none' }}>
+                  <div style={{
+                    height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'var(--bg-void)', position: 'relative'
+                  }}>
+                    {mineral.thumbnail_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={mineral.thumbnail_url}
+                        alt={title}
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div style={{ fontSize: '2.5rem', color: 'var(--text-muted)' }}>{mineral.is_rock ? '⬡' : '◆'}</div>
+                    )}
+                    <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.6)', borderRadius: 'var(--radius-xs)', padding: '2px 6px' }}>
+                      <Star size={14} fill="var(--accent-gold)" color="var(--accent-gold)" />
+                    </div>
+                  </div>
+                </Link>
+
+                <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
+                  <div>
+                    <Link href={`/mineral/${mineral.id}`} style={{ textDecoration: 'none' }}>
+                      <h5 style={{ marginBottom: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={title}>
+                        {title}
+                      </h5>
+                      {mineral.name_es && mineral.name_es !== mineral.name && (
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '0.5rem' }}>
+                          {mineral.name}
+                        </p>
+                      )}
+                    </Link>
+
+                    {mineral.chemical_formula && (
+                      <code
+                        className="scientific-mono"
+                        style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)', display: 'block', marginBottom: '0.5rem' }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeChemicalFormula(mineral.chemical_formula) }}
+                      />
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      style={{ flex: 1, fontSize: '0.72rem' }}
+                      onClick={() => setActiveMineralForAdd(mineral)}
+                      title="Registrar ejemplar adquirido"
+                    >
+                      + Adquirido
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      style={{ padding: '0 0.5rem', fontSize: '0.72rem' }}
+                      onClick={() => handleRemoveWanted(item)}
+                      title="Quitar de la lista de deseos"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -478,7 +642,7 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
                             {mineral.chemical_formula && (
                               <code 
                                 style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)' }}
-                                dangerouslySetInnerHTML={{ __html: mineral.chemical_formula }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeChemicalFormula(mineral.chemical_formula) }}
                               />
                             )}
                             <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.625rem', flexWrap: 'wrap', alignItems: 'center' }}>

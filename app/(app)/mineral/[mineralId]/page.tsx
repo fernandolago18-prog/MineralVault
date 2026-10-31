@@ -33,31 +33,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-// Helper para traducir texto al vuelo usando la API gratuita de Google Translate
-async function translateText(text: string): Promise<string> {
-  if (!text) return ''
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=${encodeURIComponent(text)}`
-  try {
-    const resp = await fetch(url)
-    if (!resp.ok) throw new Error(`HTTP error: ${resp.status}`)
-    const json = await resp.json()
-    if (json && json[0]) {
-      return json[0].map((s: any) => s[0]).join('')
-    }
-    return ''
-  } catch (err) {
-    console.error('[Translation API Error]:', err)
-    return ''
-  }
-}
-
-// Heurística simple para saber si el texto está en inglés
-function isEnglish(text: string): boolean {
-  const englishWords = [' the ', ' and ', ' is ', ' of ', ' with ', ' from ', ' at ', ' by ', ' for ', ' which ', ' is a ', ' composed of '];
-  const lowercase = text.toLowerCase()
-  return englishWords.some(word => lowercase.includes(word))
-}
-
 /**
  * Página de detalle de mineral — Server Component.
  * Carga todos los datos del mineral y el estado en la colección del usuario.
@@ -103,46 +78,6 @@ export default async function MineralDetailPage({ params }: Props) {
   }
 
   const realMineralId = mineral.id
-
-  // Traducción perezosa (lazy translation) de la descripción si detectamos que está en inglés
-  if (mineral.description && isEnglish(mineral.description)) {
-    // Limpiar frase incompleta al final debido al límite de 150 caracteres de la API de Mindat
-    let textToTranslate = mineral.description.trim()
-    if (textToTranslate.endsWith('...')) {
-      textToTranslate = textToTranslate.slice(0, -3).trim()
-    }
-    const lastPeriod = Math.max(
-      textToTranslate.lastIndexOf('.'),
-      textToTranslate.lastIndexOf('?'),
-      textToTranslate.lastIndexOf('!')
-    )
-    if (lastPeriod !== -1 && lastPeriod < textToTranslate.length - 1) {
-      textToTranslate = textToTranslate.slice(0, lastPeriod + 1).trim()
-    }
-
-    if (textToTranslate) {
-      const translated = await translateText(textToTranslate)
-      if (translated) {
-        try {
-          const { createClient: createServiceRoleClient } = await import('@supabase/supabase-js')
-          const serviceSupabase = createServiceRoleClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-          )
-          const { error: errUpdate } = await serviceSupabase
-            .from('minerals')
-            .update({ description: translated })
-            .eq('id', realMineralId)
-
-          if (!errUpdate) {
-            mineral.description = translated
-          }
-        } catch (dbErr) {
-          console.error('[Lazy Translation DB Update Error]:', dbErr)
-        }
-      }
-    }
-  }
 
   // Estado en la colección del usuario (múltiples ejemplares)
   const { data: collectionItems } = await (supabase
