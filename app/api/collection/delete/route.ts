@@ -1,8 +1,11 @@
 /**
  * app/api/collection/delete/route.ts
- * Borra un ejemplar por completo: borra todas sus fotos en Google Drive y su registro en Supabase.
+ * Borra ejemplares de forma segura: elimina las fotos asociadas en Google Drive
+ * y posteriormente elimina los registros en Supabase (disparando ON DELETE CASCADE).
  *
- * Body JSON: { collectionId: string }
+ * Admite:
+ * - Body JSON: { collectionId: string } -> Elimina un ejemplar específico
+ * - Body JSON: { mineralId: string }    -> Elimina todos los ejemplares de un mineral
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -23,41 +26,62 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     }
 
     // 2. Parsear body
-    const { collectionId } = await req.json() as { collectionId?: string }
-
-    if (!collectionId) {
-      return NextResponse.json({ error: 'Falta parámetro: collectionId' }, { status: 400 })
+    const { collectionId, mineralId } = await req.json() as {
+      collectionId?: string
+      mineralId?: string
     }
 
-    // 3. Verificar propiedad del ejemplar y obtener mineral_id
-    const { data: specimen, error: specError } = await (supabase
-      .from('user_collection') as any)
-      .select('id, mineral_id')
-      .eq('id', collectionId)
-      .eq('user_id', user.id)
-      .single()
-
-    if (specError || !specimen) {
-      return NextResponse.json({ error: 'Ejemplar no encontrado o sin permisos' }, { status: 404 })
+    if (!collectionId && !mineralId) {
+      return NextResponse.json(
+        { error: 'Falta parámetro: collectionId o mineralId' },
+        { status: 400 }
+      )
     }
 
-    // Contar cuántos ejemplares del mismo mineral tiene el usuario
-    const { count } = await (supabase
-      .from('user_collection') as any)
-      .select('id', { count: 'exact', head: true })
-      .eq('mineral_id', specimen.mineral_id)
-      .eq('user_id', user.id)
+    let targetCollectionIds: string[] = []
 
-    const hasMultiple = (count ?? 0) > 1
+    if (collectionId) {
+      // Verificar propiedad del ejemplar individual
+      const { data: specimen, error: specError } = await (supabase
+        .from('user_collection') as any)
+        .select('id')
+        .eq('id', collectionId)
+        .eq('user_id', user.id)
+        .single()
 
-    // 4. Obtener todas las fotos asociadas
+      if (specError || !specimen) {
+        return NextResponse.json(
+          { error: 'Ejemplar no encontrado o sin permisos' },
+          { status: 404 }
+        )
+      }
+      targetCollectionIds = [specimen.id]
+    } else if (mineralId) {
+      // Obtener todos los ejemplares del mineral para este usuario
+      const { data: specimens, error: specError } = await (supabase
+        .from('user_collection') as any)
+        .select('id')
+        .eq('mineral_id', mineralId)
+        .eq('user_id', user.id)
+
+      if (specError) {
+        return NextResponse.json({ error: 'Error al buscar ejemplares' }, { status: 500 })
+      }
+      targetCollectionIds = (specimens || []).map((s: any) => s.id)
+    }
+
+    if (targetCollectionIds.length === 0) {
+      return NextResponse.json({ success: true, deletedCount: 0 })
+    }
+
+    // 3. Obtener todas las fotos asociadas a los ejemplares a eliminar
     const { data: photos } = await (supabase
       .from('specimen_photos') as any)
       .select('id, drive_file_id')
-      .eq('collection_id', collectionId)
+      .in('collection_id', targetCollectionIds)
       .eq('user_id', user.id)
 
-    // 5. Si hay fotos, borrarlas de Google Drive
+    // 4. Si hay fotos, borrarlas de Google Drive
     if (photos && photos.length > 0) {
       const adminSupabase = createAdminClient()
       const { data: tokenData } = await (adminSupabase
@@ -82,49 +106,18 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
       }
     }
 
-    if (hasMultiple) {
-      // 6. Eliminar ejemplar por completo si el usuario tiene más de uno
-      const { error: deleteError } = await (supabase
-        .from('user_collection') as any)
-        .delete()
-        .eq('id', collectionId)
-        .eq('user_id', user.id)
+    // 5. Eliminar los registros de user_collection (dispara ON DELETE CASCADE en specimen_photos)
+    const { error: deleteError } = await (supabase
+      .from('user_collection') as any)
+      .delete()
+      .in('id', targetCollectionIds)
+      .eq('user_id', user.id)
 
-      if (deleteError) {
-        throw new Error(`Error al eliminar ejemplar de la base de datos: ${deleteError.message}`)
-      }
-    } else {
-      // 6. Si es el único ejemplar, limpiar todos los campos para mantener la propiedad del mineral
-      const { error: updateError } = await (supabase
-        .from('user_collection') as any)
-        .update({
-          specimen_label: null,
-          acquired_at: null,
-          origin: null,
-          notes: null,
-          quality: null,
-          dimensions: null,
-          weight_g: null,
-          price_eur: null,
-          primary_photo_url: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', collectionId)
-        .eq('user_id', user.id)
-
-      if (updateError) {
-        throw new Error(`Error al vaciar los detalles del ejemplar: ${updateError.message}`)
-      }
-
-      // Eliminar registros de fotos ya que no se dispara el ON DELETE CASCADE
-      await (supabase
-        .from('specimen_photos') as any)
-        .delete()
-        .eq('collection_id', collectionId)
-        .eq('user_id', user.id)
+    if (deleteError) {
+      throw new Error(`Error al eliminar ejemplares de la base de datos: ${deleteError.message}`)
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, deletedCount: targetCollectionIds.length })
 
   } catch (err) {
     console.error('[Delete Specimen API Error]:', err)

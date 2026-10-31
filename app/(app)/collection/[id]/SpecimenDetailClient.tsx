@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { CollectionItem, Mineral, SpecimenPhoto } from '@/types/database'
 import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS, getDriveImageUrl } from '@/types/database'
+import { Star, Check, Trash2, CameraOff, X } from 'lucide-react'
 
 interface Props {
   item: CollectionItem & { mineral: Mineral }
@@ -71,7 +72,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
         .eq('user_id', userId)
 
       if (error) throw error
-      showToast('Datos guardados ✓', 'success')
+      showToast('Datos guardados', 'success')
     } catch (err) {
       console.error('[Save Error]:', err)
       showToast('Error al guardar', 'error')
@@ -257,7 +258,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
       const data = await res.json() as { success?: boolean; error?: string }
       if (!res.ok || data.error) throw new Error(data.error ?? 'Error al eliminar')
       
-      showToast('Ejemplar eliminado ✓', 'success')
+      showToast('Ejemplar eliminado', 'success')
       router.push('/collection')
       router.refresh()
     } catch (err) {
@@ -305,7 +306,9 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                 )}
               </>
             )}
-            <span className="badge badge-emerald">✓ En colección</span>
+            <span className="badge badge-emerald" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Check size={12} /> En colección
+            </span>
           </div>
           <h1 style={{ marginBottom: '0.25rem' }}>{specimenLabel || mineral.name_es || mineral.name}</h1>
           {specimenLabel && (
@@ -409,8 +412,9 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                       background: 'var(--accent-amber)', color: 'white',
                       borderRadius: '4px', fontSize: '0.6rem', fontWeight: 700,
                       padding: '2px 5px', fontFamily: 'Outfit',
+                      display: 'flex', alignItems: 'center', gap: '3px'
                     }}>
-                      ★ PRINCIPAL
+                      <Star size={9} fill="currentColor" /> PRINCIPAL
                     </div>
                   )}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -440,9 +444,9 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                       <button
                         onClick={() => handleSetPrimary(photo)}
                         title="Establecer como principal"
-                        style={{ background: 'rgba(245,158,11,0.9)', border: 'none', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', color: 'white', fontSize: '0.7rem', fontWeight: 700 }}
+                        style={{ background: 'rgba(245,158,11,0.9)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        ★
+                        <Star size={12} fill="currentColor" />
                       </button>
                     )}
                     <button
@@ -456,9 +460,9 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                       onClick={() => handleDeletePhoto(photo)}
                       disabled={deleting === photo.id}
                       title="Eliminar foto"
-                      style={{ background: 'rgba(244,63,94,0.9)', border: 'none', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', color: 'white', fontSize: '0.7rem' }}
+                      style={{ background: 'rgba(244,63,94,0.9)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      {deleting === photo.id ? '…' : '✕'}
+                      {deleting === photo.id ? '…' : <Trash2 size={12} />}
                     </button>
                   </div>
                 </div>
@@ -466,7 +470,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🪨</div>
+              <CameraOff size={36} style={{ margin: '0 auto 0.75rem', color: 'var(--text-muted)', display: 'block', opacity: 0.6 }} />
               <p style={{ fontSize: '0.875rem' }}>Aún no has subido fotos de este ejemplar</p>
             </div>
           )}
@@ -502,14 +506,18 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
           {/* Stars */}
           <div className="card-elevated" style={{ padding: '1.25rem', marginBottom: '1rem' }}>
             <label style={{ marginBottom: '0.75rem' }}>Calidad del ejemplar</label>
-            <div className="star-rating" style={{ justifyContent: 'center' }}>
+            <div className="star-rating" style={{ justifyContent: 'center', gap: '0.5rem', display: 'flex' }}>
               {[1, 2, 3, 4, 5].map(n => (
                 <span key={n}
                   className={`star ${n <= quality ? 'active' : ''}`}
                   onClick={() => setQuality(n === quality ? 0 : n)}
-                  style={{ fontSize: '1.75rem', cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
                 >
-                  {n <= quality ? '★' : '☆'}
+                  <Star
+                    size={24}
+                    fill={n <= quality ? 'var(--accent-amber)' : 'none'}
+                    stroke={n <= quality ? 'var(--accent-amber)' : 'var(--border-strong)'}
+                  />
                 </span>
               ))}
             </div>
@@ -584,7 +592,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                 width: '100%'
               }}
             >
-              {deletingSpecimen ? <><span className="spinner" style={{ width: 16, height: 16, borderLeftColor: 'var(--accent-rose)' }} /> Eliminando...</> : '✕ Eliminar Ejemplar'}
+              {deletingSpecimen ? <><span className="spinner" style={{ width: 16, height: 16, borderLeftColor: 'var(--accent-rose)' }} /> Eliminando...</> : <><Trash2 size={14} /> Eliminar Ejemplar</>}
             </button>
           </div>
 
@@ -622,8 +630,8 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
           }}
         >
           <button onClick={() => setLightbox(null)}
-            style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', fontSize: '1.25rem' }}>
-            ✕
+            style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={20} />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

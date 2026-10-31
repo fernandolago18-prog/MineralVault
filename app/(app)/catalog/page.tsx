@@ -46,9 +46,13 @@ export default async function CatalogPage() {
   
   if (collection) {
     (collection as any[]).forEach((item: any) => {
-      collectionMap.set(item.mineral_id, item.status)
       if (item.status === 'owned') {
         collectionCounts[item.mineral_id] = (collectionCounts[item.mineral_id] ?? 0) + 1
+        if (!collectionMap.has(item.mineral_id)) {
+          collectionMap.set(item.mineral_id, 'owned')
+        }
+      } else if (item.status === 'wanted') {
+        collectionMap.set(item.mineral_id, 'wanted')
       }
     })
   }

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AddSpecimenModal from '@/components/catalog/AddSpecimenModal'
 import { getStreakColors, MINERAL_CLASS_LABELS, CRYSTAL_SYSTEM_LABELS, VALID_3D_SYSTEMS, getDriveImageUrl, matchesSearch } from '@/types/database'
+import { Gem, Layers, Sparkles, MapPin, Star, Plus } from 'lucide-react'
 
 interface CollectionClientProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -198,12 +199,12 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
         gap: '0.75rem', marginBottom: '2rem',
       }}>
         {[
-          { label: 'Especies', value: groupedItems.length, icon: '◆', color: 'var(--accent-purple)' },
-          { label: 'Ejemplares', value: filteredItems.length, icon: '🪨', color: 'var(--accent-amber)' },
-          { label: 'Clases', value: Object.keys(byClass).length, icon: '■', color: 'var(--accent-cyan)' },
+          { label: 'Especies', value: groupedItems.length, icon: <Gem size={20} />, color: 'var(--accent-purple)' },
+          { label: 'Ejemplares', value: filteredItems.length, icon: <Layers size={20} />, color: 'var(--accent-amber)' },
+          { label: 'Clases', value: Object.keys(byClass).length, icon: <Sparkles size={20} />, color: 'var(--accent-cyan)' },
         ].map(stat => (
           <div key={stat.label} className="card" style={{ padding: '0.875rem 0.75rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem', color: stat.color }}>{stat.icon}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.35rem', color: stat.color }}>{stat.icon}</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'Outfit', color: stat.color, lineHeight: 1.1 }}>
               {stat.value}
             </div>
@@ -354,7 +355,7 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
       {/* Collection grid */}
       {filteredItems.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--border-strong)' }}>◆</div>
+          <Gem size={48} style={{ color: 'var(--border-strong)', margin: '0 auto 1rem', display: 'block' }} />
           <h3 style={{ marginBottom: '0.75rem' }}>{items.length === 0 ? 'Tu colección está vacía' : 'No hay resultados'}</h3>
           <p style={{ marginBottom: '1.5rem' }}>{items.length === 0 ? 'Visita el catálogo y añade tus primeros minerales.' : 'Prueba a cambiar o borrar los filtros de búsqueda.'}</p>
           {items.length === 0 && (
@@ -482,8 +483,16 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
                             )}
                             <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.625rem', flexWrap: 'wrap', alignItems: 'center' }}>
                               {item.quality && (
-                                <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber)' }}>
-                                  {'★'.repeat(item.quality as number)}{'☆'.repeat(5 - (item.quality as number))}
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: 'var(--accent-amber)' }}>
+                                  {[1, 2, 3, 4, 5].map(starNum => (
+                                    <Star
+                                      key={starNum}
+                                      size={10}
+                                      fill={starNum <= (item.quality as number) ? 'currentColor' : 'none'}
+                                      stroke="currentColor"
+                                      style={{ opacity: starNum <= (item.quality as number) ? 1 : 0.3 }}
+                                    />
+                                  ))}
                                 </span>
                               )}
                               {item.acquired_at && (
@@ -492,8 +501,8 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
                                 </span>
                               )}
                               {item.origin && (
-                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100px' }} title={item.origin}>
-                                  📍 {item.origin}
+                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '110px', display: 'inline-flex', alignItems: 'center', gap: '2px' }} title={item.origin}>
+                                  <MapPin size={10} style={{ flexShrink: 0 }} /> {item.origin}
                                 </span>
                               )}
                             </div>
@@ -531,7 +540,7 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
                       t.style.background = 'rgba(255,255,255,0.01)'
                     }}
                   >
-                    <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>+</span>
+                    <Plus size={28} style={{ color: 'var(--text-muted)' }} />
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Añadir Ejemplar</span>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>de {title}</span>
                   </div>

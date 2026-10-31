@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { MineralSearchResult, Mineral } from '@/types/database'
 import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS, mergeMineralWithParent } from '@/types/database'
 import MineralCard from '@/components/catalog/MineralCard'
+import { X, SearchX } from 'lucide-react'
 
 interface CatalogClientProps {
   initialMinerals: MineralSearchResult[]
@@ -227,14 +228,15 @@ export default function CatalogClient({
     
     try {
       if (status === 'remove_all') {
-        // Quitar completamente el mineral de la colección
-        const { error } = await (supabase
-          .from('user_collection') as any)
-          .delete()
-          .eq('user_id', userId)
-          .eq('mineral_id', mineralId)
+        // Quitar completamente el mineral y sus fotos de Google Drive de forma segura
+        const res = await fetch('/api/collection/delete', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mineralId }),
+        })
+        const data = await res.json()
+        if (!res.ok || data.error) throw new Error(data.error || 'Error al eliminar')
 
-        if (error) throw error
         setCollectionMap(prev => { const next = { ...prev }; delete next[mineralId]; return next })
         setCollectionCounts(prev => { const next = { ...prev }; delete next[mineralId]; return next })
         showToast('Mineral eliminado de tu colección', 'info')
@@ -252,9 +254,9 @@ export default function CatalogClient({
         setCollectionCounts(prev => ({ ...prev, [mineralId]: (prev[mineralId] ?? 0) + 1 }))
         showToast('¡Ejemplar añadido a tu colección!', 'success')
       } else {
-        // Toggle wanted (lista de deseos)
+        // Toggle wanted (lista de deseos) sin destruir ejemplares coleccionados
         if (currentStatus === 'wanted') {
-          // Ya era wanted, lo quitamos
+          // Ya era wanted, lo quitamos de la lista de deseos
           const { error } = await (supabase
             .from('user_collection') as any)
             .delete()
@@ -263,31 +265,27 @@ export default function CatalogClient({
             .eq('status', 'wanted')
           
           if (error) throw error
-          setCollectionMap(prev => { const next = { ...prev }; delete next[mineralId]; return next })
+          
+          // Si el usuario tiene ejemplares coleccionados de este mineral, mantenemos 'owned'
+          const hasOwned = (collectionCounts[mineralId] ?? 0) > 0
+          setCollectionMap(prev => {
+            const next = { ...prev }
+            if (hasOwned) {
+              next[mineralId] = 'owned'
+            } else {
+              delete next[mineralId]
+            }
+            return next
+          })
           showToast('Quitado de tu lista de deseos', 'info')
         } else {
-          // Si era owned, pedir confirmación antes de borrar los ejemplares existentes
-          if (currentStatus === 'owned') {
-            if (!confirm('Este mineral ya tiene ejemplares en tu colección. Si lo añades a la lista de deseos, se eliminarán todos tus ejemplares existentes. ¿Deseas continuar?')) {
-              return
-            }
-            // Borrar los ejemplares existentes
-            const { error: delError } = await (supabase
-              .from('user_collection') as any)
-              .delete()
-              .eq('user_id', userId)
-              .eq('mineral_id', mineralId)
-            if (delError) throw delError
-          }
-
-          // Insertar wanted
+          // Insertar wanted de forma no destructiva
           const { error } = await (supabase
             .from('user_collection') as any)
             .insert({ user_id: userId, mineral_id: mineralId, status: 'wanted' })
 
           if (error) throw error
           setCollectionMap(prev => ({ ...prev, [mineralId]: 'wanted' }))
-          setCollectionCounts(prev => { const next = { ...prev }; delete next[mineralId]; return next })
           showToast('Añadido a tu lista de deseos', 'success')
         }
       }
@@ -481,10 +479,12 @@ export default function CatalogClient({
             Mostrando <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{minerals.length}</span> de {totalCount.toLocaleString()} resultados
           </div>
           {(search || filterClass || filterSystem || hardnessMin !== '' || hardnessMax !== '') && (
-            <button className="btn btn-ghost btn-sm" onClick={() => {
+            <button className="btn btn-ghost btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => {
               setSearch(''); setFilterClass(''); setFilterSystem(''); setHardnessMin(''); setHardnessMax('')
               executeSearch({ query: '', cls: '', system: '', hMin: '', hMax: '' })
-            }}>✕ Limpiar filtros</button>
+            }}>
+              <X size={14} /> Limpiar filtros
+            </button>
           )}
         </div>
       </div>
@@ -498,7 +498,7 @@ export default function CatalogClient({
         </div>
       ) : minerals.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-muted)' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--border-strong)' }}>◆</div>
+          <SearchX size={36} style={{ margin: '0 auto 1rem', color: 'var(--border-strong)', display: 'block' }} />
           <h3>Sin resultados</h3>
           <p>Prueba con otros filtros o términos de búsqueda.</p>
         </div>

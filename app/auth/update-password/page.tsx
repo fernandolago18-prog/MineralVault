@@ -18,24 +18,40 @@ export default function UpdatePasswordPage() {
   const [hasSession, setHasSession] = useState(false)
 
   useEffect(() => {
+    let isMounted = true
+
+    // Escuchar el evento de autenticación por si el token viene en el hash de la URL
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return
+      if (session && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+        setHasSession(true)
+        setCheckingSession(false)
+      }
+    })
+
     // Verificar si el usuario tiene una sesión activa o de recuperación
     const checkUserSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setHasSession(true)
-      } else {
-        // Escuchar el evento de autenticación por si el token viene en el hash de la URL
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          if (session && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN')) {
-            setHasSession(true)
-          }
-        })
-        return () => subscription.unsubscribe()
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!isMounted) return
+        if (user) {
+          setHasSession(true)
+        }
+      } catch (err) {
+        console.error('[Check User Session Error]:', err)
+      } finally {
+        if (isMounted) {
+          setCheckingSession(false)
+        }
       }
-      setCheckingSession(false)
     }
 
     checkUserSession()
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [supabase])
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { ChevronRight, MapPin, Star } from 'lucide-react'
 import type { Mineral, CollectionItem, SpecimenPhoto } from '@/types/database'
 import {
   CRYSTAL_SYSTEM_LABELS,
@@ -435,7 +436,7 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
                             )}
                           </div>
                         </div>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', paddingLeft: '0.5rem', flexShrink: 0 }}>➜</span>
+                        <span style={{ display: 'flex', alignItems: 'center', paddingLeft: '0.5rem', flexShrink: 0, color: 'var(--text-muted)' }}><ChevronRight size={14} /></span>
                       </Link>
                     ))}
                   </div>
@@ -573,18 +574,20 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
                           </div>
                           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', alignItems: 'center' }}>
                             {item.origin && (
-                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                📍 {item.origin}
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                <MapPin size={10} style={{ flexShrink: 0 }} /> {item.origin}
                               </span>
                             )}
                             {item.quality && (
-                              <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber)' }}>
-                                {'★'.repeat(item.quality)}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: 'var(--accent-amber)' }}>
+                                {[1, 2, 3, 4, 5].slice(0, item.quality).map(starNum => (
+                                  <Star key={starNum} size={9} fill="currentColor" />
+                                ))}
                               </span>
                             )}
                           </div>
                         </div>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>➜</span>
+                        <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)' }}><ChevronRight size={14} /></span>
                       </div>
                     </Link>
                   ))}

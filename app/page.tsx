@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { Database, Box, Cloud } from 'lucide-react'
 
 export default async function LandingPage() {
   const supabase = await createClient()
@@ -144,12 +145,12 @@ export default async function LandingPage() {
           opacity: 0.9
         }}>
           {[
-            { title: 'Base de Datos', desc: '+10k especies de Mindat.org', icon: '◆' },
-            { title: 'Visor 3D', desc: 'Hábitos y sistemas cristalinos', icon: '💎' },
-            { title: 'Google Drive', desc: 'Tus fotos siempre seguras', icon: '☁' },
+            { title: 'Base de Datos', desc: '+10k especies de Mindat.org', icon: <Database size={22} /> },
+            { title: 'Visor 3D', desc: 'Hábitos y sistemas cristalinos', icon: <Box size={22} /> },
+            { title: 'Google Drive', desc: 'Tus fotos siempre seguras', icon: <Cloud size={22} /> },
           ].map((feat, i) => (
             <div key={i} className="card" style={{ padding: '1.25rem', textAlign: 'left' }}>
-              <div style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'var(--accent-gold)' }}>{feat.icon}</div>
+              <div style={{ marginBottom: '0.5rem', color: 'var(--accent-gold)', display: 'flex', alignItems: 'center' }}>{feat.icon}</div>
               <h4 style={{ fontSize: '0.95rem', marginBottom: '0.25rem' }}>{feat.title}</h4>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{feat.desc}</p>
             </div>

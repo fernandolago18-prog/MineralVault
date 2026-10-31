@@ -26,7 +26,7 @@ export default async function CollectionPage() {
       )
     `)
     .eq('user_id', user.id)
-    .eq('status', 'owned')
+    .in('status', ['owned', 'wanted'])
     .order('created_at', { ascending: false })
 
   if (error) console.error('[Collection Load Error]:', error.message)
