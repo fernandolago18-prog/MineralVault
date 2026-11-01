@@ -710,8 +710,13 @@ label {
 }
 
 /* ============================================================
-   MINING & PROSPECTOR LOADER ANIMATIONS
+   CASTILLETE MINERO DE LA UNIÓN (REGIÓN DE MURCIA)
+   ANIMACIÓN HIPERREALISTA DE EXTRACCIÓN DE MINERAL
    ============================================================ */
+
+:root {
+  --mining-cycle: 5.2s;
+}
 
 .mining-loader-container {
   display: flex;
@@ -732,7 +737,7 @@ label {
 }
 
 .mining-loader-container.embedded {
-  min-height: clamp(340px, 60vh, 520px);
+  min-height: clamp(360px, 62vh, 560px);
   padding: 2.5rem 1rem;
   animation: miningFadeIn 0.3s ease-out;
 }
@@ -750,13 +755,13 @@ label {
 
 .mining-loader-card {
   position: relative;
-  max-width: 420px;
+  max-width: 440px;
   width: 100%;
   padding: 2rem 1.5rem 1.75rem;
-  background: radial-gradient(circle at 50% 25%, rgba(22, 22, 28, 0.95) 0%, rgba(14, 14, 18, 0.98) 100%);
+  background: radial-gradient(circle at 50% 25%, rgba(22, 22, 28, 0.98) 0%, rgba(12, 12, 16, 0.99) 100%);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(197, 160, 89, 0.12);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 40px rgba(197, 160, 89, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -766,32 +771,33 @@ label {
 
 .mining-lantern-glow {
   position: absolute;
-  top: 15%;
-  left: 50%;
+  top: 20%;
+  left: 55%;
   transform: translate(-50%, -50%);
-  width: 240px;
-  height: 240px;
+  width: 260px;
+  height: 260px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(197, 160, 89, 0.18) 0%, rgba(45, 138, 103, 0.08) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(197, 160, 89, 0.2) 0%, rgba(217, 119, 6, 0.08) 45%, transparent 70%);
   pointer-events: none;
   animation: miningLanternPulse 3.5s ease-in-out infinite alternate;
 }
 
 @keyframes miningLanternPulse {
   0% {
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.92);
   }
   100% {
     opacity: 0.95;
-    transform: translate(-50%, -50%) scale(1.15);
+    transform: translate(-50%, -50%) scale(1.12);
   }
 }
 
 .mining-scene-wrapper {
   position: relative;
-  width: 180px;
-  height: 180px;
+  width: 100%;
+  max-width: 340px;
+  height: 250px;
   margin: 0 auto 1.25rem;
   display: flex;
   align-items: center;
@@ -802,159 +808,198 @@ label {
   width: 100%;
   height: 100%;
   overflow: visible;
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6));
 }
 
-/* Animación de la Brújula / Radar Geológico */
-.mining-radar-ring {
-  transform-origin: 100px 110px;
-  animation: miningRotateCW 22s linear infinite;
+/* ============================================================
+   FÍSICA Y CINEMÁTICA DEL CASTILLETE DE LA UNIÓN
+   ============================================================ */
+
+/* 1. Rotación sincronizada de las poleas de extracción (Sheaves) */
+.sheave-wheel-front {
+  transform-origin: 200px 52px;
+  animation: sheaveSpin var(--mining-cycle) cubic-bezier(0.38, 0.04, 0.22, 1) infinite;
 }
 
-.mining-radar-ring-reverse {
-  transform-origin: 100px 110px;
-  animation: miningRotateCCW 16s linear infinite;
+.sheave-wheel-rear {
+  transform-origin: 209px 47px;
+  animation: sheaveSpin var(--mining-cycle) cubic-bezier(0.38, 0.04, 0.22, 1) infinite;
 }
 
-@keyframes miningRotateCW {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes miningRotateCCW {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
-}
-
-/* Aura palpitante de la veta mineral */
-.mining-pulse-aura {
-  animation: miningVeinPulse 1.8s ease-in-out infinite;
-  transform-origin: 100px 135px;
-}
-
-@keyframes miningVeinPulse {
-  0%, 100% { opacity: 0.35; transform: scale(0.96); }
-  50% { opacity: 0.75; transform: scale(1.05); }
-}
-
-/* Resplandor de los cristales */
-.mining-crystal-cluster {
-  filter: drop-shadow(0 0 8px rgba(197, 160, 89, 0.3));
-}
-
-/* GOLPE DEL PICO DE MINERO */
-/* Ciclo de 1.35 segundos por golpe */
-.mining-pickaxe-arm {
-  transform-origin: 136px 52px;
-  animation: miningPickStrike 1.35s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
-}
-
-@keyframes miningPickStrike {
+@keyframes sheaveSpin {
   0% {
-    transform: rotate(0deg); /* Posición inicial: listo arriba */
-  }
-  18% {
-    transform: rotate(-32deg); /* Carga el golpe hacia atrás */
-  }
-  38% {
-    transform: rotate(26deg); /* IMPACTO SECO contra el cristal */
-  }
-  44% {
-    transform: rotate(20deg); /* Ligero rebote elástico tras el golpe */
-  }
-  75% {
-    transform: rotate(-10deg); /* Recuperación controlada */
-  }
-  100% {
     transform: rotate(0deg);
   }
-}
-
-/* Destello en el instante de contacto (en el 38% del ciclo) */
-.mining-impact-flash {
-  transform-origin: 104px 98px;
-  animation: miningFlashBurst 1.35s ease-out infinite;
-  opacity: 0;
-}
-
-@keyframes miningFlashBurst {
-  0%, 35% {
-    opacity: 0;
-    transform: scale(0.2);
-  }
-  38% {
-    opacity: 0.95;
-    transform: scale(1.4);
-  }
-  48% {
-    opacity: 0;
-    transform: scale(2.2);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.2);
-  }
-}
-
-/* CHISPAS Y ESQUIRLAS DE CRISTAL */
-.mining-spark {
-  transform-origin: 104px 98px;
-  animation: miningSparkFly 1.35s ease-out infinite;
-  opacity: 0;
-}
-
-.spark-1 {
-  animation-delay: 0.01s;
-}
-.spark-2 {
-  animation-delay: 0.02s;
-}
-.spark-3 {
-  animation-delay: 0.015s;
-}
-.spark-4 {
-  animation-delay: 0.03s;
-}
-.spark-5 {
-  animation-delay: 0.025s;
-}
-
-@keyframes miningSparkFly {
-  0%, 36% {
-    opacity: 0;
-    transform: translate(0, 0) scale(0.3);
-  }
-  38% {
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-  }
-  55% {
-    opacity: 0.7;
-    transform: translate(calc(var(--spark-x, 0) * 0.7), calc(var(--spark-y, 0) * 0.7)) scale(0.9);
+  8% {
+    transform: rotate(20deg); /* Inicio suave del tiro desde el fondo */
   }
   68% {
-    opacity: 0;
-    transform: translate(calc(var(--spark-x, 0) * 1.2), calc(var(--spark-y, 0) * 1.2)) scale(0.3);
+    transform: rotate(720deg); /* Tiro continuo a régimen constante */
+  }
+  75% {
+    transform: rotate(790deg); /* Frenado amortiguado al llegar arriba */
+  }
+  78%, 93% {
+    transform: rotate(795deg); /* Bloqueo en desembarque de mineral */
   }
   100% {
+    transform: rotate(1080deg); /* Retorno / ciclo fluido */
+  }
+}
+
+/* 2. Ascenso vertical de la jaula con mineral */
+.mining-cage-assembly {
+  animation: cageAscent var(--mining-cycle) cubic-bezier(0.38, 0.04, 0.22, 1) infinite;
+}
+
+@keyframes cageAscent {
+  0% {
+    transform: translateY(142px); /* En el fondo oscuro del pozo */
+    opacity: 0.25;
+  }
+  8% {
+    transform: translateY(142px);
+    opacity: 0.5;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  68% {
+    transform: translateY(0px); /* Llega a nivel del brocal / superficie */
+    opacity: 1;
+  }
+  73% {
+    transform: translateY(-3.5px); /* Inercia elástica natural del cable de acero */
+  }
+  78%, 93% {
+    transform: translateY(0px); /* Reposo en plataforma de desembarque */
+    opacity: 1;
+  }
+  98% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(142px);
     opacity: 0;
   }
 }
 
-/* Parpadeo de la linterna de carburo */
-.mining-lantern-flicker {
-  animation: lanternFlicker 2.2s infinite alternate;
+/* 3. Acortamiento proporcional y milimétrico del cable vertical */
+.vertical-hoist-cable {
+  transform-origin: 222px 52px;
+  animation: cableShorten var(--mining-cycle) cubic-bezier(0.38, 0.04, 0.22, 1) infinite;
+}
+
+@keyframes cableShorten {
+  0%, 8% {
+    transform: scaleY(1);
+    opacity: 0.85;
+  }
+  68% {
+    transform: scaleY(0.377); /* Empata exactamente con el enganche de la jaula */
+  }
+  73% {
+    transform: scaleY(0.362);
+  }
+  78%, 93% {
+    transform: scaleY(0.377);
+    opacity: 1;
+  }
+  98% {
+    opacity: 0;
+    transform: scaleY(0.35);
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0.85;
+  }
+}
+
+/* 4. Vibración y zumbido mecánico del cable de tracción */
+.cable-vibration {
+  animation: cableHum 0.18s ease-in-out infinite alternate;
+}
+
+@keyframes cableHum {
+  0% { transform: scaleX(0.99) translateX(0px); }
+  100% { transform: scaleX(1.01) translateX(0.35px); }
+}
+
+/* 5. Parpadeo de la llama de carburo del farol minero */
+.carbide-lantern-flame {
+  animation: lanternFlicker 2.6s ease-in-out infinite alternate;
 }
 
 @keyframes lanternFlicker {
-  0%, 100% { opacity: 0.9; }
-  25% { opacity: 0.65; }
-  50% { opacity: 1; }
-  75% { opacity: 0.8; }
-  85% { opacity: 0.55; }
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  25% { opacity: 0.7; transform: scale(0.96); }
+  55% { opacity: 1; transform: scale(1.06); }
+  80% { opacity: 0.75; transform: scale(0.98); }
 }
 
-/* ÁREA DE TEXTO Y PROGRESO */
+/* 6. Destellos especulares en las facetas de la galena y la pirita */
+.ore-glint {
+  opacity: 0;
+  animation: glintShine var(--mining-cycle) ease-in-out infinite;
+}
+
+.glint-1 { animation-delay: 0s; }
+.glint-2 { animation-delay: 0.16s; }
+.glint-3 { animation-delay: 0.32s; }
+
+@keyframes glintShine {
+  0%, 66% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1.25) rotate(15deg);
+  }
+  82% {
+    opacity: 0.85;
+    transform: scale(0.9) rotate(45deg);
+  }
+  92% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 7. Vaho y partículas minerales saliendo del pozo */
+.well-vapor-1 {
+  animation: wellVaporRise 3.6s ease-out infinite;
+}
+
+.well-vapor-2 {
+  animation: wellVaporRise 4.2s ease-out infinite 1.8s;
+}
+
+@keyframes wellVaporRise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.85);
+  }
+  30% {
+    opacity: 0.35;
+  }
+  80% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-45px) scale(1.35);
+  }
+}
+
+/* ============================================================
+   ÁREA DE TEXTO, PROFUNDIDAD Y PROGRESO
+   ============================================================ */
+
 .mining-loader-text-area {
   display: flex;
   flex-direction: column;
@@ -968,7 +1013,7 @@ label {
   align-items: center;
   gap: 0.5rem;
   font-family: 'Fraunces', serif;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   color: var(--accent-gold);
@@ -982,7 +1027,7 @@ label {
 
 .mining-loader-phrase {
   font-family: 'Inter', -apple-system, sans-serif;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-primary);
   min-height: 1.5rem;
@@ -1002,6 +1047,35 @@ label {
   transform: translateY(4px);
 }
 
+/* Indicador de profundidad en tiempo real */
+.mining-depth-gauge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.3rem 0.85rem;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 0.15rem 0;
+}
+
+.mining-depth-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-emerald);
+  box-shadow: 0 0 6px var(--accent-emerald);
+  animation: depthPulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes depthPulse {
+  0% { opacity: 0.6; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1.15); }
+}
+
 /* Barra de progreso de veta de oro */
 .mining-progress-track {
   width: 160px;
@@ -1010,7 +1084,7 @@ label {
   border-radius: var(--radius-full);
   overflow: hidden;
   position: relative;
-  margin: 0.4rem 0 0.25rem;
+  margin: 0.35rem 0 0.25rem;
 }
 
 .mining-progress-shimmer {
