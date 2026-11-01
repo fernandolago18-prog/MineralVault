@@ -81,7 +81,7 @@ export default function MiningLoader({
       className={`mining-loader-container ${fullScreen ? 'fullscreen' : 'embedded'}`}
     >
       <div className="mining-loader-card">
-        {/* Glow cálido ambiental del farol de carburo */}
+        {/* Glow cálido ambiental del castillete minero */}
         <div className="mining-lantern-glow" />
 
         {/* ============================================================
@@ -156,19 +156,19 @@ export default function MiningLoader({
                 <stop offset="100%" stopColor="#020203" />
               </radialGradient>
 
-              {/* Cono volumétrico de luz del farol de carburo */}
-              <radialGradient id="lanternVolumetric" cx="20%" cy="20%" r="80%">
-                <stop offset="0%" stopColor="#fef08a" stopOpacity="0.32" />
-                <stop offset="40%" stopColor="#d97706" stopOpacity="0.14" />
-                <stop offset="75%" stopColor="#78350f" stopOpacity="0.03" />
+              {/* Haz descendente del foco industrial sobre la viga */}
+              <linearGradient id="spotlightBeam" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fef08a" stopOpacity="0.25" />
+                <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.12" />
+                <stop offset="65%" stopColor="#d97706" stopOpacity="0.04" />
                 <stop offset="100%" stopColor="#000000" stopOpacity="0" />
-              </radialGradient>
+              </linearGradient>
 
-              {/* Llama incandescente del farol */}
-              <radialGradient id="lanternBulb" cx="50%" cy="50%" r="50%">
+              {/* Llama incandescente y destello de reflector */}
+              <radialGradient id="lampBulbGlow" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="30%" stopColor="#fef08a" />
-                <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.8" />
+                <stop offset="35%" stopColor="#fef08a" stopOpacity="0.95" />
+                <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.5" />
                 <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
               </radialGradient>
 
@@ -355,10 +355,6 @@ export default function MiningLoader({
             {/* 5. Plataforma de servicio y poleas de extracción (Sheaves) */}
             <line x1="176" y1="58" x2="248" y2="58" stroke="#3e414f" strokeWidth="2" />
             <line x1="178" y1="50" x2="246" y2="50" stroke="#4f5364" strokeWidth="1.2" />
-            <line x1="178" y1="50" x2="178" y2="58" stroke="#4f5364" strokeWidth="1.2" />
-            <line x1="246" y1="50" x2="246" y2="58" stroke="#4f5364" strokeWidth="1.2" />
-            <line x1="212" y1="50" x2="212" y2="58" stroke="#4f5364" strokeWidth="1.2" />
-
             <polygon points="196,58 204,58 202,46 198,46" fill="#1f2028" stroke="#5a5e6d" strokeWidth="1" />
             <polygon points="205,55 213,55 211,43 207,43" fill="#1a1b22" stroke="#444754" strokeWidth="1" />
 
@@ -369,7 +365,6 @@ export default function MiningLoader({
             {/* Polea trasera en perspectiva */}
             <g className="sheave-wheel-rear" opacity="0.6">
               <circle cx="209" cy="47" r="21" fill="none" stroke="url(#sheaveRim)" strokeWidth="3" />
-              <circle cx="209" cy="47" r="18" fill="none" stroke="#252733" strokeWidth="1" />
               <line x1="209" y1="26" x2="209" y2="68" stroke="#606476" strokeWidth="1.4" />
               <line x1="188" y1="47" x2="230" y2="47" stroke="#606476" strokeWidth="1.4" />
               <line x1="194" y1="32" x2="224" y2="62" stroke="#606476" strokeWidth="1.2" />
@@ -531,20 +526,56 @@ export default function MiningLoader({
               </g>
             </g>
 
-            {/* 9. Farol minero de carburo y cono de luz volumétrica */}
-            <polygon
-              points="260,172 165,220 185,285 275,250"
-              fill="url(#lanternVolumetric)"
-              pointerEvents="none"
-            />
+            {/* ============================================================
+                9. ILUMINACIÓN INDUSTRIAL AUTÉNTICA Y REALISTA (SIN OBJETOS FLOTANTES)
+                Foco de maniobras empernado sólidamente a la viga intermedia del castillete
+                y lámpara minera de seguridad Wolf apoyada firmemente sobre el brocal
+                ============================================================ */}
+            <g id="iluminacion-minera">
+              {/* Haz descendente suave que baña la boca del pozo y la jaula */}
+              <polygon
+                points="260,172 165,225 186,285 272,250"
+                fill="url(#spotlightBeam)"
+                pointerEvents="none"
+              />
 
-            <path d="M 252 166 Q 260 164 260 170" fill="none" stroke="#606474" strokeWidth="1.5" />
+              {/* FOCO INDUSTRIAL DE VIGA: Placa base de acero con remaches sobre la viga */}
+              <rect x="248" y="156" width="4" height="9" rx="0.5" fill="#2d3038" stroke="#1c1d22" strokeWidth="0.8" />
+              <circle cx="250" cy="158.5" r="0.7" fill="#cbd5e1" />
+              <circle cx="250" cy="162.5" r="0.7" fill="#cbd5e1" />
 
-            <g className="carbide-lantern-flame">
-              <path d="M 256 170 L 264 170 L 262 167 L 258 167 Z" fill="#b45309" stroke="#451a03" strokeWidth="0.8" />
-              <rect x="257" y="170" width="6" height="8" rx="1" fill="#fef08a" opacity="0.9" />
-              <circle cx="260" cy="174" r="7" fill="url(#lanternBulb)" />
-              <rect x="256" y="178" width="8" height="6" rx="1" fill="#78350f" stroke="#291204" strokeWidth="0.8" />
+              {/* Brazo acodado de fijación de hierro macizo forjado */}
+              <path d="M 251 160.5 L 260 160.5 L 263 166" fill="none" stroke="#484b56" strokeWidth="2.2" strokeLinecap="round" />
+
+              {/* Campana del foco industrial de hierro fundido (orientada hacia el pozo) */}
+              <g transform="translate(263, 166) rotate(24)">
+                {/* Carcasa cónica reflectora */}
+                <path d="M -6 0 C -6 -3 6 -3 6 0 L 8 6 L -8 6 Z" fill="#2a2d36" stroke="#121318" strokeWidth="0.9" />
+                <line x1="-8" y1="6" x2="8" y2="6" stroke="#5d6272" strokeWidth="1.2" />
+                {/* Lente estriada y resplandor incandescente */}
+                <ellipse cx="0" cy="6" rx="6" ry="2.5" fill="#ffffff" />
+                <circle cx="0" cy="6" r="7" fill="url(#lampBulbGlow)" className="carbide-lantern-flame" />
+                {/* Rejilla de protección metálica antigolpes */}
+                <line x1="-3" y1="4" x2="-3" y2="7.5" stroke="#3b3e4a" strokeWidth="0.8" />
+                <line x1="0" y1="4" x2="0" y2="8" stroke="#3b3e4a" strokeWidth="0.8" />
+                <line x1="3" y1="4" x2="3" y2="7.5" stroke="#3b3e4a" strokeWidth="0.8" />
+              </g>
+
+              {/* LÁMPARA MINERA DE SEGURIDAD (WOLF/DAVY): Asentada sólidamente en el brocal de piedra */}
+              <g id="lampara-testigo-brocal" transform="translate(263, 252)">
+                {/* Base plana circular de latón pesado apoyada en el sillar */}
+                <rect x="-4" y="12" width="8" height="4" rx="1" fill="#b45309" stroke="#451a03" strokeWidth="0.8" />
+                <rect x="-3.5" y="10" width="7" height="2" fill="#d97706" />
+                {/* Cilindro de vidrio blindado con llama segura */}
+                <rect x="-3" y="4" width="6" height="6" rx="0.5" fill="#fef08a" opacity="0.9" />
+                <circle cx="0" cy="7" r="4.5" fill="url(#lampBulbGlow)" className="carbide-lantern-flame" />
+                {/* Columnas protectoras de latón */}
+                <line x1="-2.5" y1="4" x2="-2.5" y2="10" stroke="#78350f" strokeWidth="0.7" />
+                <line x1="2.5" y1="4" x2="2.5" y2="10" stroke="#78350f" strokeWidth="0.7" />
+                {/* Caperuza de malla de alambre y anilla de forja */}
+                <polygon points="-3.5,4 3.5,4 2,0 -2,0" fill="#92400e" stroke="#451a03" strokeWidth="0.6" />
+                <circle cx="0" cy="-2" r="1.8" fill="none" stroke="#b45309" strokeWidth="0.8" />
+              </g>
             </g>
           </svg>
         </div>
