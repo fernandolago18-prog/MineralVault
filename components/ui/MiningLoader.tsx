@@ -11,9 +11,9 @@ interface MiningLoaderProps {
 const DEFAULT_PHRASES = [
   'Picando en la roca madre...',
   'Descubriendo vetas de cristal...',
-  'Localizando ejemplares geológicos...',
   'Extrayendo minerales de las profundidades...',
-  'Inspeccionando hábitos cristalinos...',
+  'Inspeccionando hábitos cristalinos y dureza...',
+  'Localizando ejemplares geológicos...',
   'Iluminando las galerías subterráneas...',
 ]
 
@@ -34,7 +34,7 @@ export default function MiningLoader({
         setPhraseIndex(prev => (prev + 1) % DEFAULT_PHRASES.length)
         setFade(true)
       }, 250)
-    }, 2400)
+    }, 2500)
 
     return () => clearInterval(interval)
   }, [subtitle])
@@ -49,302 +49,383 @@ export default function MiningLoader({
       className={`mining-loader-container ${fullScreen ? 'fullscreen' : 'embedded'}`}
     >
       <div className="mining-loader-card">
-        {/* Glow de fondo de la linterna del minero */}
+        {/* Glow atmosférico de la linterna de prospección en la caverna */}
         <div className="mining-lantern-glow" />
 
-        {/* SVG Animado del Minero / Pico y Geoda de Cristales */}
+        {/* Escena fotorealista del minero, roca madre y pico con impacto físico */}
         <div className="mining-scene-wrapper">
           <svg
-            className="mining-svg"
-            viewBox="0 0 200 200"
+            className="mining-svg photorealistic-scene"
+            viewBox="0 0 320 220"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
-              {/* Degradado para el pico de acero pulido */}
-              <linearGradient id="pickMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#e5e7eb" />
-                <stop offset="50%" stopColor="#9ca3af" />
-                <stop offset="100%" stopColor="#4b5563" />
+              {/* Filtro de textura para superficie rugosa de piedra natural */}
+              <filter id="rockGranite" x="-10%" y="-10%" width="120%" height="120%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="4" result="noise" />
+                <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0.25 0" />
+                <feComposite in2="SourceGraphic" in="gl" operator="in" />
+              </filter>
+
+              {/* Degradado para acero forjado al carbono (cabeza del pico) */}
+              <linearGradient id="forgedSteel" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f1f5f9" />
+                <stop offset="18%" stopColor="#94a3b8" />
+                <stop offset="45%" stopColor="#475569" />
+                <stop offset="75%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
               </linearGradient>
 
-              {/* Degradado para el mango de madera tratada */}
-              <linearGradient id="pickHandle" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#d97706" />
-                <stop offset="50%" stopColor="#b45309" />
-                <stop offset="100%" stopColor="#78350f" />
+              {/* Bisel metálico y filo pulido del pico */}
+              <linearGradient id="steelChiselBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="35%" stopColor="#cbd5e1" />
+                <stop offset="80%" stopColor="#64748b" />
+                <stop offset="100%" stopColor="#334155" />
               </linearGradient>
 
-              {/* Cristales: Oro y Ámbar */}
-              <linearGradient id="crystalGold" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fef08a" />
-                <stop offset="40%" stopColor="#eab308" />
-                <stop offset="100%" stopColor="#854d0e" />
+              {/* Madera de nogal/fresno aceitada para el mango del pico */}
+              <linearGradient id="hickoryWood" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#451a03" />
+                <stop offset="25%" stopColor="#92400e" />
+                <stop offset="60%" stopColor="#d97706" />
+                <stop offset="85%" stopColor="#b45309" />
+                <stop offset="100%" stopColor="#3d1502" />
               </linearGradient>
 
-              {/* Cristales: Esmeralda */}
-              <linearGradient id="crystalEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#6ee7b7" />
-                <stop offset="50%" stopColor="#10b981" />
+              {/* Cuero envejecido de la empuñadura */}
+              <linearGradient id="leatherGrip" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#291609" />
+                <stop offset="50%" stopColor="#45230c" />
+                <stop offset="100%" stopColor="#1f1006" />
+              </linearGradient>
+
+              {/* Roca madre: Basalto y granito volumétrico */}
+              <linearGradient id="rockBase" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#33333d" />
+                <stop offset="40%" stopColor="#22222a" />
+                <stop offset="70%" stopColor="#18181f" />
+                <stop offset="100%" stopColor="#0f0f14" />
+              </linearGradient>
+
+              {/* Luz rasante sobre las aristas de la roca */}
+              <linearGradient id="rockFacetHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#636375" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#3a3a48" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#16161c" stopOpacity="0" />
+              </linearGradient>
+
+              {/* Cristal de oro / pirita en la geoda */}
+              <linearGradient id="goldVein" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fffbeb" />
+                <stop offset="25%" stopColor="#fde047" />
+                <stop offset="60%" stopColor="#ca8a04" />
+                <stop offset="100%" stopColor="#713f12" />
+              </linearGradient>
+
+              {/* Cristal de amatista */}
+              <linearGradient id="amethystVein" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#faf5ff" />
+                <stop offset="35%" stopColor="#c084fc" />
+                <stop offset="75%" stopColor="#7e22ce" />
+                <stop offset="100%" stopColor="#3b0764" />
+              </linearGradient>
+
+              {/* Cristal de esmeralda */}
+              <linearGradient id="emeraldVein" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ecfdf5" />
+                <stop offset="35%" stopColor="#34d399" />
+                <stop offset="75%" stopColor="#059669" />
                 <stop offset="100%" stopColor="#064e3b" />
               </linearGradient>
 
-              {/* Cristales: Amatista */}
-              <linearGradient id="crystalAmethyst" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#d8b4fe" />
-                <stop offset="50%" stopColor="#a855f7" />
-                <stop offset="100%" stopColor="#581c87" />
-              </linearGradient>
+              {/* Resplandor térmico de impacto en la grieta */}
+              <radialGradient id="strikeGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+                <stop offset="25%" stopColor="#fef08a" stopOpacity="0.9" />
+                <stop offset="55%" stopColor="#eab308" stopOpacity="0.6" />
+                <stop offset="80%" stopColor="#ca8a04" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#08080a" stopOpacity="0" />
+              </radialGradient>
 
-              {/* Resplandor radial de la veta */}
-              <radialGradient id="rockAura" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#c5a059" stopOpacity="0.4" />
-                <stop offset="60%" stopColor="#2d8a67" stopOpacity="0.15" />
+              {/* Niebla y polvo mineral subterráneo */}
+              <radialGradient id="dustCloud" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.35" />
+                <stop offset="45%" stopColor="#94a3b8" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Brillo de linterna rasante */}
+              <radialGradient id="lanternCone" cx="85%" cy="20%" r="75%">
+                <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.28" />
+                <stop offset="40%" stopColor="#d97706" stopOpacity="0.12" />
+                <stop offset="80%" stopColor="#78350f" stopOpacity="0.03" />
                 <stop offset="100%" stopColor="#08080a" stopOpacity="0" />
               </radialGradient>
             </defs>
 
-            {/* Aura de la roca mineral */}
-            <circle cx="100" cy="135" r="55" fill="url(#rockAura)" className="mining-pulse-aura" />
+            {/* Haz de luz de la linterna de minero que baña la escena */}
+            <rect x="0" y="0" width="320" height="220" fill="url(#lanternCone)" />
 
-            {/* Anillos de prospección / Brújula geológica */}
-            <circle
-              cx="100"
-              cy="110"
-              r="76"
-              stroke="#c5a059"
-              strokeWidth="1"
-              strokeDasharray="4 8"
-              opacity="0.3"
-              className="mining-radar-ring"
-            />
-            <circle
-              cx="100"
-              cy="110"
-              r="86"
-              stroke="#2d8a67"
-              strokeWidth="0.75"
-              strokeDasharray="2 12"
-              opacity="0.25"
-              className="mining-radar-ring-reverse"
-            />
+            {/* Partículas de polvo de caverna flotando en el aire */}
+            <g className="cavern-motes">
+              <circle cx="80" cy="50" r="1.2" fill="#fef08a" opacity="0.4" className="mote mote-1" />
+              <circle cx="150" cy="40" r="0.9" fill="#e2e8f0" opacity="0.35" className="mote mote-2" />
+              <circle cx="210" cy="90" r="1.5" fill="#fef08a" opacity="0.3" className="mote mote-3" />
+              <circle cx="110" cy="110" r="0.8" fill="#e2e8f0" opacity="0.4" className="mote mote-4" />
+              <circle cx="260" cy="40" r="1.1" fill="#fef08a" opacity="0.5" className="mote mote-5" />
+            </g>
 
-            {/* Marcadores de rumbo en el anillo */}
-            <circle cx="100" cy="24" r="2.5" fill="#c5a059" opacity="0.6" />
-            <circle cx="100" cy="196" r="2.5" fill="#c5a059" opacity="0.6" />
-            <circle cx="14" cy="110" r="2.5" fill="#c5a059" opacity="0.6" />
-            <circle cx="186" cy="110" r="2.5" fill="#c5a059" opacity="0.6" />
+            {/* =======================================================
+                BLOQUE GEOLÓGICO DE LA ROCA MADRE (OBJETIVO DEL IMPACTO)
+                El pico golpea exactamente en la grieta en x: 130, y: 145
+                ======================================================= */}
+            <g className="mining-rock-mass">
+              {/* Sombra de oclusión ambiental bajo la roca */}
+              <ellipse cx="120" cy="205" rx="95" ry="14" fill="#050508" opacity="0.85" />
 
-            {/* Roca madre (Bedrock) */}
-            <path
-              d="M40 165 L60 145 L85 152 L115 142 L145 150 L165 165 L155 178 L45 178 Z"
-              fill="#181820"
-              stroke="#262632"
-              strokeWidth="2"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M55 165 L75 153 L100 158 L125 149 L150 162"
-              stroke="#343444"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-
-            {/* Formación de cristales en la geoda */}
-            <g className="mining-crystal-cluster">
-              {/* Cristal Izquierdo: Amatista */}
-              <polygon
-                points="70,150 78,124 88,128 84,152 74,154"
-                fill="url(#crystalAmethyst)"
-                opacity="0.9"
-              />
-              <polygon
-                points="78,124 88,128 85,138 75,136"
-                fill="#f3e8ff"
-                opacity="0.6"
+              {/* Masa base de la roca (estrato volcánico / granítico) */}
+              <path
+                d="M 35 200 
+                   L 20 180 
+                   L 25 150 
+                   L 45 130 
+                   L 75 120 
+                   L 110 115 
+                   L 130 145 
+                   L 155 125 
+                   L 185 135 
+                   L 205 160 
+                   L 215 195 
+                   L 180 205 
+                   L 110 208 Z"
+                fill="url(#rockBase)"
+                stroke="#2a2a36"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
               />
 
-              {/* Cristal Derecho: Esmeralda */}
-              <polygon
-                points="118,150 126,120 138,126 132,152 122,153"
-                fill="url(#crystalEmerald)"
-                opacity="0.9"
-              />
-              <polygon
-                points="126,120 138,126 134,136 124,132"
-                fill="#d1fae5"
-                opacity="0.6"
+              {/* Facetas esculpidas y aristas de fractura natural de la piedra */}
+              <polygon points="45,130 75,120 90,140 55,155" fill="url(#rockFacetHighlight)" />
+              <polygon points="75,120 110,115 130,145 90,140" fill="#2d2d3a" opacity="0.9" />
+              <polygon points="110,115 155,125 130,145" fill="#1b1b22" />
+              <polygon points="155,125 185,135 170,165 130,145" fill="url(#rockFacetHighlight)" />
+              <polygon points="185,135 205,160 175,185 170,165" fill="#262632" />
+              <polygon points="55,155 90,140 100,185 45,185" fill="#181820" />
+              <polygon points="90,140 130,145 140,195 100,185" fill="#14141a" />
+              <polygon points="130,145 170,165 175,185 140,195" fill="#1e1e28" />
+
+              {/* Aristas afiladas de la fractura */}
+              <path
+                d="M 45 130 L 90 140 L 130 145 L 170 165 L 205 160
+                   M 75 120 L 90 140 L 100 185 L 110 208
+                   M 155 125 L 130 145 L 140 195"
+                stroke="#444455"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
 
-              {/* Cristal Central Principal: Oro nativo / Pirita brillante */}
-              <polygon
-                points="92,152 98,102 110,106 108,153"
-                fill="url(#crystalGold)"
-              />
-              <polygon
-                points="98,102 104,92 110,106 104,112"
-                fill="#fef9c3"
-                opacity="0.9"
-              />
-              <polygon
-                points="98,102 104,92 92,110 94,124"
-                fill="#facc15"
-                opacity="0.75"
-              />
+              {/* =======================================================
+                  LA GEODA Y VETA MINERAL EXPUESTA (DENTRO DE LA GRIETA)
+                  ======================================================= */}
+              <g className="mining-geode-vein">
+                {/* Fondo oscuro del interior de la geoda */}
+                <path
+                  d="M 118 135 Q 130 140 142 136 Q 148 148 138 158 Q 124 160 116 148 Z"
+                  fill="#09090d"
+                />
 
-              {/* Cristales menores de acompañamiento */}
-              <polygon
-                points="60,158 64,142 70,145 68,160"
-                fill="url(#crystalGold)"
-                opacity="0.7"
-              />
-              <polygon
-                points="136,155 142,138 148,142 144,158"
-                fill="url(#crystalAmethyst)"
-                opacity="0.75"
+                {/* Cristales de Oro Nativo / Pirita cúbica formándose en la veta */}
+                <polygon points="122,142 127,135 132,139 127,146" fill="url(#goldVein)" />
+                <polygon points="127,135 131,130 136,134 132,139" fill="#fef08a" />
+                <polygon points="125,145 129,141 135,147 131,151" fill="url(#goldVein)" />
+
+                {/* Cristales prismáticos de Amatista en las paredes de la grieta */}
+                <polygon points="118,148 111,142 115,138 122,144" fill="url(#amethystVein)" />
+                <polygon points="111,142 108,137 113,136 115,138" fill="#f3e8ff" />
+
+                {/* Cristales de Esmeralda / Malaquita */}
+                <polygon points="135,152 143,148 146,155 138,159" fill="url(#emeraldVein)" />
+                <polygon points="143,148 147,144 150,149 146,155" fill="#a7f3d0" />
+
+                {/* Líneas de fractura secundarias que laten con el impacto */}
+                <path
+                  className="fissure-crack-line"
+                  d="M 130 145 L 115 158 L 102 165
+                     M 130 145 L 140 162 L 150 178
+                     M 130 145 L 126 132 L 118 126"
+                  stroke="#fbbf24"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+
+              {/* Resplandor interno de la veta que se aviva con el golpe */}
+              <circle
+                cx="130"
+                cy="145"
+                r="35"
+                fill="url(#strikeGlow)"
+                className="fissure-internal-glow"
               />
             </g>
 
-            {/* Destello central del cristal cuando impacta el pico */}
-            <circle
-              cx="104"
-              cy="98"
-              r="14"
-              fill="#fff"
-              className="mining-impact-flash"
+            {/* =======================================================
+                NUBE DE POLVO Y ESQUIRLAS DE IMPACTO (EN X: 130, Y: 145)
+                ======================================================= */}
+            {/* Polvo mineral fino generado por el impacto */}
+            <ellipse
+              cx="130"
+              cy="145"
+              rx="24"
+              ry="16"
+              fill="url(#dustCloud)"
+              className="impact-dust-cloud"
             />
 
-            {/* Chispas y esquirlas de minerales que saltan con el golpe */}
-            <g className="mining-sparks-group">
-              {/* Chispa 1: Arriba-Izquierda */}
-              <path
-                d="M102 92 Q88 72 82 68"
-                stroke="#fef08a"
-                strokeWidth="2"
-                strokeLinecap="round"
-                className="mining-spark spark-1"
-              />
-              <polygon
-                points="80,68 84,65 83,70"
-                fill="#fde047"
-                className="mining-spark spark-1"
-              />
+            {/* Destello blanco incandescente de contacto acero-roca */}
+            <circle
+              cx="130"
+              cy="145"
+              r="18"
+              fill="url(#strikeGlow)"
+              className="steel-impact-flash"
+            />
 
-              {/* Chispa 2: Arriba central (Diamante/Estrella) */}
-              <path
-                d="M104 88 L104 64"
-                stroke="#6ee7b7"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                className="mining-spark spark-2"
-              />
-              <polygon
-                points="104,60 106,64 104,68 102,64"
-                fill="#a7f3d0"
-                className="mining-spark spark-2"
-              />
-
-              {/* Chispa 3: Arriba-Derecha */}
-              <path
-                d="M108 94 Q122 76 132 70"
-                stroke="#fef08a"
-                strokeWidth="2"
-                strokeLinecap="round"
-                className="mining-spark spark-3"
-              />
-              <polygon
-                points="132,70 136,73 131,75"
-                fill="#fde047"
-                className="mining-spark spark-3"
-              />
-
-              {/* Chispa 4: Lateral Izquierda (Púrpura) */}
-              <circle
-                cx="74"
-                cy="88"
-                r="2.5"
-                fill="#d8b4fe"
-                className="mining-spark spark-4"
-              />
-
-              {/* Chispa 5: Lateral Derecha (Oro) */}
-              <circle
-                cx="138"
-                cy="92"
-                r="3"
-                fill="#fef08a"
-                className="mining-spark spark-5"
-              />
+            {/* Esquirlas de roca y trozos de mineral que salen disparados */}
+            <g className="impact-debris-burst">
+              {/* Esquirla de roca 1 (hacia arriba izquierda con parábola) */}
+              <polygon points="130,145 125,142 127,148" fill="#64748b" className="debris chunk-1" />
+              {/* Esquirla de oro 2 (hacia arriba derecho) */}
+              <polygon points="130,145 134,141 136,146" fill="#fde047" className="debris chunk-2" />
+              {/* Esquirla de cristal 3 (hacia arriba vertical) */}
+              <polygon points="130,145 131,139 128,141" fill="#c084fc" className="debris chunk-3" />
+              {/* Esquirla de roca 4 (hacia izquierda) */}
+              <polygon points="130,145 122,147 124,151" fill="#475569" className="debris chunk-4" />
+              {/* Esquirla de oro 5 (hacia abajo y rebote) */}
+              <polygon points="130,145 136,149 138,145" fill="#facc15" className="debris chunk-5" />
+              {/* Esquirla de cuarzo 6 */}
+              <polygon points="130,145 133,138 135,142" fill="#ffffff" className="debris chunk-6" />
             </g>
 
-            {/* PICO DE MINERO ANIMADO */}
-            {/* El grupo rota sobre el punto de sujeción para simular el golpe */}
-            <g className="mining-pickaxe-arm">
-              {/* Mango del pico (madera de fresno con remate) */}
-              <rect
-                x="132"
-                y="30"
-                width="7"
-                height="80"
-                rx="3.5"
-                transform="rotate(38 132 30)"
-                fill="url(#pickHandle)"
-                stroke="#451a03"
+            {/* Chispas incandescentes de alta velocidad */}
+            <g className="impact-sparks-burst">
+              <line x1="130" y1="145" x2="110" y2="120" stroke="#fef08a" strokeWidth="2" strokeLinecap="round" className="spark spark-1" />
+              <line x1="130" y1="145" x2="135" y2="105" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" className="spark spark-2" />
+              <line x1="130" y1="145" x2="155" y2="118" stroke="#fde047" strokeWidth="1.8" strokeLinecap="round" className="spark spark-3" />
+              <line x1="130" y1="145" x2="98" y2="138" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" className="spark spark-4" />
+              <line x1="130" y1="145" x2="160" y2="140" stroke="#fde047" strokeWidth="1.5" strokeLinecap="round" className="spark spark-5" />
+            </g>
+
+            {/* =======================================================
+                EL PICO DE MINERO (CINEMÁTICA Y CONTACTO FÍSICO REAL)
+                Punto de rotación en x: 240, y: 55 (manos del minero)
+                En rotación 0deg, la punta de cincel está exactamente en (130, 145)
+                ======================================================= */}
+            <g className="photorealistic-pickaxe-pivot">
+              {/* Sombra proyectada del pico en la pared de la cueva */}
+              <g opacity="0.4" transform="translate(10, 12)">
+                <path
+                  d="M 240 55 L 140 135 Q 120 148 105 140"
+                  stroke="#050508"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  filter="blur(4px)"
+                />
+              </g>
+
+              {/* Mango de madera de fresno/hickory con veta curva ergonómica */}
+              <path
+                d="M 245 50 
+                   Q 200 90 148 135
+                   L 142 128
+                   Q 195 82 238 43 Z"
+                fill="url(#hickoryWood)"
+                stroke="#291204"
                 strokeWidth="1"
               />
 
-              {/* Refuerzo / anillo de unión de bronce */}
-              <rect
-                x="131"
-                y="35"
-                width="9"
-                height="10"
-                rx="1.5"
-                transform="rotate(38 131 35)"
-                fill="#c5a059"
-                stroke="#78350f"
-                strokeWidth="0.75"
+              {/* Brillo especular longitudinal a lo largo del mango de madera */}
+              <path
+                d="M 242 47 Q 198 86 145 131"
+                stroke="#fed7aa"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                opacity="0.35"
               />
 
-              {/* Cabeza metálica del pico de doble punta */}
-              {/* Curva arqueada de minería clásica */}
+              {/* Envoltura de cuero antideslizante en la zona de agarre */}
               <path
-                d="M102 36 Q135 48 168 84 Q148 64 120 48 Q110 42 102 36 Z"
-                fill="url(#pickMetal)"
-                stroke="#1f2937"
+                d="M 247 48 L 225 66 L 218 58 L 240 40 Z"
+                fill="url(#leatherGrip)"
+                stroke="#1c0b02"
+                strokeWidth="0.8"
+              />
+              <line x1="228" y1="62" x2="238" y2="44" stroke="#78350f" strokeWidth="1" />
+              <line x1="233" y1="58" x2="243" y2="40" stroke="#78350f" strokeWidth="1" />
+
+              {/* Remate metálico / culata de acero al final del mango */}
+              <polygon points="248,46 254,41 249,36 243,41" fill="url(#forgedSteel)" stroke="#0f172a" strokeWidth="0.8" />
+
+              {/* CASQUILLO Y OJO DE FIJACIÓN DEL PICO (Unión cabeza-mango) */}
+              <g transform="translate(145, 131) rotate(42)">
+                {/* Cuña de acero y anillo de refuerzo de bronce */}
+                <rect x="-8" y="-6" width="16" height="12" rx="2" fill="#b45309" stroke="#451a03" strokeWidth="0.8" />
+                <rect x="-6" y="-4" width="12" height="8" rx="1.5" fill="url(#forgedSteel)" stroke="#1e293b" strokeWidth="0.8" />
+                {/* Ojo central del mango */}
+                <circle cx="0" cy="0" r="2.5" fill="#0f172a" />
+              </g>
+
+              {/* CABEZA DE ACERO FORJADO AL CARBONO DEL PICO */}
+              {/* Curva de arco minero: Hoja trasera (maza) y Hoja delantera (punta de cincel) */}
+              {/* La punta afilada delantera finaliza EXACTAMENTE en (130, 145) */}
+              <path
+                d="M 172 108 
+                   Q 156 122 145 131 
+                   Q 138 138 130 145 
+                   Q 135 140 144 127 
+                   Q 154 115 167 101 Z"
+                fill="url(#forgedSteel)"
+                stroke="#0f172a"
                 strokeWidth="1.2"
                 strokeLinejoin="round"
               />
 
-              {/* Punta afilada frontal reforzada */}
-              <polygon
-                points="102,36 109,38 107,43 100,38"
-                fill="#f9fafb"
+              {/* Bisel superior del filo que capta la luz reflejada de la linterna */}
+              <path
+                d="M 172 108 Q 155 123 130 145"
+                stroke="url(#steelChiselBevel)"
+                strokeWidth="1.8"
+                strokeLinecap="round"
               />
 
-              {/* Ojo del pico (fijación al mango) */}
-              <circle
-                cx="136"
-                cy="52"
-                r="4.5"
-                fill="#374151"
-                stroke="#c5a059"
+              {/* Hoja trasera de maza / piocha cuadrada */}
+              <path
+                d="M 148 133
+                   Q 160 142 178 152
+                   L 175 158
+                   Q 156 147 142 136 Z"
+                fill="url(#forgedSteel)"
+                stroke="#0f172a"
                 strokeWidth="1"
               />
-            </g>
+              <line x1="178" y1="152" x2="175" y2="158" stroke="#cbd5e1" strokeWidth="1.4" />
 
-            {/* Linterna de minero en el suelo (Candil de carburo) */}
-            <g transform="translate(42, 148) scale(0.7)">
-              <rect x="0" y="8" width="16" height="20" rx="3" fill="#3f3f46" stroke="#c5a059" strokeWidth="1" />
-              {/* Cristal del candil encendido */}
-              <rect x="3" y="11" width="10" height="13" rx="1.5" fill="#fef08a" opacity="0.85" className="mining-lantern-flicker" />
-              {/* Asa de transporte */}
-              <path d="M2 8 C2 -2 14 -2 14 8" fill="none" stroke="#a1a1aa" strokeWidth="1.5" />
+              {/* Punta de diamante endurecida en la punta de penetración (130, 145) */}
+              <polygon
+                points="130,145 134,142 133,146"
+                fill="#ffffff"
+                stroke="#94a3b8"
+                strokeWidth="0.5"
+              />
             </g>
           </svg>
         </div>
 
-        {/* Títulos y textos dinámicos del buscador de minerales */}
+        {/* Título, frases del explorador y barra de progreso */}
         <div className="mining-loader-text-area">
           <div className="mining-loader-title">
             <span className="mining-gem-symbol">◆</span>
@@ -358,7 +439,7 @@ export default function MiningLoader({
             {currentPhrase}
           </div>
 
-          {/* Barra de progreso de veta de oro */}
+          {/* Barra de veta dorada */}
           <div className="mining-progress-track">
             <div className="mining-progress-shimmer" />
           </div>
