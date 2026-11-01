@@ -16,8 +16,42 @@ interface LayoutWrapperProps {
 export default function LayoutWrapper({ children, userId, displayName, driveConnected }: LayoutWrapperProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [navVisible, setNavVisible] = useState(true)
+  const [isNavigating, setIsNavigating] = useState(false)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pathname = usePathname()
+
+  // Detectar clics en enlaces internos para feedback instantáneo (0ms)
+  useEffect(() => {
+    const handleLinkClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement)?.closest('a')
+      if (!target) return
+
+      const href = target.getAttribute('href')
+      if (
+        href &&
+        href.startsWith('/') &&
+        !href.startsWith('//') &&
+        target.target !== '_blank' &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.shiftKey &&
+        !e.altKey &&
+        href !== pathname
+      ) {
+        setIsNavigating(true)
+      }
+    }
+
+    document.addEventListener('click', handleLinkClick, { capture: true })
+    return () => {
+      document.removeEventListener('click', handleLinkClick, { capture: true })
+    }
+  }, [pathname])
+
+  // Desactivar indicador al completarse el cambio de ruta
+  useEffect(() => {
+    setIsNavigating(false)
+  }, [pathname])
 
   // Prevent background scroll when sidebar is open on mobile
   useEffect(() => {
@@ -86,6 +120,25 @@ export default function LayoutWrapper({ children, userId, displayName, driveConn
 
   return (
     <div className="app-layout">
+      {/* Barra de progreso de veta de oro ultra-rápida al iniciar navegación */}
+      {isNavigating && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            zIndex: 99999,
+            background: 'rgba(8, 8, 10, 0.6)',
+            overflow: 'hidden',
+            pointerEvents: 'none',
+          }}
+        >
+          <div className="mining-progress-shimmer" style={{ width: '80%', height: '100%' }} />
+        </div>
+      )}
+
       {/* Mobile Overlay */}
       <div 
         className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} 

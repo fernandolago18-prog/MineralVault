@@ -145,7 +145,7 @@ export default function MineralCard({
                   (e.currentTarget as HTMLImageElement).src = mergedMineral.thumbnail_url
                 }
               }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isOwned ? 1 : 0.75 }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', imageOrientation: 'from-image', opacity: isOwned ? 1 : 0.75 }}
             />
           ) : (
             <div style={{ textAlign: 'center', opacity: isOwned ? 1 : 0.5 }}>

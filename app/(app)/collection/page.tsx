@@ -14,24 +14,32 @@ export default async function CollectionPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: collection, error } = await (supabase
-    .from('user_collection') as any)
-    .select(`
-      id, status, acquired_at, origin, quality,
-      price_eur, primary_photo_url, created_at, specimen_label,
-      mineral:mineral_id (
-        id, name, name_es, chemical_formula,
-        hardness_min, hardness_max, crystal_system,
-        mineral_class, thumbnail_url, color, parent_mindat_id, streak, is_rock
-      )
-    `)
-    .eq('user_id', user.id)
-    .in('status', ['owned', 'wanted'])
-    .order('created_at', { ascending: false })
+  // Cargar colección del usuario y perfil en PARALELO para acelerar la navegación
+  const [collectionRes, profileRes] = await Promise.all([
+    (supabase
+      .from('user_collection') as any)
+      .select(`
+        id, status, acquired_at, origin, quality,
+        price_eur, primary_photo_url, created_at, specimen_label,
+        mineral:mineral_id (
+          id, name, name_es, chemical_formula,
+          hardness_min, hardness_max, crystal_system,
+          mineral_class, thumbnail_url, color, parent_mindat_id, streak, is_rock
+        )
+      `)
+      .eq('user_id', user.id)
+      .in('status', ['owned', 'wanted'])
+      .order('created_at', { ascending: false }),
+    (supabase
+      .from('user_profiles') as any)
+      .select('google_drive_connected')
+      .eq('id', user.id)
+      .single(),
+  ])
 
-  if (error) console.error('[Collection Load Error]:', error.message)
+  if (collectionRes.error) console.error('[Collection Load Error]:', collectionRes.error.message)
 
-  const items = (collection as any[]) ?? []
+  const items = (collectionRes.data as any[]) ?? []
 
   // Obtener los parent_mindat_id únicos para las variedades en la colección
   const parentMindatIds = items
@@ -58,13 +66,7 @@ export default async function CollectionPage() {
     }
   })
 
-  const { data: profile } = await (supabase
-    .from('user_profiles') as any)
-    .select('google_drive_connected')
-    .eq('id', user.id)
-    .single()
-
-  const driveConnected = profile?.google_drive_connected ?? false
+  const driveConnected = (profileRes.data as any)?.google_drive_connected ?? false
 
   return <CollectionClient items={items} driveConnected={driveConnected} userId={user.id} />
 }

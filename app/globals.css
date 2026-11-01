@@ -68,6 +68,10 @@
   padding: 0;
 }
 
+img {
+  image-orientation: from-image;
+}
+
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
@@ -704,3 +708,335 @@ label {
   color: var(--text-primary);
   font-size: 0.85rem;
 }
+
+/* ============================================================
+   MINING & PROSPECTOR LOADER ANIMATIONS
+   ============================================================ */
+
+.mining-loader-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.mining-loader-container.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(8, 8, 10, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  animation: miningFadeIn 0.25s ease-out;
+}
+
+.mining-loader-container.embedded {
+  min-height: clamp(340px, 60vh, 520px);
+  padding: 2.5rem 1rem;
+  animation: miningFadeIn 0.3s ease-out;
+}
+
+@keyframes miningFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mining-loader-card {
+  position: relative;
+  max-width: 420px;
+  width: 100%;
+  padding: 2rem 1.5rem 1.75rem;
+  background: radial-gradient(circle at 50% 25%, rgba(22, 22, 28, 0.95) 0%, rgba(14, 14, 18, 0.98) 100%);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(197, 160, 89, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.mining-lantern-glow {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(197, 160, 89, 0.18) 0%, rgba(45, 138, 103, 0.08) 50%, transparent 70%);
+  pointer-events: none;
+  animation: miningLanternPulse 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes miningLanternPulse {
+  0% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  100% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+.mining-scene-wrapper {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mining-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
+}
+
+/* Animación de la Brújula / Radar Geológico */
+.mining-radar-ring {
+  transform-origin: 100px 110px;
+  animation: miningRotateCW 22s linear infinite;
+}
+
+.mining-radar-ring-reverse {
+  transform-origin: 100px 110px;
+  animation: miningRotateCCW 16s linear infinite;
+}
+
+@keyframes miningRotateCW {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes miningRotateCCW {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* Aura palpitante de la veta mineral */
+.mining-pulse-aura {
+  animation: miningVeinPulse 1.8s ease-in-out infinite;
+  transform-origin: 100px 135px;
+}
+
+@keyframes miningVeinPulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.96); }
+  50% { opacity: 0.75; transform: scale(1.05); }
+}
+
+/* Resplandor de los cristales */
+.mining-crystal-cluster {
+  filter: drop-shadow(0 0 8px rgba(197, 160, 89, 0.3));
+}
+
+/* GOLPE DEL PICO DE MINERO */
+/* Ciclo de 1.35 segundos por golpe */
+.mining-pickaxe-arm {
+  transform-origin: 136px 52px;
+  animation: miningPickStrike 1.35s cubic-bezier(0.2, 0.8, 0.25, 1) infinite;
+}
+
+@keyframes miningPickStrike {
+  0% {
+    transform: rotate(0deg); /* Posición inicial: listo arriba */
+  }
+  18% {
+    transform: rotate(-32deg); /* Carga el golpe hacia atrás */
+  }
+  38% {
+    transform: rotate(26deg); /* IMPACTO SECO contra el cristal */
+  }
+  44% {
+    transform: rotate(20deg); /* Ligero rebote elástico tras el golpe */
+  }
+  75% {
+    transform: rotate(-10deg); /* Recuperación controlada */
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Destello en el instante de contacto (en el 38% del ciclo) */
+.mining-impact-flash {
+  transform-origin: 104px 98px;
+  animation: miningFlashBurst 1.35s ease-out infinite;
+  opacity: 0;
+}
+
+@keyframes miningFlashBurst {
+  0%, 35% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  38% {
+    opacity: 0.95;
+    transform: scale(1.4);
+  }
+  48% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}
+
+/* CHISPAS Y ESQUIRLAS DE CRISTAL */
+.mining-spark {
+  transform-origin: 104px 98px;
+  animation: miningSparkFly 1.35s ease-out infinite;
+  opacity: 0;
+}
+
+.spark-1 {
+  animation-delay: 0.01s;
+}
+.spark-2 {
+  animation-delay: 0.02s;
+}
+.spark-3 {
+  animation-delay: 0.015s;
+}
+.spark-4 {
+  animation-delay: 0.03s;
+}
+.spark-5 {
+  animation-delay: 0.025s;
+}
+
+@keyframes miningSparkFly {
+  0%, 36% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3);
+  }
+  38% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  55% {
+    opacity: 0.7;
+    transform: translate(calc(var(--spark-x, 0) * 0.7), calc(var(--spark-y, 0) * 0.7)) scale(0.9);
+  }
+  68% {
+    opacity: 0;
+    transform: translate(calc(var(--spark-x, 0) * 1.2), calc(var(--spark-y, 0) * 1.2)) scale(0.3);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Parpadeo de la linterna de carburo */
+.mining-lantern-flicker {
+  animation: lanternFlicker 2.2s infinite alternate;
+}
+
+@keyframes lanternFlicker {
+  0%, 100% { opacity: 0.9; }
+  25% { opacity: 0.65; }
+  50% { opacity: 1; }
+  75% { opacity: 0.8; }
+  85% { opacity: 0.55; }
+}
+
+/* ÁREA DE TEXTO Y PROGRESO */
+.mining-loader-text-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.mining-loader-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Fraunces', serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+}
+
+.mining-gem-symbol {
+  font-size: 0.65rem;
+  opacity: 0.8;
+}
+
+.mining-loader-phrase {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+}
+
+.mining-loader-phrase.phrase-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mining-loader-phrase.phrase-hidden {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* Barra de progreso de veta de oro */
+.mining-progress-track {
+  width: 160px;
+  height: 3px;
+  background: var(--bg-overlay);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+  margin: 0.4rem 0 0.25rem;
+}
+
+.mining-progress-shimmer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 60%;
+  background: linear-gradient(90deg, transparent 0%, var(--accent-gold) 50%, var(--accent-emerald) 80%, transparent 100%);
+  border-radius: var(--radius-full);
+  animation: miningProgressShimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes miningProgressShimmer {
+  0% {
+    left: -60%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.mining-loader-hint {
+  font-size: 0.68rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+

@@ -33,7 +33,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
       const { error } = await supabase.auth.resetPasswordForEmail(userEmail, { redirectTo })
       if (error) throw error
       setResetSent(true)
-      showToast('Correo de recuperación enviado ✓')
+      showToast('Correo de recuperación enviado')
     } catch (err) {
       console.error('[Password Reset Error]:', err)
       showToast('Error al enviar el correo de recuperación', 'error')
@@ -55,7 +55,7 @@ export default function SettingsClient({ profile, userEmail }: Props) {
         .eq('id', profile.id)
 
       if (error) throw error
-      showToast('Perfil actualizado ✓')
+      showToast('Perfil actualizado')
       router.refresh()
     } catch (err) {
       console.error('[Settings Save Error]:', err)

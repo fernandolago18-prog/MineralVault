@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { CollectionItem } from '@/types/database'
 import { Star, X } from 'lucide-react'
+import { processAndOrientImage } from '@/lib/images'
 
 interface AddSpecimenModalProps {
   isOpen: boolean
@@ -34,51 +35,6 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
   const [loading, setLoading] = useState(false)
   const [compressingProgress, setCompressingProgress] = useState(false)
 
-  // ── Image compression (client-side) ──
-  const compressImage = async (file: File): Promise<File> => {
-    const MAX_BYTES = 4 * 1024 * 1024   // 4 MB target
-    const MAX_DIM   = 2000              // max width or height in px
-
-    if (file.type === 'image/heic' || file.type === 'image/heif') return file
-    if (file.size <= MAX_BYTES) return file
-
-    return new Promise<File>((resolve) => {
-      const img = new Image()
-      const url = URL.createObjectURL(file)
-
-      img.onload = () => {
-        URL.revokeObjectURL(url)
-        const canvas = document.createElement('canvas')
-        let { naturalWidth: w, naturalHeight: h } = img
-
-        if (w > MAX_DIM || h > MAX_DIM) {
-          if (w >= h) { h = Math.round((h / w) * MAX_DIM); w = MAX_DIM }
-          else        { w = Math.round((w / h) * MAX_DIM); h = MAX_DIM }
-        }
-
-        canvas.width  = w
-        canvas.height = h
-        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-
-        canvas.toBlob((blob) => {
-          if (!blob) { resolve(file); return }
-          if (blob.size <= MAX_BYTES) {
-            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }))
-          } else {
-            canvas.toBlob((blob2) => {
-              resolve(blob2
-                ? new File([blob2], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
-                : file)
-            }, 'image/jpeg', 0.65)
-          }
-        }, 'image/jpeg', 0.82)
-      }
-
-      img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
-      img.src = url
-    })
-  }
-
   if (!isOpen) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,7 +45,7 @@ export default function AddSpecimenModal({ isOpen, onClose, onSave, mineralName 
       const compressedFiles: File[] = []
       if (selectedFiles && selectedFiles.length > 0) {
         for (let i = 0; i < selectedFiles.length; i++) {
-          const file = await compressImage(selectedFiles[i])
+          const file = await processAndOrientImage(selectedFiles[i])
           compressedFiles.push(file)
         }
       }

@@ -79,43 +79,50 @@ export default async function MineralDetailPage({ params }: Props) {
 
   const realMineralId = mineral.id
 
-  // Estado en la colección del usuario (múltiples ejemplares)
-  const { data: collectionItems } = await (supabase
+  // Cargar en PARALELO los ejemplares en colección y las variedades / mineral padre
+  const collectionPromise = supabase
     .from('user_collection')
     .select('*, specimen_photos(*)')
     .eq('user_id', user.id)
-    .eq('mineral_id', realMineralId) as any)
+    .eq('mineral_id', realMineralId)
 
-  // Obtener variedades y/o mineral principal (padre)
-  let varieties: any[] = []
-  let parentMineral: any = null
+  let varietiesPromise: PromiseLike<any>
+  let parentPromise: PromiseLike<any> | null = null
 
   if (mineral.parent_mindat_id === null) {
     if (mineral.mindat_id !== null) {
-      const { data: vars } = await supabase
+      varietiesPromise = supabase
         .from('minerals')
         .select('id, name, name_es, chemical_formula, thumbnail_url')
         .eq('parent_mindat_id', mineral.mindat_id)
         .order('name_es', { ascending: true })
-      varieties = vars ?? []
+    } else {
+      varietiesPromise = Promise.resolve({ data: [] })
     }
   } else {
-    const [parentRes, siblingsRes] = await Promise.all([
-      supabase
-        .from('minerals')
-        .select('*')
-        .eq('mindat_id', mineral.parent_mindat_id)
-        .maybeSingle(),
-      supabase
-        .from('minerals')
-        .select('id, name, name_es, chemical_formula, thumbnail_url')
-        .eq('parent_mindat_id', mineral.parent_mindat_id)
-        .neq('id', mineral.id)
-        .order('name_es', { ascending: true })
-    ])
-    parentMineral = parentRes.data ?? null
-    varieties = siblingsRes.data ?? []
+    parentPromise = supabase
+      .from('minerals')
+      .select('*')
+      .eq('mindat_id', mineral.parent_mindat_id)
+      .maybeSingle()
+
+    varietiesPromise = supabase
+      .from('minerals')
+      .select('id, name, name_es, chemical_formula, thumbnail_url')
+      .eq('parent_mindat_id', mineral.parent_mindat_id)
+      .neq('id', mineral.id)
+      .order('name_es', { ascending: true })
   }
+
+  const [collectionRes, varietiesRes, parentRes] = await Promise.all([
+    collectionPromise,
+    varietiesPromise,
+    parentPromise ?? Promise.resolve({ data: null })
+  ])
+
+  const collectionItems = collectionRes.data
+  const varieties = varietiesRes.data ?? []
+  const parentMineral = parentRes.data ?? null
 
   // Fusionar propiedades del padre si es una variedad, y enriquecer con hábitos por defecto
   const displayMineral = mergeMineralWithParent(mineral, parentMineral)

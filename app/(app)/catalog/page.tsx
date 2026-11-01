@@ -20,27 +20,35 @@ export default async function CatalogPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  // Carga inicial de minerales (primera página) — solo minerales padre (sin variedades)
+  // Carga inicial de minerales, colección y estadísticas en PARALELO para máxima velocidad de navegación
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: minerals, error } = await (supabase as any).rpc('search_minerals', {
-    search_query:   null,
-    filter_class:   null,
-    filter_system:  null,
-    hardness_min_v: null,
-    hardness_max_v: null,
-    page_size:      24,
-    page_offset:    0,
-  })
+  const [mineralsRes, collectionRes, countRes] = await Promise.all([
+    (supabase as any).rpc('search_minerals', {
+      search_query:   null,
+      filter_class:   null,
+      filter_system:  null,
+      hardness_min_v: null,
+      hardness_max_v: null,
+      page_size:      24,
+      page_offset:    0,
+    }),
+    (supabase
+      .from('user_collection')
+      .select('mineral_id, status, primary_photo_url, specimen_photos(drive_thumb_url, drive_file_id, is_primary)')
+      .eq('user_id', user.id) as any),
+    supabase
+      .from('minerals')
+      .select('id', { count: 'exact', head: true }),
+  ])
 
+  const minerals = mineralsRes.data
+  const error = mineralsRes.error
   if (error) {
     console.error('[Catalog Load Error]:', error.message)
   }
 
-  // IDs y fotos de ejemplares que el usuario ya tiene en su colección
-  const { data: collection } = await (supabase
-    .from('user_collection')
-    .select('mineral_id, status, primary_photo_url, specimen_photos(drive_thumb_url, drive_file_id, is_primary)')
-    .eq('user_id', user.id) as any)
+  const collection = collectionRes.data
+  const totalMinerals = countRes.count
 
   const collectionMap = new Map()
   const collectionCounts: Record<string, number> = {}
@@ -94,11 +102,6 @@ export default async function CatalogPage() {
   } else {
     initialMinerals = initialMinerals.map(m => mergeMineralWithParent(m, null))
   }
-
-  // Estadísticas para el header
-  const { count: totalMinerals } = await supabase
-    .from('minerals')
-    .select('id', { count: 'exact', head: true })
 
   return (
     <CatalogClient

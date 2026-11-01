@@ -219,7 +219,7 @@ export default function MineralDetailClient({ mineral, collectionItems: initialI
                 (e.currentTarget as HTMLImageElement).src = mineral.thumbnail_url
               }
             }}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', imageOrientation: 'from-image' }}
           />
           <div style={{
             position: 'absolute', top: '10px', left: '10px',

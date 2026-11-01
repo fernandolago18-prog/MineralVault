@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { CollectionItem, Mineral, SpecimenPhoto } from '@/types/database'
 import { CRYSTAL_SYSTEM_LABELS, MINERAL_CLASS_LABELS, getDriveImageUrl } from '@/types/database'
-import { Star, Check, Trash2, CameraOff, X } from 'lucide-react'
+import { Star, Check, Trash2, CameraOff, X, RotateCw } from 'lucide-react'
+import { processAndOrientImage } from '@/lib/images'
 
 interface Props {
   item: CollectionItem & { mineral: Mineral }
@@ -81,54 +82,58 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
     }
   }
 
-  // ── Image compression (client-side, keeps size under Vercel 4.5 MB limit) ──
-  const compressImage = useCallback(async (file: File): Promise<File> => {
-    const MAX_BYTES = 4 * 1024 * 1024   // 4 MB target
-    const MAX_DIM   = 2000              // max width or height in px
+  // ── Rotar foto 90° (para fotos ya subidas que se ven volteadas a horizontal) ──
+  const [rotating, setRotating] = useState<string | null>(null)
 
-    // HEIC/HEIF cannot be drawn on canvas in most browsers — skip compression
-    if (file.type === 'image/heic' || file.type === 'image/heif') return file
-    // Already small enough
-    if (file.size <= MAX_BYTES) return file
+  const handleRotatePhoto = async (photo: SpecimenPhoto) => {
+    setRotating(photo.id)
+    try {
+      const currentUrl = photo.drive_thumb_url || photo.drive_file_id || ''
+      const rotMatch = currentUrl.match(/-r(90|180|270)/)
+      const currentDeg = rotMatch ? parseInt(rotMatch[1], 10) : 0
+      const nextDeg = (currentDeg + 90) % 360
 
-    return new Promise<File>((resolve) => {
-      const img = new Image()
-      const url = URL.createObjectURL(file)
+      // Construir la nueva URL con el parámetro de rotación
+      const baseClean = currentUrl.replace(/-r(90|180|270)/, '')
+      const newThumbUrl = nextDeg > 0 ? `${baseClean}-r${nextDeg}` : baseClean
 
-      img.onload = () => {
-        URL.revokeObjectURL(url)
-        const canvas = document.createElement('canvas')
-        let { naturalWidth: w, naturalHeight: h } = img
+      // 1. Actualizar en specimen_photos
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: photoErr } = await (supabase
+        .from('specimen_photos') as any)
+        .update({ drive_thumb_url: newThumbUrl })
+        .eq('id', photo.id)
+        .eq('user_id', userId)
 
-        // Downscale if needed
-        if (w > MAX_DIM || h > MAX_DIM) {
-          if (w >= h) { h = Math.round((h / w) * MAX_DIM); w = MAX_DIM }
-          else        { w = Math.round((w / h) * MAX_DIM); h = MAX_DIM }
-        }
+      if (photoErr) throw photoErr
 
-        canvas.width  = w
-        canvas.height = h
-        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-
-        // Try quality 0.82 first; if still too large drop to 0.65
-        canvas.toBlob((blob) => {
-          if (!blob) { resolve(file); return }
-          if (blob.size <= MAX_BYTES) {
-            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }))
-          } else {
-            canvas.toBlob((blob2) => {
-              resolve(blob2
-                ? new File([blob2], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
-                : file)
-            }, 'image/jpeg', 0.65)
-          }
-        }, 'image/jpeg', 0.82)
+      // 2. Si es la foto principal, actualizar en user_collection
+      if (photo.is_primary) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase
+          .from('user_collection') as any)
+          .update({ primary_photo_url: newThumbUrl })
+          .eq('id', item.id)
+          .eq('user_id', userId)
       }
 
-      img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
-      img.src = url
-    })
-  }, [])
+      setPhotos(prev =>
+        prev.map(p => (p.id === photo.id ? { ...p, drive_thumb_url: newThumbUrl } : p))
+      )
+
+      if (lightbox?.id === photo.id) {
+        setLightbox(prev => (prev ? { ...prev, drive_thumb_url: newThumbUrl } : null))
+      }
+
+      showToast(`Foto rotada ${nextDeg}°`, 'success')
+      router.refresh()
+    } catch (err) {
+      console.error('[Rotate Error]:', err)
+      showToast('Error al rotar la foto', 'error')
+    } finally {
+      setRotating(null)
+    }
+  }
 
   // ── Upload photos ──────────────────────────────────────────────────────────
   const handleUpload = async (files: FileList | null) => {
@@ -149,8 +154,8 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
       setUploadProgress(Math.round(((i) / fileArray.length) * 100) + 10)
 
       try {
-        // Compress before sending to stay under Vercel's 4.5 MB body limit
-        const file = await compressImage(raw)
+        // Normalizar orientación (evita que fotos verticales se volteen) y comprimir si es necesario
+        const file = await processAndOrientImage(raw)
 
         const fd = new FormData()
         fd.append('file',         file)
@@ -423,7 +428,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                     alt={photo.caption ?? photo.filename ?? 'Foto del mineral'}
                     referrerPolicy="no-referrer"
                     loading="lazy"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', imageOrientation: 'from-image', cursor: 'pointer' }}
                     onClick={() => setLightbox(photo)}
                     onError={e => { (e.target as HTMLImageElement).src = '/placeholder-mineral.svg' }}
                   />
@@ -449,6 +454,14 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                         <Star size={12} fill="currentColor" />
                       </button>
                     )}
+                    <button
+                      onClick={() => handleRotatePhoto(photo)}
+                      disabled={rotating === photo.id}
+                      title="Rotar foto 90° (ajustar orientación vertical/horizontal)"
+                      style={{ background: 'rgba(99,102,241,0.9)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <RotateCw size={12} className={rotating === photo.id ? 'spin' : ''} />
+                    </button>
                     <button
                       onClick={() => window.open(photo.drive_view_url, '_blank')}
                       title="Ver en Drive"
@@ -492,7 +505,7 @@ export default function SpecimenDetailClient({ item, initialPhotos, driveConnect
                 src={getDriveImageUrl(primaryPhoto.drive_thumb_url || primaryPhoto.drive_file_id, 600)}
                 alt={mineral.name}
                 referrerPolicy="no-referrer"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', imageOrientation: 'from-image' }}
                 onError={e => { (e.target as HTMLImageElement).src = '/placeholder-mineral.svg' }}
               />
             ) : (

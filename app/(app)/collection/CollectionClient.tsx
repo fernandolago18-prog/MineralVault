@@ -438,7 +438,7 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
             <>
               <Star size={48} style={{ color: 'var(--border-strong)', margin: '0 auto 1rem', display: 'block' }} />
               <h3 style={{ marginBottom: '0.75rem' }}>{wantedItems.length === 0 ? 'Tu lista de deseos está vacía' : 'No hay resultados'}</h3>
-              <p style={{ marginBottom: '1.5rem' }}>{wantedItems.length === 0 ? 'Marca cualquier mineral con la estrella (★) en el catálogo para guardarlo aquí.' : 'Prueba a cambiar o borrar los filtros de búsqueda.'}</p>
+              <p style={{ marginBottom: '1.5rem' }}>{wantedItems.length === 0 ? 'Marca cualquier mineral con el icono de estrella en el catálogo para guardarlo aquí.' : 'Prueba a cambiar o borrar los filtros de búsqueda.'}</p>
               <Link href="/catalog">
                 <button className="btn btn-primary btn-lg">Buscar Minerales para Desear</button>
               </Link>
@@ -597,7 +597,7 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
                                 alt={item.specimen_label || mineral.name}
                                 referrerPolicy="no-referrer"
                                 loading="lazy"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', imageOrientation: 'from-image' }}
                                 onError={(e) => {
                                   const target = e.currentTarget
                                   if (mineral.thumbnail_url && target.src !== mineral.thumbnail_url) {
@@ -614,7 +614,7 @@ export default function CollectionClient({ items, driveConnected, userId }: Coll
                                 alt={mineral.name}
                                 referrerPolicy="no-referrer"
                                 loading="lazy"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', imageOrientation: 'from-image' }}
                               />
                             ) : (
                               <div style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>{mineral.is_rock ? '⬡' : '◆'}</div>
